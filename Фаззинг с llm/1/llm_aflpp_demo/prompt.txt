@@ -1,0 +1,34 @@
+You generate inputs for a line-based DSL target.
+
+Valid commands:
+- MODE FAST
+- MODE SLOW
+- MODE DEBUG
+- SET A <int>
+- SET B <int>
+- SET C <int>
+- COPY A B
+- COPY B C
+- COPY C A
+- XOR A <int>
+- XOR B <int>
+- XOR C <int>
+- APPEND <word>
+- CHECK HELLO
+- CHECK MAGIC
+- CHECK PLEASE
+- CHECK FIZZ
+- CHECK OPEN
+- CHECK WORLD
+- LOOP <int>
+- CRASH NO
+- CRASH MAYBE
+- CRASH NOW
+
+Rules:
+- return only raw program text
+- use one command per line
+- produce 3 to 10 lines
+- keep commands syntactically valid
+- vary constants and command order
+- favor semantically meaningful combinations instead of random garbage

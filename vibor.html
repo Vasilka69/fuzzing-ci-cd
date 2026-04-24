@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор элемента пайплайна</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .directory-buttons {
+            margin: 20px 0;
+        }
+
+        .directory-buttons button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .directory-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #back-button {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #f48536;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Выбор элемента пайплайна</h1>
+<div id="directory-view">
+    <h3>Выберите элемент:</h3>
+    <div class="directory-buttons" id="directory-buttons"></div>
+</div>
+
+<button id="back-button" onclick="goBack()">Назад</button>
+
+<script>
+    // Пример данных для директорий
+    const directoryStructure = {
+        root: {
+            vsc: {
+                git: {},
+                mercurial: {}
+            },
+            build: {
+                maven: {},
+                gradle: {},
+                javac: {},
+                gcc: {}
+            },
+            fuzzing: {},
+            deploy: {
+                windows: {
+                    cmd: {},
+                    powershell: {}
+                },
+                linux: {
+                    bash: {},
+                    zsh: {}
+                }
+            }
+        }
+    };
+
+    let currentPath = ['root']; // Начинаем с корня
+    let historyStack = []; // Для кнопки "Назад"
+
+    // Инициализация
+    function renderDirectory() {
+        const currentDirectory = getCurrentDirectory();
+        const buttonsContainer = document.getElementById('directory-buttons');
+        buttonsContainer.innerHTML = ''; // Очищаем текущие кнопки
+
+        const backButton = document.getElementById('back-button');
+        if (currentPath.length > 1) {
+            backButton.style.display = 'inline-block'; // Показываем кнопку "Назад"
+        } else {
+            backButton.style.display = 'none'; // Прячем кнопку "Назад"
+        }
+
+        // Отображаем кнопки для выбора подкатегорий
+        Object.keys(currentDirectory).forEach((directoryName) => {
+            const button = document.createElement('button');
+            button.textContent = directoryName;
+            button.onclick = () => enterDirectory(directoryName);
+            buttonsContainer.appendChild(button);
+        });
+    }
+
+    // Получить текущую директорию по пути
+    function getCurrentDirectory() {
+        let currentDirectory = directoryStructure;
+        for (let i = 1; i < currentPath.length; i++) {
+            currentDirectory = currentDirectory[currentPath[i]];
+        }
+        return currentDirectory;
+    }
+
+    // Вход в подкатегорию
+    function enterDirectory(directoryName) {
+        historyStack.push([...currentPath]); // Сохраняем текущий путь для кнопки "Назад"
+        currentPath.push(directoryName); // Добавляем новый уровень в путь
+        renderDirectory(); // Перерисовываем интерфейс
+    }
+
+    // Возврат на предыдущий уровень
+    function goBack() {
+        currentPath = historyStack.pop(); // Возвращаемся на предыдущий уровень
+        renderDirectory(); // Перерисовываем интерфейс
+    }
+
+    // Инициализируем отображение начальной директории
+    renderDirectory();
+</script>
+
+</body>
+</html>

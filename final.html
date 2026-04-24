@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамическая навигация по директориям</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .directory-buttons {
+            margin: 20px 0;
+        }
+
+        .directory-buttons button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .directory-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #back-button {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #f44336;
+            color: white;
+            cursor: pointer;
+        }
+
+        .form-container {
+            margin-top: 20px;
+        }
+
+        .form-container input {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 300px;
+        }
+
+        .form-container button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Динамическая навигация по директориям</h1>
+<div id="directory-view">
+    <h3>Выберите категорию:</h3>
+    <div class="directory-buttons" id="directory-buttons"></div>
+</div>
+
+<button id="back-button" onclick="goBack()">Назад</button>
+
+<div id="form-container" class="form-container" style="display: none;">
+    <h3>Заполните форму:</h3>
+    <form id="data-form"></form>
+    <button type="submit">Отправить</button>
+</div>
+
+<script>
+    // Данные из CSV
+    const directoryData = {
+        "vsc/git": {
+            url: "",
+            login: "",
+            branch: "",
+            password: ""
+        },
+        "vsc/mercurial": {
+            url: "",
+            login: "",
+            branch: "",
+            password: ""
+        },
+        "build/maven": {
+            args: "",
+            version: ""
+        },
+        "build/gradle": {
+            args: "",
+            version: ""
+        },
+        "build/javac": {
+            args: "",
+            version: ""
+        },
+        "build/gcc": {
+            args: "",
+            version: ""
+        },
+        "fuzzing": {
+            function: ""
+        },
+        "deploy/windows/cmd": {
+            ssh: {
+                ip: "",
+                user: "",
+                password: ""
+            },
+            script: ""
+        },
+        "deploy/linux/bash": {
+            ssh: {
+                ip: "",
+                user: "",
+                password: ""
+            },
+            script: ""
+        }
+    };
+
+    let currentPath = ['root']; // Начинаем с корня
+    let historyStack = []; // Для кнопки "Назад"
+
+    // Структура директорий
+    const directoryStructure = {
+        root: {
+            vsc: {
+                git: {},
+                mercurial: {}
+            },
+            build: {
+                maven: {},
+                gradle: {},
+                javac: {},
+                gcc: {}
+            },
+            fuzzing: {},
+            deploy: {
+                windows: {
+                    cmd: {},
+                    powershell: {}
+                },
+                linux: {
+                    bash: {},
+                    zsh: {}
+                }
+            }
+        }
+    };
+
+    // Инициализация отображения текущей директории
+    function renderDirectory() {
+        const currentDirectory = getCurrentDirectory();
+        const buttonsContainer = document.getElementById('directory-buttons');
+        buttonsContainer.innerHTML = ''; // Очищаем текущие кнопки
+
+        const backButton = document.getElementById('back-button');
+        if (currentPath.length > 1) {
+            backButton.style.display = 'inline-block'; // Показываем кнопку "Назад"
+        } else {
+            backButton.style.display = 'none'; // Прячем кнопку "Назад"
+        }
+
+        // Проверка на конечную директорию и показ формы
+        const currentPathString = currentPath.join('/');
+        console.log("Текущий путь:", currentPathString); // Добавили вывод текущего пути
+
+        // Если путь существует в directoryData, показываем форму
+        if (directoryData[currentPathString]) {
+            console.log("Форма должна отображаться для: ", currentPathString);  // Отладочная информация
+            showForm(currentPathString); // Показать форму для конечной директории
+            return;
+        }
+
+        // Отображаем кнопки для выбора подкатегорий
+        Object.keys(currentDirectory).forEach((directoryName) => {
+            const button = document.createElement('button');
+            button.textContent = directoryName;
+            button.onclick = () => enterDirectory(directoryName);
+            buttonsContainer.appendChild(button);
+        });
+    }
+
+    // Получить текущую директорию по пути
+    function getCurrentDirectory() {
+        let currentDirectory = directoryStructure;
+        for (let i = 1; i < currentPath.length; i++) {
+            currentDirectory = currentDirectory[currentPath[i]];
+        }
+        return currentDirectory;
+    }
+
+    // Вход в подкатегорию
+    function enterDirectory(directoryName) {
+        historyStack.push([...currentPath]); // Сохраняем текущий путь для кнопки "Назад"
+        currentPath.push(directoryName); // Добавляем новый уровень в путь
+        renderDirectory(); // Перерисовываем интерфейс
+    }
+
+    // Возврат на предыдущий уровень
+    function goBack() {
+        currentPath = historyStack.pop(); // Возвращаемся на предыдущий уровень
+        renderDirectory(); // Перерисовываем интерфейс
+    }
+
+    // Показать форму на основе данных
+    function showForm(path) {
+        const formContainer = document.getElementById('form-container');
+        const form = document.getElementById('data-form');
+        formContainer.style.display = 'block'; // Показываем форму
+
+        // Очищаем форму
+        form.innerHTML = '';
+
+        const formData = directoryData[path];
+
+        // Создаем поля формы на основе данных
+        Object.keys(formData).forEach(key => {
+            const label = document.createElement('label');
+            label.textContent = key;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = key;
+            input.value = formData[key];
+            form.appendChild(label);
+            form.appendChild(input);
+            form.appendChild(document.createElement('br'));
+        });
+    }
+
+    // Инициализируем отображение начальной директории
+    renderDirectory();
+</script>
+
+</body>
+</html>

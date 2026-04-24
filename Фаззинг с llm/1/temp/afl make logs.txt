@@ -1,0 +1,683 @@
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# sudo apt-get install -y gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+libstdc++-13-dev is already the newest version (13.3.0-6ubuntu2~24.04.1).
+libstdc++-13-dev set to manually installed.
+The following additional packages will be installed:
+  libgmp-dev libgmpxx4ldbl libmpc-dev libmpfr-dev
+Suggested packages:
+  gmp-doc libgmp10-doc libmpfr-doc
+The following NEW packages will be installed:
+  gcc-13-plugin-dev libgmp-dev libgmpxx4ldbl libmpc-dev libmpfr-dev
+0 upgraded, 5 newly installed, 0 to remove and 36 not upgraded.
+Need to get 2160 kB of archives.
+After this operation, 13.6 MB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgmpxx4ldbl amd64 2:6.3.0+dfsg-2ubuntu6.1 [9888 B]
+Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgmp-dev amd64 2:6.3.0+dfsg-2ubuntu6.1 [340 kB]
+Get:3 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libmpfr-dev amd64 4.2.1-1build1.1 [288 kB]
+Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libmpc-dev amd64 1.3.1-1build1.1 [70.2 kB]
+Get:5 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 gcc-13-plugin-dev amd64 13.3.0-6ubuntu2~24.04.1 [1452 kB]
+Fetched 2160 kB in 1s (2254 kB/s)          
+Selecting previously unselected package libgmpxx4ldbl:amd64.
+(Reading database ... 59041 files and directories currently installed.)
+Preparing to unpack .../libgmpxx4ldbl_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb ...
+Unpacking libgmpxx4ldbl:amd64 (2:6.3.0+dfsg-2ubuntu6.1) ...
+Selecting previously unselected package libgmp-dev:amd64.
+Preparing to unpack .../libgmp-dev_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb ...
+Unpacking libgmp-dev:amd64 (2:6.3.0+dfsg-2ubuntu6.1) ...
+Selecting previously unselected package libmpfr-dev:amd64.
+Preparing to unpack .../libmpfr-dev_4.2.1-1build1.1_amd64.deb ...
+Unpacking libmpfr-dev:amd64 (4.2.1-1build1.1) ...
+Selecting previously unselected package libmpc-dev:amd64.
+Preparing to unpack .../libmpc-dev_1.3.1-1build1.1_amd64.deb ...
+Unpacking libmpc-dev:amd64 (1.3.1-1build1.1) ...
+Selecting previously unselected package gcc-13-plugin-dev.
+Preparing to unpack .../gcc-13-plugin-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-plugin-dev (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libgmpxx4ldbl:amd64 (2:6.3.0+dfsg-2ubuntu6.1) ...
+Setting up libgmp-dev:amd64 (2:6.3.0+dfsg-2ubuntu6.1) ...
+Setting up libmpfr-dev:amd64 (4.2.1-1build1.1) ...
+Setting up libmpc-dev:amd64 (1.3.1-1build1.1) ...
+Setting up gcc-13-plugin-dev (13.3.0-6ubuntu2~24.04.1) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# sudo apt-get install -y wget curl
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+wget is already the newest version (1.21.4-1ubuntu4.1).
+wget set to manually installed.
+curl is already the newest version (8.5.0-2ubuntu10.8).
+curl set to manually installed.
+0 upgraded, 0 newly installed, 0 to remove and 36 not upgraded.
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# sudo apt-get install -y python3-pip
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  python3-wheel
+The following NEW packages will be installed:
+  python3-pip python3-wheel
+0 upgraded, 2 newly installed, 0 to remove and 36 not upgraded.
+Need to get 1373 kB of archives.
+After this operation, 7270 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/universe amd64 python3-wheel all 0.42.0-2 [53.1 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 python3-pip all 24.0+dfsg-1ubuntu1.3 [1320 kB]
+Fetched 1373 kB in 1s (1754 kB/s)    
+Selecting previously unselected package python3-wheel.
+(Reading database ... 59575 files and directories currently installed.)
+Preparing to unpack .../python3-wheel_0.42.0-2_all.deb ...
+Unpacking python3-wheel (0.42.0-2) ...
+Selecting previously unselected package python3-pip.
+Preparing to unpack .../python3-pip_24.0+dfsg-1ubuntu1.3_all.deb ...
+Unpacking python3-pip (24.0+dfsg-1ubuntu1.3) ...
+Setting up python3-wheel (0.42.0-2) ...
+Setting up python3-pip (24.0+dfsg-1ubuntu1.3) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# git submodule update --init
+Submodule 'coresight_mode/coresight-trace' (https://github.com/AFLplusplus/coresight-trace.git) registered for path 'coresight_mode/coresight-trace'
+Submodule 'custom_mutators/grammar_mutator' (https://github.com/AFLplusplus/Grammar-Mutator) registered for path 'custom_mutators/grammar_mutator/grammar_mutator'
+Submodule 'nyx_mode/QEMU-Nyx' (https://github.com/nyx-fuzz/QEMU-Nyx) registered for path 'nyx_mode/QEMU-Nyx'
+Submodule 'nyx_mode/libnyx' (https://github.com/nyx-fuzz/libnyx.git) registered for path 'nyx_mode/libnyx'
+Submodule 'nyx_mode/packer' (https://github.com/nyx-fuzz/packer.git) registered for path 'nyx_mode/packer'
+Submodule 'qemu_mode/qemuafl' (https://github.com/AFLplusplus/qemuafl) registered for path 'qemu_mode/qemuafl'
+Submodule 'unicorn_mode/unicornafl' (https://github.com/AFLplusplus/unicornafl) registered for path 'unicorn_mode/unicornafl'
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace'...
+fatal: unable to access 'https://github.com/AFLplusplus/coresight-trace.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/coresight-trace.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace' failed
+Failed to clone 'coresight_mode/coresight-trace'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/custom_mutators/grammar_mutator/grammar_mutator'...
+fatal: unable to access 'https://github.com/AFLplusplus/Grammar-Mutator/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/Grammar-Mutator' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/custom_mutators/grammar_mutator/grammar_mutator' failed
+Failed to clone 'custom_mutators/grammar_mutator/grammar_mutator'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/QEMU-Nyx'...
+fatal: unable to access 'https://github.com/nyx-fuzz/QEMU-Nyx/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/QEMU-Nyx' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/QEMU-Nyx' failed
+Failed to clone 'nyx_mode/QEMU-Nyx'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/libnyx'...
+fatal: unable to access 'https://github.com/nyx-fuzz/libnyx.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/libnyx.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/libnyx' failed
+Failed to clone 'nyx_mode/libnyx'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/packer'...
+fatal: unable to access 'https://github.com/nyx-fuzz/packer.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/packer.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/packer' failed
+Failed to clone 'nyx_mode/packer'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/qemu_mode/qemuafl'...
+fatal: unable to access 'https://github.com/AFLplusplus/qemuafl/': Failed to connect to 127.0.0.1 port 7890 after 1 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/qemuafl' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/qemu_mode/qemuafl' failed
+Failed to clone 'qemu_mode/qemuafl'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/unicorn_mode/unicornafl'...
+fatal: unable to access 'https://github.com/AFLplusplus/unicornafl/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/unicornafl' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/unicorn_mode/unicornafl' failed
+Failed to clone 'unicorn_mode/unicornafl'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace'...
+fatal: unable to access 'https://github.com/AFLplusplus/coresight-trace.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/coresight-trace.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace' failed
+Failed to clone 'coresight_mode/coresight-trace' a second time, aborting
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# sudo apt-get install -y meson ninja-build
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  meson ninja-build
+0 upgraded, 2 newly installed, 0 to remove and 36 not upgraded.
+Need to get 733 kB of archives.
+After this operation, 4213 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/universe amd64 ninja-build amd64 1.11.1-2 [129 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble/universe amd64 meson all 1.3.2-1ubuntu1 [604 kB]
+Fetched 733 kB in 1s (805 kB/s)
+Selecting previously unselected package ninja-build.
+(Reading database ... 60292 files and directories currently installed.)
+Preparing to unpack .../ninja-build_1.11.1-2_amd64.deb ...
+Unpacking ninja-build (1.11.1-2) ...
+Selecting previously unselected package meson.
+Preparing to unpack .../meson_1.3.2-1ubuntu1_all.deb ...
+Unpacking meson (1.3.2-1ubuntu1) ...
+Setting up ninja-build (1.11.1-2) ...
+Setting up meson (1.3.2-1ubuntu1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# sudo apt-get install -y cpio libcapstone-dev
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  libcapstone4
+Suggested packages:
+  libarchive-dev
+The following NEW packages will be installed:
+  cpio libcapstone-dev libcapstone4
+0 upgraded, 3 newly installed, 0 to remove and 36 not upgraded.
+Need to get 1497 kB of archives.
+After this operation, 15.2 MB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 cpio amd64 2.15+dfsg-1ubuntu2 [82.7 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble/universe amd64 libcapstone4 amd64 4.0.2-5.1build1 [656 kB]
+Get:3 http://archive.ubuntu.com/ubuntu noble/universe amd64 libcapstone-dev amd64 4.0.2-5.1build1 [759 kB]
+Fetched 1497 kB in 1s (1479 kB/s)       
+Selecting previously unselected package cpio.
+(Reading database ... 60569 files and directories currently installed.)
+Preparing to unpack .../cpio_2.15+dfsg-1ubuntu2_amd64.deb ...
+Unpacking cpio (2.15+dfsg-1ubuntu2) ...
+Selecting previously unselected package libcapstone4:amd64.
+Preparing to unpack .../libcapstone4_4.0.2-5.1build1_amd64.deb ...
+Unpacking libcapstone4:amd64 (4.0.2-5.1build1) ...
+Selecting previously unselected package libcapstone-dev:amd64.
+Preparing to unpack .../libcapstone-dev_4.0.2-5.1build1_amd64.deb ...
+Unpacking libcapstone-dev:amd64 (4.0.2-5.1build1) ...
+Setting up cpio (2.15+dfsg-1ubuntu2) ...
+update-alternatives: using /usr/bin/mt-gnu to provide /usr/bin/mt (mt) in auto mode
+Setting up libcapstone4:amd64 (4.0.2-5.1build1) ...
+Setting up libcapstone-dev:amd64 (4.0.2-5.1build1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# git submodule update --init
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace'...
+fatal: unable to access 'https://github.com/AFLplusplus/coresight-trace.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/coresight-trace.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace' failed
+Failed to clone 'coresight_mode/coresight-trace'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/custom_mutators/grammar_mutator/grammar_mutator'...
+fatal: unable to access 'https://github.com/AFLplusplus/Grammar-Mutator/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/Grammar-Mutator' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/custom_mutators/grammar_mutator/grammar_mutator' failed
+Failed to clone 'custom_mutators/grammar_mutator/grammar_mutator'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/QEMU-Nyx'...
+fatal: unable to access 'https://github.com/nyx-fuzz/QEMU-Nyx/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/QEMU-Nyx' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/QEMU-Nyx' failed
+Failed to clone 'nyx_mode/QEMU-Nyx'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/libnyx'...
+fatal: unable to access 'https://github.com/nyx-fuzz/libnyx.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/libnyx.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/libnyx' failed
+Failed to clone 'nyx_mode/libnyx'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/packer'...
+fatal: unable to access 'https://github.com/nyx-fuzz/packer.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/nyx-fuzz/packer.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/nyx_mode/packer' failed
+Failed to clone 'nyx_mode/packer'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/qemu_mode/qemuafl'...
+fatal: unable to access 'https://github.com/AFLplusplus/qemuafl/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/qemuafl' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/qemu_mode/qemuafl' failed
+Failed to clone 'qemu_mode/qemuafl'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/unicorn_mode/unicornafl'...
+fatal: unable to access 'https://github.com/AFLplusplus/unicornafl/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/unicornafl' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/unicorn_mode/unicornafl' failed
+Failed to clone 'unicorn_mode/unicornafl'. Retry scheduled
+Cloning into '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace'...
+fatal: unable to access 'https://github.com/AFLplusplus/coresight-trace.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+fatal: clone of 'https://github.com/AFLplusplus/coresight-trace.git' into submodule path '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/coresight_mode/coresight-trace' failed
+Failed to clone 'coresight_mode/coresight-trace' a second time, aborting
+root@Vasili4PK:/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus# make distrib
+[*] Compiling AFL++ for OS Linux on ARCH x86_64
+[+] ZLIB detected
+[*] Checking for the default compiler cc...
+[*] Testing the PATH environment variable...
+[*] Checking for the ability to compile x86 code...
+[+] shmat seems to be working.
+[+] Python 3.12.3 support seems to be working.
+[+] Everything seems to be working, ready to compile. (cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0)
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\" -flto -DHAVE_ZLIB -c src/afl-common.c -o src/afl-common.o
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\" -flto -DHAVE_ZLIB -c src/afl-sharedmem.c -o src/afl-sharedmem.o
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\" -flto -DHAVE_ZLIB -c src/afl-forkserver.c -o src/afl-forkserver.o
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\" -flto -Wno-format-truncation -DHAVE_ZLIB -Iinclude -c src/afl-performance.c -o src/afl-performance.o
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-fuzz-bitmap.c src/afl-fuzz-cmplog.c src/afl-fuzz-coverage.c src/afl-fuzz-extras.c src/afl-fuzz-frameshift.c src/afl-fuzz-ijon.c src/afl-fuzz-init.c src/afl-fuzz-mutators.c src/afl-fuzz-one.c src/afl-fuzz-python.c src/afl-fuzz-queue.c src/afl-fuzz-redqueen.c src/afl-fuzz-run.c src/afl-fuzz-sanfuzz.c src/afl-fuzz-skipdet.c src/afl-fuzz-state.c src/afl-fuzz-stats.c src/afl-fuzz-statsd.c src/afl-fuzz.c src/afl-common.o src/afl-sharedmem.o src/afl-forkserver.o src/afl-performance.o -o afl-fuzz -DUSE_PYTHON -I/usr/include/python3.12 -I/usr/include/python3.12 -ldl -lrt -lm -lz -lpython3.12 -ldl  -lm  -L/usr/lib/python3.12/config-3.12-x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -lpython3.12 -ldl  -lm  -DPYTHON_VERSION="\"Python 3.12.3\"" -ldl -lrt -lm -lz -lm
+lto-wrapper: warning: using serial compilation of 7 LTRANS jobs
+lto-wrapper: note: see the ‘-flto’ option documentation for more information
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-showmap.c src/afl-fuzz-mutators.c src/afl-fuzz-python.c src/afl-common.o src/afl-sharedmem.o src/afl-forkserver.o src/afl-performance.o -o afl-showmap -DUSE_PYTHON -I/usr/include/python3.12 -I/usr/include/python3.12 -ldl -lrt -lm -lz -lpython3.12 -ldl  -lm  -L/usr/lib/python3.12/config-3.12-x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -lpython3.12 -ldl  -lm  -DPYTHON_VERSION="\"Python 3.12.3\"" -ldl -lrt -lm -lz
+lto-wrapper: warning: using serial compilation of 2 LTRANS jobs
+lto-wrapper: note: see the ‘-flto’ option documentation for more information
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"   -c -o src/afl-fuzz-python.o src/afl-fuzz-python.c
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"   -c -o src/afl-fuzz-mutators.o src/afl-fuzz-mutators.c
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-tmin.c src/afl-common.o src/afl-sharedmem.o src/afl-forkserver.o src/afl-performance.o src/afl-fuzz-python.o src/afl-fuzz-mutators.o -o afl-tmin -DUSE_PYTHON -I/usr/include/python3.12 -I/usr/include/python3.12 -ldl -lrt -lm -lz -lpython3.12 -ldl  -lm  -L/usr/lib/python3.12/config-3.12-x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -lpython3.12 -ldl  -lm  -DPYTHON_VERSION="\"Python 3.12.3\"" -ldl -lrt -lm -lz
+lto-wrapper: warning: using serial compilation of 2 LTRANS jobs
+lto-wrapper: note: see the ‘-flto’ option documentation for more information
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-gotcpu.c src/afl-common.o -o afl-gotcpu -ldl -lrt -lm -lz
+cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-analyze.c src/afl-common.o src/afl-sharedmem.o src/afl-performance.o src/afl-forkserver.o -o afl-analyze -ldl -lrt -lm -lz
+cp -f afl-cmin.py afl-cmin
+#cc -O2 -Wno-format-truncation -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-pointer-arith -fPIC -I include/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DDOC_PATH=\"/usr/local/share/doc/afl\"  -flto -DHAVE_ZLIB src/afl-cmin.c src/afl-common.o src/afl-sharedmem.o src/afl-forkserver.o src/afl-performance.o -o afl-cmin -DUSE_PYTHON -I/usr/include/python3.12 -I/usr/include/python3.12 -ldl -lrt -lm -lz -lpython3.12 -ldl  -lm  -L/usr/lib/python3.12/config-3.12-x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -lpython3.12 -ldl  -lm  -DPYTHON_VERSION="\"Python 3.12.3\"" -ldl -lrt -lm -lz -pthread
+make -j -f GNUmakefile.llvm
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+[+] llvm_mode detected llvm 16+, enabling c++17
+[+] llvm_mode detected llvm 12+, enabling afl-lto LTO implementation
+[+] shmat seems to be working.
+[*] Checking for working 'llvm-config'...
+[*] Checking for working '/usr/lib/llvm-18/bin/clang'...
+[*] Checking for matching versions of '/usr/lib/llvm-18/bin/clang' and 'llvm-config-18'
+[*] We have llvm-config version 18.1.3 with a clang version 18.1.3, good.
+[*] Checking for './afl-showmap'...
+[+] All set and ready to build.
+/usr/lib/llvm-18/bin/clang -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  -c src/afl-common.c -o instrumentation/afl-common.o 
+In file included from src/afl-common.c:28:
+In file included from ./include/forkserver.h:37:
+In file included from ./include/types.h:28:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:4:9: note: previous definition is here
+    4 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang -I/usr/lib/llvm-18/include -I./../include -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  -DAFL_INCLUDE_PATH=\"/usr/local/include/afl\" src/afl-cc.c instrumentation/afl-common.o -o afl-cc -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -DCFLAGS_OPT=\"\" -lm
+In file included from src/afl-cc.c:28:
+In file included from ./include/common.h:35:
+In file included from ./include/forkserver.h:37:
+In file included from ./include/types.h:28:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:4:9: note: previous definition is here
+    4 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang -I/usr/lib/llvm-18/include -I./../include -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  -O3 -Wno-unused-result -fPIC -c instrumentation/afl-compiler-rt.o.c -o afl-compiler-rt.o
+In file included from instrumentation/afl-compiler-rt.o.c:40:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:4:9: note: previous definition is here
+    4 | #define VERSION ""
+      |         ^
+1 warning generated.
+[*] Building 32-bit variant of the runtime (-m32)... failed (that's fine)
+[*] Building 64-bit variant of the runtime (-m64)... success!
+/usr/lib/llvm-18/bin/clang++ -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  $(llvm-config-18 --cxxflags) -fno-rtti -fPIC -std=c++17 -c instrumentation/afl-llvm-common.cc -o instrumentation/afl-llvm-common.o
+In file included from instrumentation/afl-llvm-common.cc:3:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:4:9: note: previous definition is here
+    4 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -Wdeprecated -fno-rtti -fPIC -std=c++17 -shared instrumentation/afl-llvm-pass.so.cc -o afl-llvm-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+In file included from instrumentation/afl-llvm-pass.so.cc:24:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+In file included from instrumentation/afl-llvm-pass.so.cc:46:
+In file included from /usr/lib/llvm-18/include/llvm/Passes/PassBuilder.h:18:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/CGSCCPassManager.h:92:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/LazyCallGraph.h:45:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/TargetLibraryInfo.h:14:
+In file included from /usr/lib/llvm-18/include/llvm/IR/InstrTypes.h:24:
+/usr/lib/llvm-18/include/llvm/IR/Attributes.h:315:3: warning: definition of implicit copy assignment operator for 'AttributeSet' is deprecated because it has a user-declared destructor [-Wdeprecated-copy-with-dtor]
+  315 |   ~AttributeSet() = default;
+      |   ^
+/usr/lib/llvm-18/include/llvm/IR/GlobalVariable.h:194:11: note: in implicit copy assignment operator for 'llvm::AttributeSet' first required here
+  194 |     Attrs = Attrs.addAttribute(getContext(), Kind);
+      |           ^
+In file included from instrumentation/afl-llvm-pass.so.cc:46:
+In file included from /usr/lib/llvm-18/include/llvm/Passes/PassBuilder.h:25:
+In file included from /usr/lib/llvm-18/include/llvm/Transforms/IPO/Inliner.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineAdvisor.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineCost.h:18:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineModelFeatureMaps.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/TensorSpec.h:16:
+In file included from /usr/lib/llvm-18/include/llvm/Support/JSON.h:55:
+In file included from /usr/lib/llvm-18/include/llvm/Support/FormatVariadic.h:33:
+In file included from /usr/lib/llvm-18/include/llvm/Support/FormatCommon.h:13:
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadicDetails.h:27:11: warning: definition of implicit copy constructor for 'format_adapter' is deprecated because it has a user-declared destructor [-Wdeprecated-copy-with-dtor]
+   27 |   virtual ~format_adapter() = default;
+      |           ^
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadicDetails.h:33:29: note: in implicit copy constructor for 'llvm::detail::format_adapter' first required here
+   33 | template <typename T> class provider_format_adapter : public format_adapter {
+      |                             ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:201:4: note: in implicit move constructor for 'llvm::detail::provider_format_adapter<const char *const &>' first required here
+  201 |         : _M_head_impl(std::forward<_UHead>(__h)) { }
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:514:4: note: in instantiation of function template specialization 'std::_Head_base<3, llvm::detail::provider_format_adapter<const char *const &>>::_Head_base<llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  514 |         : _Base(std::forward<_UHead>(__head))
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<3, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  292 |         : _Inherited(std::forward<_UTail>(__tail)...),
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<2, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<1, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:891:4: note: in instantiation of function template specialization 'std::_Tuple_impl<0, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+  891 |         : _Inherited(std::forward<_UElements>(__elements)...) { }
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:2005:14: note: in instantiation of function template specialization 'std::tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, true, true>' requested here
+ 2005 |       return __result_type(std::forward<_Elements>(__args)...);
+      |              ^
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadic.h:257:12: note: in instantiation of function template specialization 'std::make_tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  257 |       std::make_tuple(detail::build_format_adapter(std::forward<Ts>(Vals))...));
+      |            ^
+/usr/lib/llvm-18/include/llvm/Support/JSON.h:902:17: note: in instantiation of function template specialization 'llvm::formatv<const unsigned int &, const unsigned int &, const unsigned int &, const char *const &>' requested here
+  902 |     OS << llvm::formatv("[{0}:{1}, byte={2}]: {3}", Line, Column, Offset, Msg);
+      |                 ^
+3 warnings generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -Wdeprecated -fno-rtti -fPIC -std=c++17 -shared instrumentation/afl-llvm-ijon-pass.so.cc -o afl-llvm-ijon-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+In file included from instrumentation/afl-llvm-ijon-pass.so.cc:17:
+In file included from /usr/lib/llvm-18/include/llvm/Passes/PassBuilder.h:18:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/CGSCCPassManager.h:92:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/LazyCallGraph.h:45:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/TargetLibraryInfo.h:14:
+In file included from /usr/lib/llvm-18/include/llvm/IR/InstrTypes.h:24:
+/usr/lib/llvm-18/include/llvm/IR/Attributes.h:315:3: warning: definition of implicit copy assignment operator for 'AttributeSet' is deprecated because it has a user-declared destructor [-Wdeprecated-copy-with-dtor]
+  315 |   ~AttributeSet() = default;
+      |   ^
+/usr/lib/llvm-18/include/llvm/IR/GlobalVariable.h:194:11: note: in implicit copy assignment operator for 'llvm::AttributeSet' first required here
+  194 |     Attrs = Attrs.addAttribute(getContext(), Kind);
+      |           ^
+In file included from instrumentation/afl-llvm-ijon-pass.so.cc:36:
+In file included from instrumentation/llvm-alternative-coverage.h:4:
+In file included from ./include/types.h:28:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+In file included from instrumentation/afl-llvm-ijon-pass.so.cc:17:
+In file included from /usr/lib/llvm-18/include/llvm/Passes/PassBuilder.h:25:
+In file included from /usr/lib/llvm-18/include/llvm/Transforms/IPO/Inliner.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineAdvisor.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineCost.h:18:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/InlineModelFeatureMaps.h:13:
+In file included from /usr/lib/llvm-18/include/llvm/Analysis/TensorSpec.h:16:
+In file included from /usr/lib/llvm-18/include/llvm/Support/JSON.h:55:
+In file included from /usr/lib/llvm-18/include/llvm/Support/FormatVariadic.h:33:
+In file included from /usr/lib/llvm-18/include/llvm/Support/FormatCommon.h:13:
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadicDetails.h:27:11: warning: definition of implicit copy constructor for 'format_adapter' is deprecated because it has a user-declared destructor [-Wdeprecated-copy-with-dtor]
+   27 |   virtual ~format_adapter() = default;
+      |           ^
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadicDetails.h:33:29: note: in implicit copy constructor for 'llvm::detail::format_adapter' first required here
+   33 | template <typename T> class provider_format_adapter : public format_adapter {
+      |                             ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:201:4: note: in implicit move constructor for 'llvm::detail::provider_format_adapter<const char *const &>' first required here
+  201 |         : _M_head_impl(std::forward<_UHead>(__h)) { }
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:514:4: note: in instantiation of function template specialization 'std::_Head_base<3, llvm::detail::provider_format_adapter<const char *const &>>::_Head_base<llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  514 |         : _Base(std::forward<_UHead>(__head))
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<3, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  292 |         : _Inherited(std::forward<_UTail>(__tail)...),
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<2, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:292:4: note: in instantiation of function template specialization 'std::_Tuple_impl<1, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:891:4: note: in instantiation of function template specialization 'std::_Tuple_impl<0, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::_Tuple_impl<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, void>' requested here
+  891 |         : _Inherited(std::forward<_UElements>(__elements)...) { }
+      |           ^
+/usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple:2005:14: note: in instantiation of function template specialization 'std::tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>::tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>, true, true>' requested here
+ 2005 |       return __result_type(std::forward<_Elements>(__args)...);
+      |              ^
+/usr/lib/llvm-18/include/llvm/Support/FormatVariadic.h:257:12: note: in instantiation of function template specialization 'std::make_tuple<llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const unsigned int &>, llvm::detail::provider_format_adapter<const char *const &>>' requested here
+  257 |       std::make_tuple(detail::build_format_adapter(std::forward<Ts>(Vals))...));
+      |            ^
+/usr/lib/llvm-18/include/llvm/Support/JSON.h:902:17: note: in instantiation of function template specialization 'llvm::formatv<const unsigned int &, const unsigned int &, const unsigned int &, const char *const &>' requested here
+  902 |     OS << llvm::formatv("[{0}:{1}, byte={2}]: {3}", Line, Column, Offset, Msg);
+      |                 ^
+3 warnings generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -fno-rtti -fPIC -std=c++17 -shared instrumentation/SanitizerCoveragePCGUARD.so.cc -o SanitizerCoveragePCGUARD.so $(llvm-config-18 --ldflags)  -Wno-deprecated-copy-dtor -Wdeprecated instrumentation/afl-llvm-common.o
+In file included from instrumentation/SanitizerCoveragePCGUARD.so.cc:84:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/split-compares-pass.so.cc -o split-compares-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/split-switches-pass.so.cc -o split-switches-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/cmplog-routines-pass.cc -o cmplog-routines-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/cmplog-instructions-pass.cc -o cmplog-instructions-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/cmplog-switches-pass.cc -o cmplog-switches-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/afl-llvm-dict2file.so.cc -o afl-llvm-dict2file.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+In file included from instrumentation/afl-llvm-dict2file.so.cc:21:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/compare-transform-pass.so.cc -o compare-transform-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+/usr/lib/llvm-18/bin/clang -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  src/afl-ld-lto.c -o afl-ld-lto 
+In file included from src/afl-ld-lto.c:30:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:4:9: note: previous definition is here
+    4 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -fno-rtti -fPIC -std=c++17 -shared instrumentation/afl-llvm-lto-instrumentlist.so.cc -o afl-llvm-lto-instrumentlist.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+In file included from instrumentation/afl-llvm-lto-instrumentlist.so.cc:21:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -Wno-writable-strings -fno-rtti -fPIC -std=c++17 -shared instrumentation/SanitizerCoverageLTO.so.cc -o SanitizerCoverageLTO.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+In file included from instrumentation/SanitizerCoverageLTO.so.cc:72:
+./include/config.h:29:9: warning: 'VERSION' macro redefined [-Wmacro-redefined]
+   29 | #define VERSION "++4.41a"
+      |         ^
+<command line>:5:9: note: previous definition is here
+    5 | #define VERSION ""
+      |         ^
+1 warning generated.
+/usr/lib/llvm-18/bin/clang -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  -Wno-unused-result -O0 -flto=full -fPIC -c instrumentation/afl-llvm-rt-lto.o.c -o ./afl-llvm-rt-lto.o
+/usr/lib/llvm-18/bin/clang++ $(llvm-config-18 --cxxflags) -fno-rtti -fno-exceptions -fPIC -O3 -funroll-loops -fPIC -Wall -g -I ./include/ -DVERSION=\"\" -Wno-variadic-macros -Wno-deprecated-copy-with-dtor -DLLVM_MINOR=1 -DLLVM_MAJOR=18  -Wno-deprecated-declarations -Wl,-znodelete -shared instrumentation/injection-pass.cc -o injection-pass.so $(llvm-config-18 --ldflags)  instrumentation/afl-llvm-common.o
+[*] Testing the CC wrapper and instrumentation output...
+unset AFL_USE_ASAN AFL_USE_MSAN AFL_INST_RATIO AFL_LLVM_ALLOWLIST AFL_LLVM_DENYLIST; ASAN_OPTIONS=detect_leaks=0 AFL_QUIET=1 AFL_PATH=. AFL_LLVM_LAF_ALL=1 ./afl-cc -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  ./test-instr.c -o test-instr 
+ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr0 ./test-instr < /dev/null
+echo 1 | ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr1 ./test-instr
+[+] All right, the instrumentation seems to be working!
+[+] All done! You can now use './afl-cc' to compile programs.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+make -f GNUmakefile.gcc_plugin
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+[+] shmat seems to be working.
+[*] Checking for working 'cc'...
+[*] Checking for gcc plugin development header files...
+[*] Checking for './afl-showmap'...
+[+] All set and ready to build.
+g++ -O3 -g -funroll-loops  -Wall -std=c++11 -fPIC -fno-rtti -fno-exceptions -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin"/include -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin" -shared instrumentation/afl-gcc-pass.so.cc -o afl-gcc-pass.so -lrt
+ln -sf afl-cc afl-gcc-fast
+ln -sf afl-cc afl-g++-fast
+ln -sf afl-cc.8 afl-gcc-fast.8
+ln -sf afl-cc.8 afl-g++-fast.8
+g++ -O3 -g -funroll-loops  -Wall -std=c++11 -fPIC -fno-rtti -fno-exceptions -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin"/include -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin" -shared instrumentation/afl-gcc-cmplog-pass.so.cc -o afl-gcc-cmplog-pass.so
+g++ -O3 -g -funroll-loops  -Wall -std=c++11 -fPIC -fno-rtti -fno-exceptions -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin"/include -I"/usr/lib/gcc/x86_64-linux-gnu/13/plugin" -shared instrumentation/afl-gcc-cmptrs-pass.so.cc -o afl-gcc-cmptrs-pass.so
+[*] Building 32-bit variant of the runtime (-m32)... failed (that's fine)
+[*] Testing the CC wrapper and instrumentation output...
+unset AFL_USE_ASAN AFL_USE_MSAN AFL_LLVM_ALLOWLIST AFL_LLVM_DENYLIST; ASAN_OPTIONS=detect_leaks=0 AFL_QUIET=1 AFL_INST_RATIO=100 AFL_PATH=. AFL_CC=cc ./afl-gcc-fast -O3 -g -funroll-loops -Wall -Iinclude -Wno-pointer-sign -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DGCC_VERSION=\"\" -DGCC_BINDIR=\"\" -Wno-unused-function  ./test-instr.c -o test-instr -lrt
+ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr0 ./test-instr </dev/null
+echo 1 | ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr1 ./test-instr
+[+] All right, the instrumentation seems to be working!
+[+] All done! You can now use './afl-gcc-fast' to compile programs.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+[*] Testing the CC wrapper afl-cc and its instrumentation output...
+afl-cc++4.41a by Michal Zalewski, Laszlo Szekeres, Marc Heuse - mode: LLVM-PCGUARD
+SanitizerCoveragePCGUARD++4.41a
+[+] Instrumented 13 locations with no collisions (non-hardened mode) of which are 0 handled and 0 unhandled special instructions.
+ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -q -m none -o .test-instr0 ./test-instr < /dev/null
+echo 1 | ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr1 ./test-instr
+
+[+] All right, the instrumentation of afl-cc seems to be working!
+[+] Main compiler 'afl-cc' successfully built!
+[+] LLVM mode for 'afl-cc' successfully built!
+[+] LLVM LTO mode for 'afl-cc' successfully built!
+[+] gcc_plugin for 'afl-cc' successfully built!
+[+] All done! Be sure to review the README.md - it's pretty short and useful.
+NOTE: If you can read this, your terminal probably uses white background.
+This will make the UI hard to read. See docs/status_screen.md for advice.
+make -C utils/aflpp_driver
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/aflpp_driver'
+cc -I. -I../../include -O3 -funroll-loops -g -fPIC -fno-lto -c aflpp_driver.c
+aflpp_driver.c:162:1: warning: constructor priorities from 0 to 100 are reserved for the implementation [-Wprio-ctor-dtor]
+  162 | __attribute__((constructor(0))) static void __decide_deferred_forkserver(void) {
+      | ^~~~~~~~~~~~~
+aflpp_driver.c: In function ‘LLVMFuzzerRunDriver’:
+aflpp_driver.c:369:5: warning: ignoring return value of ‘system’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  369 |     system(cmd);
+      |     ^~~~~~~~~~~
+'libAFLDriver.a' -> '../../libAFLDriver.a'
+cc -O3 -funroll-loops -g -fPIC -fno-lto -O0 -funroll-loops -c aflpp_qemu_driver.c
+'libAFLQemuDriver.a' -> '../../libAFLQemuDriver.a'
+Note: Optional aflpp_qemu_driver_hook.o not built.
+Note: Optional aflpp_qemu_driver_hook.so not built.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/aflpp_driver'
+
+
+
+
+Build Summary:
+[+] afl-fuzz and supporting tools successfully built
+[+] LLVM basic mode successfully built
+[+] LLVM mode successfully built
+[+] LLVM LTO mode successfully built
+[+] gcc_mode successfully built
+
+make -j -f GNUmakefile.llvm
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+[+] llvm_mode detected llvm 16+, enabling c++17
+[+] llvm_mode detected llvm 12+, enabling afl-lto LTO implementation
+[+] shmat seems to be working.
+[*] Checking for working 'llvm-config'...
+[*] Checking for working '/usr/lib/llvm-18/bin/clang'...
+[*] Checking for matching versions of '/usr/lib/llvm-18/bin/clang' and 'llvm-config-18'
+[*] We have llvm-config version 18.1.3 with a clang version 18.1.3, good.
+[*] Checking for './afl-showmap'...
+[+] All set and ready to build.
+[*] Building 32-bit variant of the runtime (-m32)... failed (that's fine)
+[*] Testing the CC wrapper and instrumentation output...
+unset AFL_USE_ASAN AFL_USE_MSAN AFL_INST_RATIO AFL_LLVM_ALLOWLIST AFL_LLVM_DENYLIST; ASAN_OPTIONS=detect_leaks=0 AFL_QUIET=1 AFL_PATH=. AFL_LLVM_LAF_ALL=1 ./afl-cc -O3 -funroll-loops -fPIC -Wall -g -Wno-cast-qual -Wno-variadic-macros -Wno-pointer-sign -I ./include/ -I ./instrumentation/ -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DLLVM_BINDIR=\"/usr/lib/llvm-18/bin\" -DVERSION=\"\" -DLLVM_LIBDIR=\"/usr/lib/llvm-18/lib\" -DLLVM_VERSION=\"18.1.3\" -DAFL_CLANG_FLTO=\"-flto=full\" -DAFL_REAL_LD=\"/usr/lib/llvm-18/bin/ld.lld\" -DAFL_CLANG_LDPATH=\"1\" -DAFL_CLANG_FUSELD=\"1\" -DCLANG_BIN=\"/usr/lib/llvm-18/bin/clang\" -DCLANGPP_BIN=\"/usr/lib/llvm-18/bin/clang++\" -DUSE_BINDIR=1 -Wno-unused-function -Wno-deprecated  ./test-instr.c -o test-instr 
+ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr0 ./test-instr < /dev/null
+echo 1 | ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr1 ./test-instr
+[+] All right, the instrumentation seems to be working!
+[+] All done! You can now use './afl-cc' to compile programs.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+make -f GNUmakefile.gcc_plugin
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+[+] shmat seems to be working.
+[*] Checking for working 'cc'...
+[*] Checking for gcc plugin development header files...
+[*] Checking for './afl-showmap'...
+[+] All set and ready to build.
+[*] Building 32-bit variant of the runtime (-m32)... failed (that's fine)
+[*] Testing the CC wrapper and instrumentation output...
+unset AFL_USE_ASAN AFL_USE_MSAN AFL_LLVM_ALLOWLIST AFL_LLVM_DENYLIST; ASAN_OPTIONS=detect_leaks=0 AFL_QUIET=1 AFL_INST_RATIO=100 AFL_PATH=. AFL_CC=cc ./afl-gcc-fast -O3 -g -funroll-loops -Wall -Iinclude -Wno-pointer-sign -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -DGCC_VERSION=\"\" -DGCC_BINDIR=\"\" -Wno-unused-function  ./test-instr.c -o test-instr -lrt
+ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr0 ./test-instr </dev/null
+echo 1 | ASAN_OPTIONS=detect_leaks=0 ./afl-showmap -m none -q -o .test-instr1 ./test-instr
+[+] All right, the instrumentation seems to be working!
+[+] All done! You can now use './afl-gcc-fast' to compile programs.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus'
+make -C utils/libdislocator
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/libdislocator'
+cc -O3 -funroll-loops -D_FORTIFY_SOURCE=2 -I ../../include/ -Wall -g -Wno-pointer-sign    -shared -fPIC libdislocator.so.c -o libdislocator.so 
+cp -fv libdislocator.so ../../
+'libdislocator.so' -> '../../libdislocator.so'
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/libdislocator'
+make -C utils/libtokencap
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/libtokencap'
+cc -O3 -funroll-loops -D_FORTIFY_SOURCE=2 -I ../../include/ -Wall -g -Wno-pointer-sign  -shared -fPIC libtokencap.so.c -o libtokencap.so "-ldl"
+In file included from libtokencap.so.c:33:
+../../include/../types.h:1:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘/’ token
+    1 | include/types.h
+      |        ^
+make[1]: *** [Makefile:77: libtokencap.so] Error 1
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/libtokencap'
+make: [GNUmakefile:737: distrib] Error 2 (ignored)
+make -C utils/afl_network_proxy
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/afl_network_proxy'
+libdeflate-dev was detected, using compression
+cc -Wno-pointer-sign -DUSE_DEFLATE=1 -I../../include -o afl-network-client afl-network-client.c -ldl -ldeflate 
+cc -Wno-pointer-sign -DUSE_DEFLATE=1 -I../../include -o afl-network-server afl-network-server.c ../../src/afl-forkserver.c ../../src/afl-sharedmem.c ../../src/afl-common.c -DAFL_PATH=\"/usr/local/lib/afl\" -DBIN_PATH=\"/usr/local/bin\" -ldl -ldeflate 
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/afl_network_proxy'
+make -C utils/socket_fuzzing
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/socket_fuzzing'
+socketfuzz32 build failure (that's fine)
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/socket_fuzzing'
+make -C utils/argv_fuzzing
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/argv_fuzzing'
+argvfuzz32 build failure (that's fine)
+../../afl-cc -g -o argv_fuzz_persistent_demo argv_fuzz_persistent_demo.c
+afl-cc++4.41a by Michal Zalewski, Laszlo Szekeres, Marc Heuse - mode: LLVM-PCGUARD
+SanitizerCoveragePCGUARD++4.41a
+[+] Instrumented 25 locations with no collisions (non-hardened mode) of which are 3 handled and 0 unhandled special instructions. 1 instrumentation saved.
+../../afl-cc -g -o argv_fuzz_demo argv_fuzz_demo.c
+afl-cc++4.41a by Michal Zalewski, Laszlo Szekeres, Marc Heuse - mode: LLVM-PCGUARD
+SanitizerCoveragePCGUARD++4.41a
+[+] Instrumented 13 locations with no collisions (non-hardened mode) of which are 0 handled and 0 unhandled special instructions.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/utils/argv_fuzzing'
+# -make -C utils/plot_ui
+make -C frida_mode -j1
+make[1]: Entering directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/frida_mode'
+GNUmakefile:242: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:239: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:242: warning: overriding recipe for target 'с'
+GNUmakefile:239: warning: ignoring old recipe for target 'с'
+GNUmakefile:247: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:242: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:247: warning: overriding recipe for target 'с'
+GNUmakefile:242: warning: ignoring old recipe for target 'с'
+GNUmakefile:275: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:247: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:275: warning: overriding recipe for target 'с'
+GNUmakefile:247: warning: ignoring old recipe for target 'с'
+GNUmakefile:278: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:275: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:278: warning: overriding recipe for target 'с'
+GNUmakefile:275: warning: ignoring old recipe for target 'с'
+GNUmakefile:281: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:278: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:281: warning: overriding recipe for target 'с'
+GNUmakefile:278: warning: ignoring old recipe for target 'с'
+GNUmakefile:288: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:281: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:288: warning: overriding recipe for target 'с'
+GNUmakefile:281: warning: ignoring old recipe for target 'с'
+GNUmakefile:297: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:288: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:297: warning: overriding recipe for target 'с'
+GNUmakefile:288: warning: ignoring old recipe for target 'с'
+GNUmakefile:308: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:297: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:308: warning: overriding recipe for target 'с'
+GNUmakefile:297: warning: ignoring old recipe for target 'с'
+GNUmakefile:316: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:308: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:316: warning: overriding recipe for target 'с'
+GNUmakefile:308: warning: ignoring old recipe for target 'с'
+GNUmakefile:319: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:316: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:319: warning: overriding recipe for target 'с'
+GNUmakefile:316: warning: ignoring old recipe for target 'с'
+GNUmakefile:345: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:319: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:345: warning: overriding recipe for target 'с'
+GNUmakefile:319: warning: ignoring old recipe for target 'с'
+GNUmakefile:361: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:345: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:361: warning: overriding recipe for target 'с'
+GNUmakefile:345: warning: ignoring old recipe for target 'с'
+GNUmakefile:372: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:361: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:372: warning: overriding recipe for target 'с'
+GNUmakefile:361: warning: ignoring old recipe for target 'с'
+GNUmakefile:378: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:372: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:378: warning: overriding recipe for target 'с'
+GNUmakefile:372: warning: ignoring old recipe for target 'с'
+GNUmakefile:388: warning: overriding recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:378: warning: ignoring old recipe for target '/mnt/h/Магистратура/Диплон/Проект/Фаззинг'
+GNUmakefile:388: warning: overriding recipe for target 'с'
+GNUmakefile:378: warning: ignoring old recipe for target 'с'
+make[1]: Circular /mnt/h/Магистратура/Диплон/Проект/Фаззинг <- /mnt/h/Магистратура/Диплон/Проект/Фаззинг dependency dropped.
+make[1]: Circular с <- /mnt/h/Магистратура/Диплон/Проект/Фаззинг dependency dropped.
+make[1]: Circular с <- с dependency dropped.
+make[1]: *** No rule to make target 'llm/1/AFLplusplus/frida_mode/addr/addr.c', needed by 'с'.  Stop.
+make[1]: Leaving directory '/mnt/h/Магистратура/Диплон/Проект/Фаззинг с llm/1/AFLplusplus/frida_mode'
+make: [GNUmakefile:742: distrib] Error 2 (ignored)
+cd nyx_mode && ./build_nyx_support.sh
+/bin/sh: 1: ./build_nyx_support.sh: not found
+make: [GNUmakefile:743: distrib] Error 127 (ignored)
+cd qemu_mode && unset CFLAGS && ./build_qemu_support.sh
+/bin/sh: 1: ./build_qemu_support.sh: not found
+make: [GNUmakefile:744: distrib] Error 127 (ignored)
+cd unicorn_mode && unset CFLAGS && ./build_unicorn_support.py
+/usr/bin/env: ‘python3\r’: No such file or directory
+/usr/bin/env: use -[v]S to pass options in shebang lines
+make: [GNUmakefile:745: distrib] Error 127 (ignored)
