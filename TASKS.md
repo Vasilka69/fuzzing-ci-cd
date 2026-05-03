@@ -24,8 +24,10 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 - [x] Добавлены prompt, dictionary и стартовые seeds.
 - [x] Добавлены `run_fake.sh` и `run_real_llm.sh`.
 - [x] Добавлен `README.md` для demo.
+- [x] Добавлен `ipc_smoke.py` / `make ipc-smoke` для проверки IPC `G`/`A` без AFL++.
 - [x] Проверен `make all`.
 - [x] Проверен `make smoke`.
+- [x] Проверен `make ipc-smoke`.
 - [x] Проверен контрольный crash-path target.
 - [x] Проверен fake pipeline AFL++ + worker.
 - [x] Проверен worker feedback persistence в `runtime/discovered/`.
@@ -37,12 +39,12 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 
 ## P0: Закрыть MVP Для Сдачи
 
-- [ ] Исправить warning smoke-сборки `target_dsl.c`: `read called with bigger length than size of the destination buffer`.
-- [ ] Исправить clang warning в AFL-сборке `target_dsl.c` про `#pragma GCC optimize("O0")`.
-- [ ] Уточнить `README.md`: добавить все поддерживаемые env vars из `PRD.md`.
-- [ ] Уточнить `README.md`: добавить заметку про `NO_PROXY=127.0.0.1,localhost` для локальных OpenAI-compatible endpoints.
-- [ ] Сделать короткий smoke script или make target для проверки IPC `G`/`A` без AFL++.
-- [ ] Добавить ожидаемый результат smoke-команд в README: build artifacts, crash-path behavior, feedback path.
+- [x] Исправить warning smoke-сборки `target_dsl.c`: `read called with bigger length than size of the destination buffer`.
+- [x] Исправить clang warning в AFL-сборке `target_dsl.c` про `#pragma GCC optimize("O0")`.
+- [x] Уточнить `README.md`: добавить все поддерживаемые env vars из `PRD.md`.
+- [x] Уточнить `README.md`: добавить заметку про `NO_PROXY=127.0.0.1,localhost` для локальных OpenAI-compatible endpoints.
+- [x] Сделать короткий smoke script или make target для проверки IPC `G`/`A` без AFL++.
+- [x] Добавить ожидаемый результат smoke-команд в README: build artifacts, crash-path behavior, feedback path.
 
 ## P1: Метрики И Сравнение
 
@@ -98,6 +100,7 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 cd main-project/llm_aflpp_demo
 make all
 make smoke
+make ipc-smoke
 printf 'MODE DEBUG\nSET A 1337\nSET B 109\nSET C 16705\nAPPEND open\nCHECK MAGIC\nCHECK PLEASE\nCHECK FIZZ\nCHECK OPEN\nLOOP 7\nCRASH NOW\n' | ./build/target_dsl_cc
 ```
 

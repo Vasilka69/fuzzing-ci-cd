@@ -10,10 +10,6 @@
 #pragma clang optimize off
 #endif
 
-#ifdef __GNUC__
-#pragma GCC optimize("O0")
-#endif
-
 #ifndef __AFL_LOOP
 static int fallback_afl_loop(void) {
 

@@ -27,6 +27,7 @@
 | `main-project/llm_aflpp_demo/afl_llm_mutator.c` | AFL++ custom mutator shared library source. |
 | `main-project/llm_aflpp_demo/llm_mutator_server.py` | Асинхронный fake/real LLM worker и IPC server. |
 | `main-project/llm_aflpp_demo/target_dsl.c` | Demo target: stdin, line-based DSL, persistent-friendly loop, hidden crash-path. |
+| `main-project/llm_aflpp_demo/ipc_smoke.py` | Локальная smoke-проверка IPC `G`/`A` без запуска AFL++. |
 | `main-project/llm_aflpp_demo/prompt.txt` | Prompt с описанием DSL-формата. |
 | `main-project/llm_aflpp_demo/demo.dict` | AFL++ dictionary для DSL tokens. |
 | `main-project/llm_aflpp_demo/seeds/` | Стартовый corpus: `seed01.txt`, `seed02.txt`, `seed03.txt`. |
@@ -200,6 +201,7 @@ Build artifacts:
 Проект должен иметь:
 
 - `main-project/llm_aflpp_demo/Makefile` для сборки target и mutator;
+- `main-project/llm_aflpp_demo/ipc_smoke.py` или `make ipc-smoke` для проверки IPC `G`/`A` без AFL++;
 - `main-project/llm_aflpp_demo/run_fake.sh` для запуска без внешнего API;
 - `main-project/llm_aflpp_demo/run_real_llm.sh` для запуска с реальным LLM endpoint;
 - `main-project/llm_aflpp_demo/README.md` с командами сборки, запуска и переменными окружения.

@@ -27,6 +27,7 @@ Vendored AFL++ dependency: `main-project/AFLplusplus/`.
 | `main-project/llm_aflpp_demo/Makefile` | Сборка demo. |
 | `main-project/llm_aflpp_demo/afl_llm_mutator.c` | Основной C-код custom mutator. |
 | `main-project/llm_aflpp_demo/llm_mutator_server.py` | Python worker, IPC, fake/real LLM. |
+| `main-project/llm_aflpp_demo/ipc_smoke.py` | Smoke-проверка IPC `G`/`A` без AFL++. |
 | `main-project/llm_aflpp_demo/target_dsl.c` | Demo target. |
 | `main-project/llm_aflpp_demo/prompt.txt` | Prompt для DSL generation. |
 | `main-project/llm_aflpp_demo/seeds/` | Стартовый corpus. |
@@ -63,6 +64,13 @@ Smoke-сборка:
 ```bash
 cd main-project/llm_aflpp_demo
 make smoke
+```
+
+Проверка IPC `G`/`A` без AFL++:
+
+```bash
+cd main-project/llm_aflpp_demo
+make ipc-smoke
 ```
 
 Проверка crash-path без AFL++:
@@ -122,7 +130,7 @@ export no_proxy=127.0.0.1,localhost
 
 ## Известные Точки Внимания
 
-- `target_dsl.c` сейчас может давать compiler warnings в smoke/AFL builds; это P0 в `TASKS.md`.
+- P0 из `TASKS.md` закрыт; ближайшие остатки - метрики, сравнение baseline vs LLM-mutator и feedback-loop hygiene.
 - Worker может логировать пустой `producer error` при заполненной очереди; это P1 в `TASKS.md`.
 - Hit/miss counters в mutator уже есть в структуре состояния, но не экспортируются как полноценная метрика.
 - Сравнительного runner для baseline AFL++ vs LLM-mutator пока нет.

@@ -11,9 +11,11 @@ TARGET := $(BUILD_DIR)/target_dsl
 TARGET_CC := $(BUILD_DIR)/target_dsl_cc
 MUTATOR := $(BUILD_DIR)/afl_llm_mutator.so
 
-.PHONY: all check-afl dirs mutator target smoke clean
+.PHONY: all check check-afl dirs mutator target smoke ipc-smoke clean
 
 all: check-afl dirs $(TARGET) $(MUTATOR)
+
+check: all smoke ipc-smoke
 
 check-afl:
 	@[ -x "$(AFL_CC)" ] || { \
@@ -36,6 +38,9 @@ $(TARGET_CC): target_dsl.c | dirs
 	$(HOST_CC) $(CFLAGS) -o "$@" "$<" $(LDFLAGS)
 
 smoke: dirs $(TARGET_CC) $(MUTATOR)
+
+ipc-smoke:
+	$(PYTHON) ipc_smoke.py
 
 clean:
 	rm -rf "$(BUILD_DIR)" output runtime/afl_llm_mutator.sock runtime/discovered
