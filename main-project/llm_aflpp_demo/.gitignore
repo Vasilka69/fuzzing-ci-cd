@@ -1,4 +1,4 @@
 build/
 output/
-runtime/discovered/
+runtime/*
 __pycache__/
