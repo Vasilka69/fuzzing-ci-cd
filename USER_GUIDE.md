@@ -205,6 +205,7 @@ cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
 export LLM_API_URL="http://127.0.0.1:11434/v1/chat/completions"
 export LLM_MODEL="qwen3:8b"
 unset LLM_API_KEY
+export LLM_MUTATOR_LOG_CANDIDATES_DIR="$PWD/runtime/generated"
 export NO_PROXY=127.0.0.1,localhost
 export no_proxy=127.0.0.1,localhost
 
@@ -218,6 +219,17 @@ ls output/real/default
 sed -n '1,100p' output/real/default/fuzzer_stats
 find runtime/discovered -type f | head
 find output/real/default/crashes -type f
+```
+
+Сырые candidates, которые worker получил от LLM и положил в очередь для AFL++, будут здесь:
+
+```bash
+find runtime/generated -type f | sort | tail -20
+
+for f in $(find runtime/generated -type f | sort | tail -5); do
+  echo "===== $f"
+  sed -n '1,80p' "$f"
+done
 ```
 
 Если используется другая модель, поменяйте только `LLM_MODEL`, например:
@@ -238,6 +250,7 @@ export LLM_MODEL="qwen3:4b"
 | `LLM_MUTATOR_PROMPT_FILE` | Prompt для генерации DSL inputs. | `./prompt.txt` |
 | `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `./seeds` |
 | `LLM_MUTATOR_DISCOVERED_DIR` | Feedback samples от AFL++. | `./runtime/discovered` |
+| `LLM_MUTATOR_LOG_CANDIDATES_DIR` | Если задана, raw candidates от fake/real generator сохраняются на диск. | `./runtime/generated` |
 | `LLM_API_URL` | OpenAI-compatible chat completions endpoint. | `http://127.0.0.1:11434/v1/chat/completions` |
 | `LLM_MODEL` | Имя модели. | `qwen3:8b` |
 | `LLM_API_KEY` | Bearer token, если endpoint требует ключ. | не нужен для Ollama |
@@ -293,4 +306,3 @@ export AFL_NO_UI=1
 - [ ] После fake или real run появляются feedback samples в `runtime/discovered/`.
 - [ ] Для real mode локальный endpoint отвечает на `/v1/chat/completions`.
 - [ ] `run_real_llm.sh` создает `output/real/default/fuzzer_stats`.
-

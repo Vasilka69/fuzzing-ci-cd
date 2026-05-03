@@ -159,6 +159,7 @@ export no_proxy=127.0.0.1,localhost
 | `LLM_MUTATOR_PROMPT_FILE` | Prompt для worker. | `./prompt.txt` |
 | `LLM_MUTATOR_SEED_DIR` | Директория seed examples для worker. | `./seeds` |
 | `LLM_MUTATOR_DISCOVERED_DIR` | Куда worker сохраняет feedback samples от AFL++. | `./runtime/discovered` |
+| `LLM_MUTATOR_LOG_CANDIDATES_DIR` | Если задана, worker сохраняет каждый raw generated candidate перед выдачей AFL++. | не задан |
 | `LLM_MUTATOR_QUEUE_SIZE` | Размер очереди готовых кандидатов. | `128` |
 | `LLM_MUTATOR_WORKERS` | Число producer-потоков worker. | `2` |
 | `LLM_MUTATOR_MAX_SAMPLE_SIZE` | Максимальный размер seed/feedback sample. | `65535` |

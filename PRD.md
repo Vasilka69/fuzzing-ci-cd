@@ -146,6 +146,7 @@ Build artifact: `main-project/llm_aflpp_demo/build/afl_llm_mutator.so`
 - Должен перечитывать prompt при изменении файла.
 - Должен загружать стартовые seeds из `LLM_MUTATOR_SEED_DIR`, по умолчанию `main-project/llm_aflpp_demo/seeds/`.
 - Должен сохранять feedback samples в `LLM_MUTATOR_DISCOVERED_DIR`, по умолчанию `main-project/llm_aflpp_demo/runtime/discovered/`.
+- Должен опционально сохранять raw generated candidates в `LLM_MUTATOR_LOG_CANDIDATES_DIR`, если переменная задана.
 
 ### 8.3 IPC-протокол
 
@@ -219,6 +220,7 @@ Build artifacts:
 | `LLM_MUTATOR_PROMPT_FILE` | Prompt file. | `main-project/llm_aflpp_demo/prompt.txt` |
 | `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `main-project/llm_aflpp_demo/seeds` |
 | `LLM_MUTATOR_DISCOVERED_DIR` | Feedback samples directory. | `main-project/llm_aflpp_demo/runtime/discovered` |
+| `LLM_MUTATOR_LOG_CANDIDATES_DIR` | Optional raw generated candidates log directory. | Не задан |
 | `LLM_MUTATOR_QUEUE_SIZE` | Размер очереди кандидатов. | `128` |
 | `LLM_MUTATOR_WORKERS` | Число producer threads. | `2` |
 | `LLM_MUTATOR_MAX_SAMPLE_SIZE` | Максимальный размер feedback/generated sample в bytes. | `65535` |

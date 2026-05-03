@@ -18,6 +18,8 @@ ADDR = os.environ.get("LLM_MUTATOR_ADDR", os.environ.get("LLM_MUTATOR_SOCK", "tc
 PROMPT_FILE = Path(os.environ.get("LLM_MUTATOR_PROMPT_FILE", str(ROOT / "prompt.txt")))
 SEED_DIR = Path(os.environ.get("LLM_MUTATOR_SEED_DIR", str(ROOT / "seeds")))
 DISCOVERED_DIR = Path(os.environ.get("LLM_MUTATOR_DISCOVERED_DIR", str(ROOT / "runtime" / "discovered")))
+CANDIDATE_LOG_DIR_TEXT = os.environ.get("LLM_MUTATOR_LOG_CANDIDATES_DIR", "")
+CANDIDATE_LOG_DIR = Path(CANDIDATE_LOG_DIR_TEXT) if CANDIDATE_LOG_DIR_TEXT else None
 
 QUEUE_SIZE = int(os.environ.get("LLM_MUTATOR_QUEUE_SIZE", "128"))
 NUM_WORKERS = int(os.environ.get("LLM_MUTATOR_WORKERS", "2"))
@@ -33,10 +35,12 @@ USE_REAL_LLM = bool(LLM_API_URL)
 sample_queue: queue.Queue[bytes] = queue.Queue(maxsize=QUEUE_SIZE)
 seed_lock = threading.Lock()
 prompt_lock = threading.Lock()
+candidate_log_lock = threading.Lock()
 stop_event = threading.Event()
 
 seed_corpus: list[bytes] = []
 feedback_counter = 0
+candidate_log_counter = 0
 current_prompt = ""
 current_prompt_mtime = 0.0
 
@@ -140,6 +144,31 @@ def register_feedback_sample(data: bytes) -> None:
     with seed_lock:
         seed_corpus.append(data)
     log(f"accepted feedback sample ({len(data)} bytes)")
+
+
+def persist_generated_candidate(data: bytes, worker_id: int) -> None:
+    global candidate_log_counter
+
+    if CANDIDATE_LOG_DIR is None:
+        return
+
+    try:
+        CANDIDATE_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+
+    with candidate_log_lock:
+        candidate_log_counter += 1
+        counter = candidate_log_counter
+
+    ts = int(time.time() * 1000)
+    mode = "real" if USE_REAL_LLM else "fake"
+    path = CANDIDATE_LOG_DIR / f"candidate_{ts}_{counter:05d}_{mode}_w{worker_id}.txt"
+
+    try:
+        path.write_bytes(clamp_sample(data))
+    except OSError:
+        return
 
 
 def build_messages() -> list[dict[str, str]]:
@@ -257,6 +286,7 @@ def producer_worker(worker_id: int) -> None:
                 time.sleep(0.1)
                 continue
             sample_queue.put(data, timeout=0.2)
+            persist_generated_candidate(data, worker_id)
         except Exception as exc:
             log(f"producer-{worker_id} error: {exc}")
             time.sleep(1.0)
@@ -308,6 +338,9 @@ def handle_client(conn: socket.socket) -> None:
 
 def serve() -> None:
     DISCOVERED_DIR.mkdir(parents=True, exist_ok=True)
+    if CANDIDATE_LOG_DIR is not None:
+        CANDIDATE_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log(f"logging generated candidates to {CANDIDATE_LOG_DIR}")
 
     load_prompt_if_changed()
     load_seed_corpus()

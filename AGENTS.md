@@ -46,7 +46,7 @@ Vendored AFL++ dependency: `main-project/AFLplusplus/`.
 - Не коммитить и не документировать реальные API keys.
 - Не добавлять secrets в scripts, README, output artifacts или prompt.
 - Generated dirs `build/`, `output/`, `runtime/discovered/` должны оставаться disposable.
-- При изменении путей обязательно обновлять `PRD.md`, `README.md`, `TASKS.md` и этот файл.
+- При изменении путей и прочего состояния проекта (новые переменные окружение, новая функциональность, смена контрактов и т.д.) обязательно обновлять документацию: `PRD.md`, `README.md`, `TASKS.md`, `USER_GUIDE.md`, этот файл (`AGENTS.md`), скрипты запуска и т.д., то есть следить за актуальностью документации и целостности проекта.
 - Для поиска использовать `rg`/`rg --files`.
 - Для ручных правок использовать patch-based edits.
 
