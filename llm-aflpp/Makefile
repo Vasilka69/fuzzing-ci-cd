@@ -7,6 +7,8 @@ CFLAGS ?= -O2 -g -Wall -Wextra -Wpedantic
 LDFLAGS ?=
 
 BUILD_DIR := build
+MUTATOR_SRC := src/mutator/afl_llm_mutator.c
+TARGET_SRC := targets/dsl/target_dsl.c
 TARGET := $(BUILD_DIR)/target_dsl
 TARGET_CC := $(BUILD_DIR)/target_dsl_cc
 MUTATOR := $(BUILD_DIR)/afl_llm_mutator.so
@@ -28,19 +30,19 @@ check-afl:
 dirs:
 	@mkdir -p "$(BUILD_DIR)" output runtime
 
-$(MUTATOR): afl_llm_mutator.c | dirs
+$(MUTATOR): $(MUTATOR_SRC) | dirs
 	$(HOST_CC) $(CFLAGS) -shared -fPIC -o "$@" "$<" $(LDFLAGS)
 
-$(TARGET): target_dsl.c | dirs
+$(TARGET): $(TARGET_SRC) | dirs
 	$(AFL_CC) -O2 -g -Wall -Wextra -o "$@" "$<"
 
-$(TARGET_CC): target_dsl.c | dirs
+$(TARGET_CC): $(TARGET_SRC) | dirs
 	$(HOST_CC) $(CFLAGS) -o "$@" "$<" $(LDFLAGS)
 
 smoke: dirs $(TARGET_CC) $(MUTATOR)
 
 ipc-smoke:
-	$(PYTHON) ipc_smoke.py
+	$(PYTHON) tests/ipc_smoke.py
 
 clean:
 	rm -rf "$(BUILD_DIR)" output runtime/afl_llm_mutator.sock runtime/discovered

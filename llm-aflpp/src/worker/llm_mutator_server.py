@@ -13,10 +13,10 @@ import urllib.request
 from pathlib import Path
 from typing import Optional
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 ADDR = os.environ.get("LLM_MUTATOR_ADDR", os.environ.get("LLM_MUTATOR_SOCK", "tcp://127.0.0.1:15333"))
-PROMPT_FILE = Path(os.environ.get("LLM_MUTATOR_PROMPT_FILE", str(ROOT / "prompt.txt")))
-SEED_DIR = Path(os.environ.get("LLM_MUTATOR_SEED_DIR", str(ROOT / "seeds")))
+PROMPT_FILE = Path(os.environ.get("LLM_MUTATOR_PROMPT_FILE", str(ROOT / "targets" / "dsl" / "prompt.txt")))
+SEED_DIR = Path(os.environ.get("LLM_MUTATOR_SEED_DIR", str(ROOT / "targets" / "dsl" / "seeds")))
 DISCOVERED_DIR = Path(os.environ.get("LLM_MUTATOR_DISCOVERED_DIR", str(ROOT / "runtime" / "discovered")))
 CANDIDATE_LOG_DIR_TEXT = os.environ.get("LLM_MUTATOR_LOG_CANDIDATES_DIR", "")
 CANDIDATE_LOG_DIR = Path(CANDIDATE_LOG_DIR_TEXT) if CANDIDATE_LOG_DIR_TEXT else None

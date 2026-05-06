@@ -1,8 +1,8 @@
 # TASKS: LLM-мутатор для AFL++ fuzzing
 
-Дата актуализации: 2026-05-03
+Дата актуализации: 2026-05-06
 
-Этот backlog собран из `PRD.md` и фактического состояния проекта. Активная рабочая директория demo: `main-project/llm_aflpp_demo/`.
+Этот backlog собран из `PRD.md` и фактического состояния проекта. Активная рабочая директория: `llm-aflpp/`.
 
 ## Текущий Статус
 
@@ -10,21 +10,25 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 
 ## Готово
 
-- [x] Создан demo-проект `main-project/llm_aflpp_demo/`.
-- [x] Добавлен vendored AFL++ checkout в `main-project/AFLplusplus/`.
-- [x] Реализован AFL++ custom mutator в `main-project/llm_aflpp_demo/afl_llm_mutator.c`.
-- [x] Mutator собирается в `main-project/llm_aflpp_demo/build/afl_llm_mutator.so`.
-- [x] Реализован Python worker `main-project/llm_aflpp_demo/llm_mutator_server.py`.
+- [x] Создан проект `llm-aflpp/`.
+- [x] Проект переименован из `llm_aflpp_demo` в `llm-aflpp/`.
+- [x] Активные директории `llm-aflpp/` и `AFLplusplus/` вынесены из `main-project/` в корень репозитория.
+- [x] Побочные материалы вынесены в `Прочее/`.
+- [x] Код разнесен по директориям `src/`, `targets/`, `tests/`, `scripts/`.
+- [x] Добавлен vendored AFL++ checkout в `AFLplusplus/`.
+- [x] Реализован AFL++ custom mutator в `llm-aflpp/src/mutator/afl_llm_mutator.c`.
+- [x] Mutator собирается в `llm-aflpp/build/afl_llm_mutator.so`.
+- [x] Реализован Python worker `llm-aflpp/src/worker/llm_mutator_server.py`.
 - [x] Поддержан fake режим без внешнего API.
 - [x] Поддержан real LLM режим через OpenAI-compatible `chat/completions`.
 - [x] Реализован IPC protocol: `G` для candidate и `A` для feedback.
 - [x] Поддержан TCP loopback `tcp://127.0.0.1:15333`.
 - [x] Поддержаны Unix socket path и abstract Unix socket.
-- [x] Добавлен demo target `main-project/llm_aflpp_demo/target_dsl.c`.
+- [x] Добавлен DSL target `llm-aflpp/targets/dsl/target_dsl.c`.
 - [x] Добавлены prompt, dictionary и стартовые seeds.
-- [x] Добавлены `run_fake.sh` и `run_real_llm.sh`.
-- [x] Добавлен `README.md` для demo.
-- [x] Добавлен `ipc_smoke.py` / `make ipc-smoke` для проверки IPC `G`/`A` без AFL++.
+- [x] Добавлены `scripts/run_fake.sh` и `scripts/run_real_llm.sh`.
+- [x] Добавлен `README.md` для проекта.
+- [x] Добавлен `tests/ipc_smoke.py` / `make ipc-smoke` для проверки IPC `G`/`A` без AFL++.
 - [x] Проверен `make all`.
 - [x] Проверен `make smoke`.
 - [x] Проверен `make ipc-smoke`.
@@ -52,11 +56,11 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 - [ ] Выбрать формат экспорта counters: stderr summary, file в `runtime/`, или AFL custom introspection-friendly output.
 - [ ] Добавить worker counters: produced, served, queue misses, feedback accepted, feedback rejected, LLM errors.
 - [ ] Исправить пустой `producer error` при заполненной очереди worker.
-- [ ] Добавить script `main-project/llm_aflpp_demo/compare_runs.sh` или аналог:
+- [ ] Добавить script `llm-aflpp/scripts/compare_runs.sh` или аналог:
   - baseline AFL++ без custom mutator;
   - AFL++ с custom mutator + fake worker;
   - фиксированное время или фиксированное число executions.
-- [ ] Сохранять результаты сравнений в отдельных директориях под `main-project/llm_aflpp_demo/output/`.
+- [ ] Сохранять результаты сравнений в отдельных директориях под `llm-aflpp/output/`.
 - [ ] Добавить парсер `fuzzer_stats` для summary metrics.
 - [ ] Документировать минимальный формат отчета: execs/sec, corpus_found, edges_found, bitmap_cvg, saved_crashes, hit/miss.
 - [ ] Добавить способ считать syntactically valid inputs для DSL corpus.
@@ -80,7 +84,7 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 
 ## P2: Адаптация К Реальному Target
 
-- [ ] Выбрать реальный target после DSL demo.
+- [ ] Выбрать реальный target после DSL target.
 - [ ] Определить формат seed corpus для реального target.
 - [ ] Подготовить prompt под реальный формат.
 - [ ] При необходимости реализовать wire-format translation в `afl_custom_post_process()`.
@@ -91,13 +95,13 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 - [ ] Добавить CI или локальный `make check`, который запускает `make all`, `make smoke`, IPC smoke.
 - [ ] Проверить, что generated dirs `build/`, `output/`, `runtime/discovered/` остаются ignored.
 - [ ] Добавить secret-scan команду для проекта без vendored AFL++ и архивов материалов.
-- [ ] Решить, остаются ли root-level `*.html`, `*.json`, `migrations/` в этом репозитории или их нужно вынести из fuzzing MVP.
-- [ ] Уточнить в документации, что `main-project/AFLplusplus/` является vendored upstream dependency.
+- [x] Вынести root-level `*.html`, `*.json`, `migrations/`, материалы и временные логи из fuzzing MVP в `Прочее/`.
+- [x] Уточнить в документации, что `AFLplusplus/` является vendored upstream dependency.
 
 ## Команды Проверки
 
 ```bash
-cd main-project/llm_aflpp_demo
+cd llm-aflpp
 make all
 make smoke
 make ipc-smoke
@@ -105,14 +109,14 @@ printf 'MODE DEBUG\nSET A 1337\nSET B 109\nSET C 16705\nAPPEND open\nCHECK MAGIC
 ```
 
 ```bash
-cd main-project/llm_aflpp_demo
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./run_fake.sh
+cd llm-aflpp
+AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./scripts/run_fake.sh
 ```
 
 ```bash
-cd main-project/llm_aflpp_demo
+cd llm-aflpp
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 \
 AFL_CUSTOM_MUTATOR_LIBRARY="$PWD/build/afl_llm_mutator.so" \
 AFL_CUSTOM_MUTATOR_ONLY=1 \
-timeout 4s ../AFLplusplus/afl-fuzz -i seeds -o output/no_worker -x demo.dict -- build/target_dsl
+timeout 4s ../AFLplusplus/afl-fuzz -i targets/dsl/seeds -o output/no_worker -x targets/dsl/dsl.dict -- build/target_dsl
 ```

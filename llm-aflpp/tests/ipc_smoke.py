@@ -10,7 +10,8 @@ import tempfile
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
+DSL_DIR = ROOT / "targets" / "dsl"
 DEFAULT_ADDR = "tcp://127.0.0.1:15334"
 FEEDBACK_SAMPLE = b"MODE DEBUG\nAPPEND ipc_smoke\nCHECK OPEN\n"
 
@@ -77,8 +78,8 @@ def main() -> int:
         env.update(
             {
                 "LLM_MUTATOR_ADDR": addr,
-                "LLM_MUTATOR_PROMPT_FILE": str(ROOT / "prompt.txt"),
-                "LLM_MUTATOR_SEED_DIR": str(ROOT / "seeds"),
+                "LLM_MUTATOR_PROMPT_FILE": str(DSL_DIR / "prompt.txt"),
+                "LLM_MUTATOR_SEED_DIR": str(DSL_DIR / "seeds"),
                 "LLM_MUTATOR_DISCOVERED_DIR": str(discovered_dir),
                 "LLM_MUTATOR_QUEUE_SIZE": env.get("LLM_MUTATOR_QUEUE_SIZE", "8"),
                 "LLM_MUTATOR_WORKERS": env.get("LLM_MUTATOR_WORKERS", "1"),
@@ -88,7 +89,7 @@ def main() -> int:
         env["LLM_API_URL"] = ""
 
         proc = subprocess.Popen(
-            [sys.executable, str(ROOT / "llm_mutator_server.py")],
+            [sys.executable, str(ROOT / "src" / "worker" / "llm_mutator_server.py")],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

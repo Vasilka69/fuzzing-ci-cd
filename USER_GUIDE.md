@@ -1,13 +1,13 @@
 # USER GUIDE: запуск и проверка проекта
 
-Дата актуализации: 2026-05-03
+Дата актуализации: 2026-05-06
 
-Этот гайд описывает, как с нуля собрать и проверить demo-проект `LLM + AFL++`, а затем подключить локальную LLM через OpenAI-compatible endpoint.
+Этот гайд описывает, как с нуля собрать и проверить проект `LLM + AFL++`, а затем подключить локальную LLM через OpenAI-compatible endpoint.
 
-Активная директория demo:
+Активная директория проекта:
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
+cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
 ```
 
 ## 1. Что запускаем
@@ -24,7 +24,7 @@ cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
 Рекомендуемый порядок проверки:
 
 1. Собрать AFL++.
-2. Собрать demo.
+2. Собрать проект.
 3. Проверить target без AFL++.
 4. Проверить IPC без AFL++.
 5. Запустить полный fake pipeline без LLM.
@@ -36,7 +36,7 @@ cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
 Перейдите в vendored AFL++ checkout:
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/AFLplusplus
+cd /opt/diplom/fuzzing-ci-cd/AFLplusplus
 make source-only
 ```
 
@@ -52,10 +52,10 @@ make LLVM_CONFIG=llvm-config-18 source-only
 ls -l afl-fuzz afl-clang-fast
 ```
 
-## 3. Сборка demo
+## 3. Сборка проекта
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
+cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
 make all
 ```
 
@@ -67,7 +67,7 @@ ls -l build/target_dsl build/afl_llm_mutator.so
 
 Назначение файлов:
 
-- `build/target_dsl` - AFL-instrumented demo target.
+- `build/target_dsl` - AFL-instrumented DSL target.
 - `build/afl_llm_mutator.so` - AFL++ custom mutator library.
 
 ## 4. Smoke-test target без AFL++
@@ -84,7 +84,7 @@ make smoke
 printf 'MODE DEBUG\nSET A 1337\nSET B 109\nSET C 16705\nAPPEND open\nCHECK MAGIC\nCHECK PLEASE\nCHECK FIZZ\nCHECK OPEN\nLOOP 7\nCRASH NOW\n' | ./build/target_dsl_cc
 ```
 
-Ожидаемый результат: процесс аварийно завершается через `SIGABRT`. Обычно shell показывает `Aborted`. Для этого теста это корректное поведение: команда специально попадает в скрытый crash-path demo target.
+Ожидаемый результат: процесс аварийно завершается через `SIGABRT`. Обычно shell показывает `Aborted`. Для этого теста это корректное поведение: команда специально попадает в скрытый crash-path DSL target.
 
 ## 5. IPC smoke без AFL++
 
@@ -107,8 +107,8 @@ ipc smoke ok: received ... bytes; persisted feedback in /tmp/llm-aflpp-ipc-smoke
 Fake mode не требует API keys, интернета или локальной модели. Worker сам генерирует синтаксически похожие DSL-программы.
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./run_fake.sh
+cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./scripts/run_fake.sh
 ```
 
 Что проверить после запуска:
@@ -131,11 +131,11 @@ find output/fake/default/crashes -type f
 Эта команда проверяет, что custom mutator не ломает AFL++, даже если worker недоступен. В таком случае mutator использует локальную fallback-мутацию.
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
+cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 \
 AFL_CUSTOM_MUTATOR_LIBRARY="$PWD/build/afl_llm_mutator.so" \
 AFL_CUSTOM_MUTATOR_ONLY=1 \
-timeout 4s ../AFLplusplus/afl-fuzz -i seeds -o output/no_worker -x demo.dict -- build/target_dsl
+timeout 4s ../AFLplusplus/afl-fuzz -i targets/dsl/seeds -o output/no_worker -x targets/dsl/dsl.dict -- build/target_dsl
 ```
 
 После запуска:
@@ -161,7 +161,7 @@ sed -n '1,80p' output/no_worker/default/fuzzer_stats
 - Нормальный ноутбук/desktop с запасом RAM или GPU: `qwen3:8b`.
 - Хороший GPU и хочется качества выше: `qwen3:14b`.
 
-Альтернатива: **LM Studio**. Оно удобно, если нужен GUI для выбора и запуска моделей, но для shell-based fuzzing demo проще начать с Ollama.
+Альтернатива: **LM Studio**. Оно удобно, если нужен GUI для выбора и запуска моделей, но для shell-based fuzzing проще начать с Ollama.
 
 ## 9. Установка Ollama
 
@@ -192,7 +192,7 @@ ollama pull qwen3:8b
 ```bash
 curl http://127.0.0.1:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Return exactly: OK"}],"max_tokens":10}'
+  -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Return exactly: OK"}],"max_tokens":150}'
 ```
 
 В ответе должен быть JSON с `choices[0].message.content`.
@@ -200,7 +200,7 @@ curl http://127.0.0.1:11434/v1/chat/completions \
 ## 10. Запуск real LLM pipeline через Ollama
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/llm_aflpp_demo
+cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
 
 export LLM_API_URL="http://127.0.0.1:11434/v1/chat/completions"
 export LLM_MODEL="qwen3:8b"
@@ -209,7 +209,7 @@ export LLM_MUTATOR_LOG_CANDIDATES_DIR="$PWD/runtime/generated"
 export NO_PROXY=127.0.0.1,localhost
 export no_proxy=127.0.0.1,localhost
 
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 30s ./run_real_llm.sh
+AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 30s ./scripts/run_real_llm.sh
 ```
 
 Результаты real run:
@@ -244,11 +244,11 @@ export LLM_MODEL="qwen3:4b"
 | --- | --- | --- |
 | `AFLPP_DIR` | Путь к AFL++ checkout. | `../AFLplusplus` |
 | `AFL_OUTPUT_DIR` | Директория AFL++ output. | `output/fake` или `output/real` |
-| `AFL_SEEDS_DIR` | Стартовый corpus. | `./seeds` |
+| `AFL_SEEDS_DIR` | Стартовый corpus. | `./targets/dsl/seeds` |
 | `AFL_CUSTOM_MUTATOR_ONLY` | Использовать только custom mutator. | `1` |
 | `LLM_MUTATOR_ADDR` | Адрес worker IPC. | `tcp://127.0.0.1:15333` |
-| `LLM_MUTATOR_PROMPT_FILE` | Prompt для генерации DSL inputs. | `./prompt.txt` |
-| `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `./seeds` |
+| `LLM_MUTATOR_PROMPT_FILE` | Prompt для генерации DSL inputs. | `./targets/dsl/prompt.txt` |
+| `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `./targets/dsl/seeds` |
 | `LLM_MUTATOR_DISCOVERED_DIR` | Feedback samples от AFL++. | `./runtime/discovered` |
 | `LLM_MUTATOR_LOG_CANDIDATES_DIR` | Если задана, raw candidates от fake/real generator сохраняются на диск. | `./runtime/generated` |
 | `LLM_API_URL` | OpenAI-compatible chat completions endpoint. | `http://127.0.0.1:11434/v1/chat/completions` |
@@ -261,11 +261,11 @@ export LLM_MODEL="qwen3:4b"
 Если `make all` пишет, что `afl-clang-fast` не найден:
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/main-project/AFLplusplus
+cd /opt/diplom/fuzzing-ci-cd/AFLplusplus
 make source-only
 ```
 
-Если `run_real_llm.sh` не может достучаться до локального endpoint:
+Если `scripts/run_real_llm.sh` не может достучаться до локального endpoint:
 
 ```bash
 curl http://127.0.0.1:11434/v1/chat/completions \
@@ -286,7 +286,7 @@ export no_proxy=127.0.0.1,localhost
 export LLM_MUTATOR_ADDR="tcp://127.0.0.1:15334"
 ```
 
-Если AFL++ ругается на системные настройки во время короткой demo-проверки, используйте:
+Если AFL++ ругается на системные настройки во время короткой проверки, используйте:
 
 ```bash
 export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
@@ -298,11 +298,11 @@ export AFL_NO_UI=1
 
 Перед тем как считать локальный запуск успешным:
 
-- [ ] `make all` проходит в `main-project/llm_aflpp_demo/`.
+- [ ] `make all` проходит в `llm-aflpp/`.
 - [ ] `make smoke` проходит.
 - [ ] Контрольный crash-path через `target_dsl_cc` завершает процесс через `SIGABRT`.
 - [ ] `make ipc-smoke` получает candidate и сохраняет feedback.
-- [ ] Короткий `run_fake.sh` создает `output/fake/default/fuzzer_stats`.
+- [ ] Короткий `scripts/run_fake.sh` создает `output/fake/default/fuzzer_stats`.
 - [ ] После fake или real run появляются feedback samples в `runtime/discovered/`.
 - [ ] Для real mode локальный endpoint отвечает на `/v1/chat/completions`.
-- [ ] `run_real_llm.sh` создает `output/real/default/fuzzer_stats`.
+- [ ] `scripts/run_real_llm.sh` создает `output/real/default/fuzzer_stats`.
