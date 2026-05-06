@@ -192,7 +192,7 @@ ollama pull qwen3:8b
 ```bash
 curl http://127.0.0.1:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Return exactly: OK"}],"max_tokens":150}'
+  -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Return exactly: OK"}],"max_tokens":250}'
 ```
 
 В ответе должен быть JSON с `choices[0].message.content`.
