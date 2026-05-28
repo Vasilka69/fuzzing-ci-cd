@@ -10,7 +10,7 @@
 
 Активный прототип находится здесь:
 
-- `llm-aflpp/` - проект LLM + AFL++;
+- `afl-llm-engine/` - проект LLM + AFL++;
 - `AFLplusplus/` - vendored AFL++ checkout, используемый проектом;
 - `PRD.md` - этот документ;
 - `TASKS.md` - backlog и готовность проекта;
@@ -22,20 +22,20 @@
 
 | Путь | Назначение |
 | --- | --- |
-| `llm-aflpp/README.md` | Команды сборки, запуска и адаптации проекта. |
-| `llm-aflpp/Makefile` | Сборка target, mutator и smoke target. |
-| `llm-aflpp/src/mutator/afl_llm_mutator.c` | AFL++ custom mutator shared library source. |
-| `llm-aflpp/src/worker/llm_mutator_server.py` | Асинхронный fake/real LLM worker и IPC server. |
-| `llm-aflpp/targets/dsl/target_dsl.c` | DSL target: stdin, line-based DSL, persistent-friendly loop, hidden crash-path. |
-| `llm-aflpp/tests/ipc_smoke.py` | Локальная smoke-проверка IPC `G`/`A` без запуска AFL++. |
-| `llm-aflpp/targets/dsl/prompt.txt` | Prompt с описанием DSL-формата. |
-| `llm-aflpp/targets/dsl/dsl.dict` | AFL++ dictionary для DSL tokens. |
-| `llm-aflpp/targets/dsl/seeds/` | Стартовый corpus: `seed01.txt`, `seed02.txt`, `seed03.txt`. |
-| `llm-aflpp/scripts/run_fake.sh` | Полный запуск AFL++ + worker без внешнего LLM API. |
-| `llm-aflpp/scripts/run_real_llm.sh` | Полный запуск AFL++ + worker через OpenAI-compatible endpoint. |
-| `llm-aflpp/build/` | Generated binaries: `target_dsl`, `target_dsl_cc`, `afl_llm_mutator.so`. Игнорируется git. |
-| `llm-aflpp/output/` | AFL++ output directories, например `output/fake/default/`. Игнорируется git. |
-| `llm-aflpp/runtime/discovered/` | Feedback samples, полученные через `afl_custom_queue_new_entry`. Игнорируется git. |
+| `afl-llm-engine/README.md` | Команды сборки, запуска и адаптации проекта. |
+| `afl-llm-engine/Makefile` | Сборка target, mutator и smoke target. |
+| `afl-llm-engine/src/mutator/afl_llm_mutator.c` | AFL++ custom mutator shared library source. |
+| `afl-llm-engine/src/worker/llm_mutator_server.py` | Асинхронный fake/real LLM worker и IPC server. |
+| `afl-llm-engine/targets/dsl/target_dsl.c` | DSL target: stdin, line-based DSL, persistent-friendly loop, hidden crash-path. |
+| `afl-llm-engine/tests/ipc_smoke.py` | Локальная smoke-проверка IPC `G`/`A` без запуска AFL++. |
+| `afl-llm-engine/targets/dsl/prompt.txt` | Prompt с описанием DSL-формата. |
+| `afl-llm-engine/targets/dsl/dsl.dict` | AFL++ dictionary для DSL tokens. |
+| `afl-llm-engine/targets/dsl/seeds/` | Стартовый corpus: `seed01.txt`, `seed02.txt`, `seed03.txt`. |
+| `afl-llm-engine/scripts/run_fake.sh` | Полный запуск AFL++ + worker без внешнего LLM API. |
+| `afl-llm-engine/scripts/run_real_llm.sh` | Полный запуск AFL++ + worker через OpenAI-compatible endpoint. |
+| `afl-llm-engine/build/` | Generated binaries: `target_dsl`, `target_dsl_cc`, `afl_llm_mutator.so`. Игнорируется git. |
+| `afl-llm-engine/output/` | AFL++ output directories, например `output/fake/default/`. Игнорируется git. |
+| `afl-llm-engine/runtime/discovered/` | Feedback samples, полученные через `afl_custom_queue_new_entry`. Игнорируется git. |
 | `AFLplusplus/afl-fuzz` | AFL++ fuzzer binary после сборки AFL++. |
 | `AFLplusplus/afl-clang-fast` | AFL++ compiler wrapper, используемый `Makefile`. |
 
@@ -92,25 +92,25 @@ LLM может использовать знания о формате, seed exa
 ## 7. Основной сценарий
 
 1. Пользователь переходит в `AFLplusplus/` и собирает AFL++ при необходимости.
-2. Пользователь переходит в `llm-aflpp/`.
+2. Пользователь переходит в `afl-llm-engine/`.
 3. Пользователь запускает `make all`.
 4. Пользователь запускает `./scripts/run_fake.sh` для проверки без внешнего LLM API.
-5. AFL++ стартует с `AFL_CUSTOM_MUTATOR_LIBRARY=llm-aflpp/build/afl_llm_mutator.so`.
-6. Отдельный Python worker `llm-aflpp/src/worker/llm_mutator_server.py` наполняет очередь готовыми кандидатами.
+5. AFL++ стартует с `AFL_CUSTOM_MUTATOR_LIBRARY=afl-llm-engine/build/afl_llm_mutator.so`.
+6. Отдельный Python worker `afl-llm-engine/src/worker/llm_mutator_server.py` наполняет очередь готовыми кандидатами.
 7. Custom mutator быстро запрашивает кандидата у worker через локальный IPC.
 8. Если кандидат есть, mutator смешивает его с текущим seed и отдает AFL++.
 9. Если кандидата нет, mutator делает дешевую локальную fallback-мутацию.
 10. Когда AFL++ находит новый интересный queue entry, mutator отправляет его worker.
-11. Worker сохраняет feedback sample в `llm-aflpp/runtime/discovered/` и использует corpus в следующих prompts.
+11. Worker сохраняет feedback sample в `afl-llm-engine/runtime/discovered/` и использует corpus в следующих prompts.
 12. Пользователь анализирует coverage, crashes, queue и статистику mutator hit/miss.
 
 ## 8. Функциональные требования
 
 ### 8.1 AFL++ custom mutator
 
-Файл: `llm-aflpp/src/mutator/afl_llm_mutator.c`
+Файл: `afl-llm-engine/src/mutator/afl_llm_mutator.c`
 
-Build artifact: `llm-aflpp/build/afl_llm_mutator.so`
+Build artifact: `afl-llm-engine/build/afl_llm_mutator.so`
 
 Требования:
 
@@ -132,7 +132,7 @@ Build artifact: `llm-aflpp/build/afl_llm_mutator.so`
 
 ### 8.2 LLM worker
 
-Файл: `llm-aflpp/src/worker/llm_mutator_server.py`
+Файл: `afl-llm-engine/src/worker/llm_mutator_server.py`
 
 Требования:
 
@@ -142,10 +142,10 @@ Build artifact: `llm-aflpp/build/afl_llm_mutator.so`
 - Должен поддерживать fake-режим без внешнего API.
 - Должен поддерживать real LLM режим при заданном `LLM_API_URL`.
 - Должен работать с OpenAI-compatible endpoint формата `chat/completions`.
-- Должен читать prompt из `LLM_MUTATOR_PROMPT_FILE`, по умолчанию `llm-aflpp/targets/dsl/prompt.txt`.
+- Должен читать prompt из `LLM_MUTATOR_PROMPT_FILE`, по умолчанию `afl-llm-engine/targets/dsl/prompt.txt`.
 - Должен перечитывать prompt при изменении файла.
-- Должен загружать стартовые seeds из `LLM_MUTATOR_SEED_DIR`, по умолчанию `llm-aflpp/targets/dsl/seeds/`.
-- Должен сохранять feedback samples в `LLM_MUTATOR_DISCOVERED_DIR`, по умолчанию `llm-aflpp/runtime/discovered/`.
+- Должен загружать стартовые seeds из `LLM_MUTATOR_SEED_DIR`, по умолчанию `afl-llm-engine/targets/dsl/seeds/`.
+- Должен сохранять feedback samples в `LLM_MUTATOR_DISCOVERED_DIR`, по умолчанию `afl-llm-engine/runtime/discovered/`.
 - Должен опционально сохранять raw generated candidates в `LLM_MUTATOR_LOG_CANDIDATES_DIR`, если переменная задана.
 
 ### 8.3 IPC-протокол
@@ -166,7 +166,7 @@ MVP-протокол:
 
 ### 8.4 Prompting
 
-Файл prompt по умолчанию: `llm-aflpp/targets/dsl/prompt.txt`
+Файл prompt по умолчанию: `afl-llm-engine/targets/dsl/prompt.txt`
 
 Требования:
 
@@ -182,12 +182,12 @@ MVP-протокол:
 
 ### 8.5 DSL target
 
-Файл: `llm-aflpp/targets/dsl/target_dsl.c`
+Файл: `afl-llm-engine/targets/dsl/target_dsl.c`
 
 Build artifacts:
 
-- `llm-aflpp/build/target_dsl` - AFL-instrumented target;
-- `llm-aflpp/build/target_dsl_cc` - host target для smoke-test.
+- `afl-llm-engine/build/target_dsl` - AFL-instrumented target;
+- `afl-llm-engine/build/target_dsl_cc` - host target для smoke-test.
 
 Требования:
 
@@ -201,25 +201,25 @@ Build artifacts:
 
 Проект должен иметь:
 
-- `llm-aflpp/Makefile` для сборки target и mutator;
-- `llm-aflpp/tests/ipc_smoke.py` или `make ipc-smoke` для проверки IPC `G`/`A` без AFL++;
-- `llm-aflpp/scripts/run_fake.sh` для запуска без внешнего API;
-- `llm-aflpp/scripts/run_real_llm.sh` для запуска с реальным LLM endpoint;
-- `llm-aflpp/README.md` с командами сборки, запуска и переменными окружения.
+- `afl-llm-engine/Makefile` для сборки target и mutator;
+- `afl-llm-engine/tests/ipc_smoke.py` или `make ipc-smoke` для проверки IPC `G`/`A` без AFL++;
+- `afl-llm-engine/scripts/run_fake.sh` для запуска без внешнего API;
+- `afl-llm-engine/scripts/run_real_llm.sh` для запуска с реальным LLM endpoint;
+- `afl-llm-engine/README.md` с командами сборки, запуска и переменными окружения.
 
 Ключевые переменные окружения:
 
 | Переменная | Назначение | Значение по умолчанию |
 | --- | --- | --- |
-| `AFLPP_DIR` | Путь к AFL++ checkout. | `llm-aflpp/../AFLplusplus` |
+| `AFLPP_DIR` | Путь к AFL++ checkout. | `afl-llm-engine/../AFLplusplus` |
 | `AFL_OUTPUT_DIR` | AFL++ `-o` directory. | `output/fake` или `output/real` |
-| `AFL_SEEDS_DIR` | AFL++ `-i` corpus directory. | `llm-aflpp/targets/dsl/seeds` |
+| `AFL_SEEDS_DIR` | AFL++ `-i` corpus directory. | `afl-llm-engine/targets/dsl/seeds` |
 | `AFL_CUSTOM_MUTATOR_ONLY` | Использовать только custom mutator. | `1` в run scripts |
 | `LLM_MUTATOR_ADDR` | Worker address. | `tcp://127.0.0.1:15333` |
 | `LLM_MUTATOR_SOCK` | Legacy alias для socket address. | Не задан |
-| `LLM_MUTATOR_PROMPT_FILE` | Prompt file. | `llm-aflpp/targets/dsl/prompt.txt` |
-| `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `llm-aflpp/targets/dsl/seeds` |
-| `LLM_MUTATOR_DISCOVERED_DIR` | Feedback samples directory. | `llm-aflpp/runtime/discovered` |
+| `LLM_MUTATOR_PROMPT_FILE` | Prompt file. | `afl-llm-engine/targets/dsl/prompt.txt` |
+| `LLM_MUTATOR_SEED_DIR` | Seed examples для worker. | `afl-llm-engine/targets/dsl/seeds` |
+| `LLM_MUTATOR_DISCOVERED_DIR` | Feedback samples directory. | `afl-llm-engine/runtime/discovered` |
 | `LLM_MUTATOR_LOG_CANDIDATES_DIR` | Optional raw generated candidates log directory. | Не задан |
 | `LLM_MUTATOR_QUEUE_SIZE` | Размер очереди кандидатов. | `128` |
 | `LLM_MUTATOR_WORKERS` | Число producer threads. | `2` |
@@ -238,7 +238,7 @@ Build artifacts:
 - При пустой очереди fallback-мутация должна быть дешевой.
 - Reconnect к worker должен быть ограничен по частоте.
 - Размеры payload должны ограничиваться, чтобы не раздувать память и время исполнения target.
-- Generated artifacts должны оставаться в `llm-aflpp/build/`, `output/`, `runtime/` и не попадать в git.
+- Generated artifacts должны оставаться в `afl-llm-engine/build/`, `output/`, `runtime/` и не попадать в git.
 
 ### Надежность
 
@@ -261,17 +261,17 @@ Build artifacts:
 - Должен быть fake-режим без сети.
 - Должен быть smoke-test для target crash-path.
 - Стартовые seeds, prompt и dictionary должны храниться в репозитории.
-- Эксперименты должны сохранять AFL++ output в отдельные директории под `llm-aflpp/output/`.
+- Эксперименты должны сохранять AFL++ output в отдельные директории под `afl-llm-engine/output/`.
 
 ## 10. Метрики успеха
 
 Минимальные метрики:
 
-- `make all` в `llm-aflpp/` собирает target и mutator;
+- `make all` в `afl-llm-engine/` собирает target и mutator;
 - `make smoke` собирает host target и mutator;
 - `./scripts/run_fake.sh` запускает AFL++ и worker без внешнего API;
 - custom mutator работает при доступном и недоступном worker;
-- feedback samples появляются в `llm-aflpp/runtime/discovered/`;
+- feedback samples появляются в `afl-llm-engine/runtime/discovered/`;
 - скрытый crash-path достижим на DSL target;
 - `./scripts/run_real_llm.sh` работает при заданном OpenAI-compatible `LLM_API_URL`.
 
@@ -288,21 +288,21 @@ Build artifacts:
 
 MVP считается готовым, если:
 
-1. AFL++ в `AFLplusplus/` собран и может запускать `llm-aflpp/build/target_dsl`.
-2. `llm-aflpp/build/afl_llm_mutator.so` подключается через `AFL_CUSTOM_MUTATOR_LIBRARY`.
+1. AFL++ в `AFLplusplus/` собран и может запускать `afl-llm-engine/build/target_dsl`.
+2. `afl-llm-engine/build/afl_llm_mutator.so` подключается через `AFL_CUSTOM_MUTATOR_LIBRARY`.
 3. Python worker генерирует кандидаты в fake-режиме.
 4. Mutator получает кандидаты через IPC и использует fallback при miss или недоступном worker.
-5. `llm-aflpp/scripts/run_fake.sh` запускает полный pipeline одной командой.
-6. `llm-aflpp/scripts/run_real_llm.sh` запускает тот же pipeline с OpenAI-compatible endpoint.
+5. `afl-llm-engine/scripts/run_fake.sh` запускает полный pipeline одной командой.
+6. `afl-llm-engine/scripts/run_real_llm.sh` запускает тот же pipeline с OpenAI-compatible endpoint.
 7. Новый AFL++ queue entry отправляется в worker через `afl_custom_queue_new_entry`.
-8. `llm-aflpp/README.md` объясняет сборку, запуск и адаптацию под другой target.
+8. `afl-llm-engine/README.md` объясняет сборку, запуск и адаптацию под другой target.
 
 Текущий статус по результатам проверки: MVP в целом реализован; оставшаяся работа относится в основном к метрикам, сравнительным экспериментам, чистоте логирования и документационной доводке.
 
 ## 12. Архитектура
 
 ```text
-llm-aflpp/
+afl-llm-engine/
   targets/dsl/prompt.txt
   targets/dsl/seeds/
   runtime/discovered/
@@ -343,8 +343,8 @@ llm-aflpp/
 
 ### Этап 1. Стабилизация проекта
 
-- Проверить сборку `llm-aflpp`.
-- Проверить fake-запуск через `llm-aflpp/scripts/run_fake.sh`.
+- Проверить сборку `afl-llm-engine`.
+- Проверить fake-запуск через `afl-llm-engine/scripts/run_fake.sh`.
 - Проверить smoke-test crash-path.
 - Зафиксировать README-команды и expected behavior.
 
@@ -353,7 +353,7 @@ llm-aflpp/
 - Добавить экспорт hit/miss/requests для custom mutator.
 - Добавить статистику worker queue size, produced samples, served samples, feedback samples и LLM errors.
 - Добавить script для сравнения baseline AFL++ vs LLM-mutator AFL++.
-- Сохранять результаты сравнений в отдельные директории под `llm-aflpp/output/`.
+- Сохранять результаты сравнений в отдельные директории под `afl-llm-engine/output/`.
 
 ### Этап 3. Feedback loop
 
@@ -364,8 +364,8 @@ llm-aflpp/
 
 ### Этап 4. Адаптация к реальному target
 
-- Добавить новый target/harness рядом с `llm-aflpp/targets/dsl/target_dsl.c` или вынести в отдельный target subdir.
-- Переписать `llm-aflpp/targets/dsl/prompt.txt` под реальный формат.
+- Добавить новый target/harness рядом с `afl-llm-engine/targets/dsl/target_dsl.c` или вынести в отдельный target subdir.
+- Переписать `afl-llm-engine/targets/dsl/prompt.txt` под реальный формат.
 - Подготовить валидные стартовые seeds.
 - При необходимости реализовать `afl_custom_post_process()` для трансляции LLM-представления в wire-format.
 
@@ -394,17 +394,17 @@ llm-aflpp/
 - Нужно ли учитывать стоимость LLM-запросов как отдельную метрику?
 - Какой режим сравнения считать основным: fixed time, fixed executions или fixed budget?
 - Нужно ли хранить crash-inducing inputs отдельно от обычных feedback samples?
-- Считается ли текущий путь `llm-aflpp/` финальным package-layout?
+- Считается ли текущий путь `afl-llm-engine/` финальным package-layout?
 
 ## 16. Acceptance criteria
 
-- Команда `make all` в `llm-aflpp/` успешно собирает target и mutator.
-- Команда `make smoke` в `llm-aflpp/` успешно собирает локальный target для проверки.
-- `llm-aflpp/scripts/run_fake.sh` запускает AFL++ pipeline без LLM API.
-- `llm-aflpp/scripts/run_real_llm.sh` запускает AFL++ pipeline при заданном `LLM_API_URL`.
+- Команда `make all` в `afl-llm-engine/` успешно собирает target и mutator.
+- Команда `make smoke` в `afl-llm-engine/` успешно собирает локальный target для проверки.
+- `afl-llm-engine/scripts/run_fake.sh` запускает AFL++ pipeline без LLM API.
+- `afl-llm-engine/scripts/run_real_llm.sh` запускает AFL++ pipeline при заданном `LLM_API_URL`.
 - AFL++ не блокируется при недоступном worker.
 - Worker принимает `G` и `A` операции по IPC.
-- Новые интересные inputs сохраняются в `llm-aflpp/runtime/discovered/`.
-- `llm-aflpp/README.md` и `PRD.md` описывают, как перенести подход с DSL target на реальный target.
+- Новые интересные inputs сохраняются в `afl-llm-engine/runtime/discovered/`.
+- `afl-llm-engine/README.md` и `PRD.md` описывают, как перенести подход с DSL target на реальный target.
 - `TASKS.md` отражает оставшиеся задачи по метрикам, feedback loop и адаптации.
 - `AGENTS.md` описывает рабочие правила, команды и границы редактирования для будущих агентов.

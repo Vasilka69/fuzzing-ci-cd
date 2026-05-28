@@ -1,137 +1,214 @@
-# AGENTS: рабочие инструкции по проекту
+# AGENTS.md
 
-Дата актуализации: 2026-05-06
+## Назначение
 
-Этот файл предназначен для будущих агентов/ассистентов, работающих в репозитории. Основной продукт описан в `PRD.md`, текущий backlog - в `TASKS.md`.
+Этот файл задает постоянные правила для AI coding agents, работающих над репозиторием дипломного проекта: микросервисной CI/CD-системой с исполняющим слоем. Цель инструкций — уменьшить шум в контекстном окне, не смешивать ответственность микросервисов и получать маленькие проверяемые изменения вместо больших неуправляемых переписываний.
 
-## Контекст
+## Главный принцип работы агента
 
-Проект демонстрирует гибридный fuzzing pipeline:
+Работай как инженерный агент, а не как генератор кода. Для любой нетривиальной задачи сначала изучи релевантные файлы, затем предложи короткий план, риски и проверки. Код меняй только после понимания границ задачи. Не делай большие rewrite без прямого требования.
 
-- AFL++ выполняет coverage-guided fuzzing, corpus management и crash triage.
-- Custom mutator получает готовые структурные inputs через локальный IPC.
-- Python worker генерирует candidates заранее в fake mode или через OpenAI-compatible `chat/completions`.
-- Feedback из AFL++ queue возвращается worker через `afl_custom_queue_new_entry`.
+## Текущий scope реализации
 
-Активная директория проекта: `llm-aflpp/`.
+Реализуются только исполняющие микросервисы и инфраструктура их запуска:
 
-Vendored AFL++ dependency: `AFLplusplus/`.
+- `vcs-service`
+- `storage-service`
+- `build-service`
+- `fuzzing-service`
+- `deploy-service`
+- `script-service`
+- общие библиотеки/контракты для executor'ов
+- Dockerfile для каждого исполняющего сервиса
+- Kubernetes manifests / Helm/Kustomize для развертывания executor'ов
+- Maven multi-module структура
 
-## Важные Пути
+Не реализуются в этой ветке, если задача явно не говорит обратное:
 
-| Путь | Как обращаться |
-| --- | --- |
-| `PRD.md` | Product requirements и acceptance criteria. |
-| `TASKS.md` | Backlog, статусы, следующие шаги. |
-| `llm-aflpp/README.md` | Пользовательская документация проекта. |
-| `llm-aflpp/Makefile` | Сборка target, mutator и smoke-проверок. |
-| `llm-aflpp/src/mutator/afl_llm_mutator.c` | Основной C-код custom mutator. |
-| `llm-aflpp/src/worker/llm_mutator_server.py` | Python worker, IPC, fake/real LLM. |
-| `llm-aflpp/tests/ipc_smoke.py` | Smoke-проверка IPC `G`/`A` без AFL++. |
-| `llm-aflpp/targets/dsl/target_dsl.c` | DSL target. |
-| `llm-aflpp/targets/dsl/prompt.txt` | Prompt для DSL generation. |
-| `llm-aflpp/targets/dsl/seeds/` | Стартовый corpus. |
-| `llm-aflpp/targets/dsl/dsl.dict` | AFL++ dictionary. |
-| `llm-aflpp/scripts/run_fake.sh` | Полный fake pipeline. |
-| `llm-aflpp/scripts/run_real_llm.sh` | Real LLM pipeline. |
-| `llm-aflpp/build/` | Generated binaries, не редактировать вручную. |
-| `llm-aflpp/output/` | AFL++ output, не коммитить. |
-| `llm-aflpp/runtime/` | Runtime socket/discovered feedback, не коммитить. |
-| `AFLplusplus/` | Vendored AFL++; не менять без явной задачи. |
+- UI
+- master-service / управляющий сервис
+- пользовательская авторизация UI
+- REST API master-service
+- полноценная бизнес-логика pipeline scheduler
 
-## Правила Работы
+Можно создавать заглушки контрактов master-service только если они нужны для contract tests executor'ов.
 
-- Сначала читать `PRD.md`, затем `TASKS.md`, затем локальные файлы в `llm-aflpp/`.
-- Не менять `AFLplusplus/`, если задача явно не требует патчить AFL++.
-- Не коммитить и не документировать реальные API keys.
-- Не добавлять secrets в scripts, README, output artifacts или prompt.
-- Generated dirs `build/`, `output/`, `runtime/discovered/` должны оставаться disposable.
-- При изменении путей и прочего состояния проекта (новые переменные окружение, новая функциональность, смена контрактов и т.д.) обязательно обновлять документацию: `PRD.md`, `README.md`, `TASKS.md`, `USER_GUIDE.md`, этот файл (`AGENTS.md`), скрипты запуска и т.д., то есть следить за актуальностью документации и целостности проекта.
-- Для поиска использовать `rg`/`rg --files`.
-- Для ручных правок использовать patch-based edits.
+## Целевая архитектура репозитория
 
-## Команды
+Рекомендуемая структура:
 
-Сборка проекта:
-
-```bash
-cd llm-aflpp
-make all
+```text
+.
+├── pom.xml
+├── AGENTS.md
+├── docs/
+│   ├── PRD.md
+│   ├── TASKS.md
+│   └── services/
+│       ├── vcs-service/
+│       │   ├── PRD.md
+│       │   └── TASKS.md
+│       ├── storage-service/
+│       ├── build-service/
+│       ├── fuzzing-service/
+│       ├── deploy-service/
+│       └── script-service/
+├── common/
+│   ├── common-contracts/
+│   ├── common-kafka/
+│   ├── common-storage-client/
+│   ├── common-observability/
+│   └── common-testing/
+├── services/
+│   ├── vcs-service/
+│   ├── storage-service/
+│   ├── build-service/
+│   ├── fuzzing-service/
+│   ├── deploy-service/
+│   └── script-service/
+├── fuzzing-engine/
+│   └── afl-llm-engine/
+├── deploy/
+│   ├── docker-compose/
+│   └── k8s/
+└── scripts/
 ```
 
-Smoke-сборка:
+Если реальная структура уже отличается, не переписывай ее целиком. Сначала предложи миграционный план.
 
-```bash
-cd llm-aflpp
-make smoke
+## Maven правила
+
+- Проект должен быть multi-module Maven project.
+- Корневой `pom.xml` — parent/aggregator.
+- Каждый исполняющий микросервис — отдельный Maven module.
+- Общая логика executor lifecycle, Kafka envelope, DTO, error model, logging, idempotency helpers и test utilities должна выноситься в `common-*` modules.
+- Не дублируй DTO Kafka-сообщений между сервисами.
+- Не добавляй новую зависимость без объяснения причины и альтернатив.
+- Предпочитай Spring Boot для сервисов и Testcontainers для интеграционных тестов Kafka/PostgreSQL/MinIO, если это применимо.
+
+## Единый executor lifecycle
+
+Каждый executor должен следовать циклу:
+
+1. Получить job message из своего Kafka topic.
+2. Провалидировать `schema_version`, `message_id`, `job_execution_id`, `job_type`, `template_path`, `attempt`, `timeout_seconds`, `resource_limits`.
+3. Проверить идемпотентность по `job_execution_id`.
+4. Опубликовать `running`/`accepted` event в `jobs.results`.
+5. Создать изолированный workspace.
+6. Скачать входные artifacts/snapshots по URI.
+7. Разрешить секреты только через runtime secret provider, не логировать значения.
+8. Выполнить работу с timeout/resource limits.
+9. Собрать stdout/stderr, exit code, metrics, artifacts.
+10. Загрузить artifacts/logs в storage.
+11. Опубликовать итоговый event в `jobs.results`.
+12. Очистить workspace согласно `workspace_policy`.
+
+## Kafka contract
+
+Входные topics:
+
+- `jobs.vcs`
+- `jobs.storage`
+- `jobs.build`
+- `jobs.fuzzing`
+- `jobs.deploy`
+- `jobs.script`
+
+Выходные topics:
+
+- `jobs.results`
+- `jobs.dead-letter`
+
+Ключ сообщения — `job_execution_id`. Большие файлы через Kafka не передавать. В Kafka передавать только metadata и URI.
+
+## Security rules
+
+- Секреты никогда не записывать в исходники, логи, Kafka payload, PostgreSQL, artifacts и crash reports.
+- Shell-команды не собирать конкатенацией строк из пользовательского ввода.
+- Build service запускает tool + args, а не произвольную shell-строку.
+- Script service выполняет пользовательский код только в sandbox/container с лимитами.
+- Fuzzing service и script service по умолчанию без privileged mode.
+- Network access для script/fuzzing job должен быть запрещен по умолчанию или явно включен параметром.
+- Не отключай тесты, static analysis или security checks ради зеленого результата.
+
+## Контекстные правила для микросервисов
+
+Перед работой над конкретным сервисом открой только его локальные документы:
+
+- `docs/services/<service>/PRD.md`
+- `docs/services/<service>/TASKS.md`
+- релевантный module в `services/<service>`
+- общие контракты в `common/common-contracts`
+
+Не загружай все PRD/TASKS без необходимости. Верхнеуровневые документы нужны для системных решений и cross-service задач.
+
+## Правила работы с задачами
+
+Для каждой задачи используй формат:
+
+```text
+Цель:
+Контекст:
+Ограничения:
+Готово, когда:
+Проверки:
 ```
 
-Проверка IPC `G`/`A` без AFL++:
+Если задача большая — разбей на вертикальные slices, которые дают проверяемый результат: contract → service handler → tests → Docker → k8s.
+
+## Definition of Done
+
+Изменение считается готовым, если:
+
+- код компилируется;
+- добавлены или обновлены тесты;
+- проверены негативные кейсы;
+- не нарушены Kafka contracts;
+- не добавлены секреты;
+- Docker image собирается для затронутого сервиса;
+- Kubernetes manifest/values обновлены, если изменились env vars, ports, probes или resources;
+- README/PRD/TASKS обновлены, если изменилось поведение;
+- итоговое сообщение агента содержит: что изменено, какие проверки выполнены, какие риски остались.
+
+## Команды проверки
+
+Предпочтительные команды, если структура проекта уже создана:
 
 ```bash
-cd llm-aflpp
-make ipc-smoke
+mvn -q -DskipTests=false test
+mvn -q -DskipTests package
+mvn -q verify
 ```
 
-Проверка crash-path без AFL++:
+Для отдельного модуля:
 
 ```bash
-cd llm-aflpp
-printf 'MODE DEBUG\nSET A 1337\nSET B 109\nSET C 16705\nAPPEND open\nCHECK MAGIC\nCHECK PLEASE\nCHECK FIZZ\nCHECK OPEN\nLOOP 7\nCRASH NOW\n' | ./build/target_dsl_cc
+mvn -q -pl services/<service-name> -am test
+mvn -q -pl services/<service-name> -am package
 ```
 
-Ожидаемый результат: процесс завершается через `SIGABRT`. Это контрольный crash-path DSL target.
-
-Короткий fake pipeline:
+Docker:
 
 ```bash
-cd llm-aflpp
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./scripts/run_fake.sh
+docker build -f services/<service-name>/Dockerfile -t <service-name>:local .
 ```
 
-Fallback без worker:
+Kubernetes manifests:
 
 ```bash
-cd llm-aflpp
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 \
-AFL_CUSTOM_MUTATOR_LIBRARY="$PWD/build/afl_llm_mutator.so" \
-AFL_CUSTOM_MUTATOR_ONLY=1 \
-timeout 4s ../AFLplusplus/afl-fuzz -i targets/dsl/seeds -o output/no_worker -x targets/dsl/dsl.dict -- build/target_dsl
+kubectl apply --dry-run=client -f deploy/k8s
 ```
 
-Real LLM mode:
+Если команда недоступна в среде агента, не придумывай результат. Напиши, что не смог выполнить, и почему.
 
-```bash
-cd llm-aflpp
-export LLM_API_URL="https://example.local/v1/chat/completions"
-export LLM_MODEL="model-name"
-export LLM_API_KEY="set-only-if-needed"
-./scripts/run_real_llm.sh
-```
+## Запрещенные паттерны
 
-Для локальных OpenAI-compatible endpoints может понадобиться:
-
-```bash
-export NO_PROXY=127.0.0.1,localhost
-export no_proxy=127.0.0.1,localhost
-```
-
-## Acceptance Checklist Для Агентов
-
-Перед тем как считать изменение готовым:
-
-- [ ] `make all` проходит в `llm-aflpp/`.
-- [ ] Если затронут target или mutator, `make smoke` проходит.
-- [ ] Если затронут IPC или worker, проверены операции `G` и `A`.
-- [ ] Если затронуты run scripts, проверен короткий `scripts/run_fake.sh`.
-- [ ] Если затронут real LLM mode, проверен хотя бы локальный OpenAI-compatible mock или явно описана причина, почему проверка невозможна.
-- [ ] Документация обновлена вместе с изменениями поведения или путей.
-- [ ] `git status --short` просмотрен; unrelated user changes не тронуты.
-
-## Известные Точки Внимания
-
-- P0 из `TASKS.md` закрыт; ближайшие остатки - метрики, сравнение baseline vs LLM-mutator и feedback-loop hygiene.
-- Worker может логировать пустой `producer error` при заполненной очереди; это P1 в `TASKS.md`.
-- Hit/miss counters в mutator уже есть в структуре состояния, но не экспортируются как полноценная метрика.
-- Сравнительного runner для baseline AFL++ vs LLM-mutator пока нет.
-- `Прочее/` содержит неактивные материалы, старые migrations, html/json и временные логи; это не активная часть fuzzing MVP.
+- Реализовывать master-service/UI в задачах executor scope.
+- Дублировать Kafka DTO в каждом сервисе.
+- Передавать бинарные artifacts через Kafka.
+- Логировать секреты или credentials-bearing URLs.
+- Игнорировать `timeout_seconds` и `resource_limits`.
+- Treat найденный fuzzing crash как infrastructure failure: это результат тестирования, если target запустился корректно.
+- Делать deployment retry без идемпотентного `release_id`/manifest.
+- Добавлять зависимости без review.
+- Удалять или отключать тесты.

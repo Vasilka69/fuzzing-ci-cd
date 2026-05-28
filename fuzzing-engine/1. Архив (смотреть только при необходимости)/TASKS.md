@@ -2,7 +2,7 @@
 
 Дата актуализации: 2026-05-06
 
-Этот backlog собран из `PRD.md` и фактического состояния проекта. Активная рабочая директория: `llm-aflpp/`.
+Этот backlog собран из `PRD.md` и фактического состояния проекта. Активная рабочая директория: `afl-llm-engine/`.
 
 ## Текущий Статус
 
@@ -10,21 +10,21 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 
 ## Готово
 
-- [x] Создан проект `llm-aflpp/`.
-- [x] Проект переименован из `llm_aflpp_demo` в `llm-aflpp/`.
-- [x] Активные директории `llm-aflpp/` и `AFLplusplus/` вынесены из `main-project/` в корень репозитория.
+- [x] Создан проект `afl-llm-engine/`.
+- [x] Проект переименован из `llm_aflpp_demo` в `afl-llm-engine/`.
+- [x] Активные директории `afl-llm-engine/` и `AFLplusplus/` вынесены из `main-project/` в корень репозитория.
 - [x] Побочные материалы вынесены в `Прочее/`.
 - [x] Код разнесен по директориям `src/`, `targets/`, `tests/`, `scripts/`.
 - [x] Добавлен vendored AFL++ checkout в `AFLplusplus/`.
-- [x] Реализован AFL++ custom mutator в `llm-aflpp/src/mutator/afl_llm_mutator.c`.
-- [x] Mutator собирается в `llm-aflpp/build/afl_llm_mutator.so`.
-- [x] Реализован Python worker `llm-aflpp/src/worker/llm_mutator_server.py`.
+- [x] Реализован AFL++ custom mutator в `afl-llm-engine/src/mutator/afl_llm_mutator.c`.
+- [x] Mutator собирается в `afl-llm-engine/build/afl_llm_mutator.so`.
+- [x] Реализован Python worker `afl-llm-engine/src/worker/llm_mutator_server.py`.
 - [x] Поддержан fake режим без внешнего API.
 - [x] Поддержан real LLM режим через OpenAI-compatible `chat/completions`.
 - [x] Реализован IPC protocol: `G` для candidate и `A` для feedback.
 - [x] Поддержан TCP loopback `tcp://127.0.0.1:15333`.
 - [x] Поддержаны Unix socket path и abstract Unix socket.
-- [x] Добавлен DSL target `llm-aflpp/targets/dsl/target_dsl.c`.
+- [x] Добавлен DSL target `afl-llm-engine/targets/dsl/target_dsl.c`.
 - [x] Добавлены prompt, dictionary и стартовые seeds.
 - [x] Добавлены `scripts/run_fake.sh` и `scripts/run_real_llm.sh`.
 - [x] Добавлен `README.md` для проекта.
@@ -56,11 +56,11 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 - [ ] Выбрать формат экспорта counters: stderr summary, file в `runtime/`, или AFL custom introspection-friendly output.
 - [ ] Добавить worker counters: produced, served, queue misses, feedback accepted, feedback rejected, LLM errors.
 - [ ] Исправить пустой `producer error` при заполненной очереди worker.
-- [ ] Добавить script `llm-aflpp/scripts/compare_runs.sh` или аналог:
+- [ ] Добавить script `afl-llm-engine/scripts/compare_runs.sh` или аналог:
   - baseline AFL++ без custom mutator;
   - AFL++ с custom mutator + fake worker;
   - фиксированное время или фиксированное число executions.
-- [ ] Сохранять результаты сравнений в отдельных директориях под `llm-aflpp/output/`.
+- [ ] Сохранять результаты сравнений в отдельных директориях под `afl-llm-engine/output/`.
 - [ ] Добавить парсер `fuzzer_stats` для summary metrics.
 - [ ] Документировать минимальный формат отчета: execs/sec, corpus_found, edges_found, bitmap_cvg, saved_crashes, hit/miss.
 - [ ] Добавить способ считать syntactically valid inputs для DSL corpus.
@@ -101,7 +101,7 @@ MVP практически готов: сборка, fake pipeline, real-mode wo
 ## Команды Проверки
 
 ```bash
-cd llm-aflpp
+cd afl-llm-engine
 make all
 make smoke
 make ipc-smoke
@@ -109,12 +109,12 @@ printf 'MODE DEBUG\nSET A 1337\nSET B 109\nSET C 16705\nAPPEND open\nCHECK MAGIC
 ```
 
 ```bash
-cd llm-aflpp
+cd afl-llm-engine
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./scripts/run_fake.sh
 ```
 
 ```bash
-cd llm-aflpp
+cd afl-llm-engine
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 \
 AFL_CUSTOM_MUTATOR_LIBRARY="$PWD/build/afl_llm_mutator.so" \
 AFL_CUSTOM_MUTATOR_ONLY=1 \

@@ -7,7 +7,7 @@
 Активная директория проекта:
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+cd /opt/diplom/fuzzing-ci-cd/afl-llm-engine
 ```
 
 ## 1. Что запускаем
@@ -55,7 +55,7 @@ ls -l afl-fuzz afl-clang-fast
 ## 3. Сборка проекта
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+cd /opt/diplom/fuzzing-ci-cd/afl-llm-engine
 make all
 ```
 
@@ -97,7 +97,7 @@ make ipc-smoke
 Ожидаемый результат похож на:
 
 ```text
-ipc smoke ok: received ... bytes; persisted feedback in /tmp/llm-aflpp-ipc-smoke-.../discovered
+ipc smoke ok: received ... bytes; persisted feedback in /tmp/afl-llm-engine-ipc-smoke-.../discovered
 ```
 
 Это означает, что worker, IPC protocol и feedback persistence работают.
@@ -107,7 +107,7 @@ ipc smoke ok: received ... bytes; persisted feedback in /tmp/llm-aflpp-ipc-smoke
 Fake mode не требует API keys, интернета или локальной модели. Worker сам генерирует синтаксически похожие DSL-программы.
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+cd /opt/diplom/fuzzing-ci-cd/afl-llm-engine
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 timeout 8s ./scripts/run_fake.sh
 ```
 
@@ -131,7 +131,7 @@ find output/fake/default/crashes -type f
 Эта команда проверяет, что custom mutator не ломает AFL++, даже если worker недоступен. В таком случае mutator использует локальную fallback-мутацию.
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+cd /opt/diplom/fuzzing-ci-cd/afl-llm-engine
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 AFL_NO_UI=1 \
 AFL_CUSTOM_MUTATOR_LIBRARY="$PWD/build/afl_llm_mutator.so" \
 AFL_CUSTOM_MUTATOR_ONLY=1 \
@@ -200,7 +200,7 @@ curl http://127.0.0.1:11434/v1/chat/completions \
 ## 10. Запуск real LLM pipeline через Ollama
 
 ```bash
-cd /opt/diplom/fuzzing-ci-cd/llm-aflpp
+cd /opt/diplom/fuzzing-ci-cd/afl-llm-engine
 
 export LLM_API_URL="http://127.0.0.1:11434/v1/chat/completions"
 export LLM_MODEL="qwen3:8b"
@@ -298,7 +298,7 @@ export AFL_NO_UI=1
 
 Перед тем как считать локальный запуск успешным:
 
-- [ ] `make all` проходит в `llm-aflpp/`.
+- [ ] `make all` проходит в `afl-llm-engine/`.
 - [ ] `make smoke` проходит.
 - [ ] Контрольный crash-path через `target_dsl_cc` завершает процесс через `SIGABRT`.
 - [ ] `make ipc-smoke` получает candidate и сохраняет feedback.
