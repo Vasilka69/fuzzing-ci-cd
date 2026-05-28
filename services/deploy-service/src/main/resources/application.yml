@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: deploy-service
+
+executor:
+  kafka:
+    input-topic: jobs.deploy
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter

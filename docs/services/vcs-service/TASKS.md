@@ -1,5 +1,8 @@
 # TASKS: VCS Integration Service
 
+## Бэклог и заметки
+- [ ] Добавить поддержку mercurial в план.
+
 ## VCS-001. Создать service module
 
 - [ ] Добавить `services/vcs-service` в root Maven modules.

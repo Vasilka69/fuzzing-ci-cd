@@ -2,25 +2,25 @@
 
 ## FUZZ-001. Создать service module
 
-- [ ] Maven module.
-- [ ] Spring Boot application.
-- [ ] Common dependencies.
+- [x] Maven module.
+- [x] Spring Boot application.
+- [x] Common dependencies.
 
 ## FUZZ-002. Создать fuzzing engine adapter
 
-- [ ] `FuzzingEngine` interface.
-- [ ] `FuzzingEngineRequest`.
-- [ ] `FuzzingEngineResult`.
-- [ ] Fake implementation for tests.
+- [x] `FuzzingEngine` interface.
+- [x] `FuzzingEngineRequest`.
+- [x] `FuzzingEngineResult`.
+- [x] Fake implementation for tests.
 - [ ] Adapter to ready AFL++/LLM engine.
 
 ## FUZZ-003. Params validation
 
-- [ ] Validate target artifact/source snapshot.
-- [ ] Validate `target_command`.
-- [ ] Validate budget and memory limit.
-- [ ] Validate mode: `fake`, `real_llm`.
-- [ ] Validate policy.
+- [x] Validate target artifact/source snapshot.
+- [x] Validate `target_command`.
+- [x] Validate budget and memory limit.
+- [x] Validate mode: `fake`, `real_llm`.
+- [x] Validate policy.
 
 ## FUZZ-004. Workspace preparation
 
@@ -48,17 +48,17 @@
 
 ## FUZZ-007. Policy mapping
 
-- [ ] `fail_on_crash=true` maps crash to failed job.
-- [ ] `fail_on_hang=true` maps hang to failed job.
-- [ ] Engine startup errors map to infrastructure/user config errors.
+- [x] `fail_on_crash=true` maps crash to failed job.
+- [x] `fail_on_hang=true` maps hang to failed job.
+- [x] Engine startup errors map to infrastructure/user config errors.
 - [ ] LLM endpoint errors apply retry/fallback policy.
 
 ## FUZZ-008. Tests
 
-- [ ] Unit tests for policy mapping.
-- [ ] Fake engine integration test with no crash.
-- [ ] Fake engine integration test with crash.
-- [ ] Timeout test.
+- [x] Unit tests for policy mapping.
+- [x] Fake engine integration test with no crash.
+- [x] Fake engine integration test with crash.
+- [x] Timeout test.
 - [ ] Artifact upload test.
 
 ## FUZZ-009. Docker and Kubernetes

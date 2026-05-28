@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: vcs-service
+
+executor:
+  kafka:
+    input-topic: jobs.vcs
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter

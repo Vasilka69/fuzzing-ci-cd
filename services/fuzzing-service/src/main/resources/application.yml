@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: fuzzing-service
+
+executor:
+  kafka:
+    input-topic: jobs.fuzzing
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter

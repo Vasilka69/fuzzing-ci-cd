@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: storage-service
+
+executor:
+  kafka:
+    input-topic: jobs.storage
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter

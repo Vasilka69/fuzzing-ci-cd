@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: build-service
+
+executor:
+  kafka:
+    input-topic: jobs.build
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter

@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: script-service
+
+executor:
+  kafka:
+    input-topic: jobs.script
+    result-topic: jobs.results
+    dead-letter-topic: jobs.dead-letter
