@@ -34,6 +34,8 @@
     <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
     <maven-wrapper-plugin.version>3.3.4</maven-wrapper-plugin.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+    <spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
+    <palantir-java-format.version>2.91.0</palantir-java-format.version>
   </properties>
 
   <modules>
@@ -150,6 +152,11 @@
           <version>${jacoco-maven-plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring-boot.version}</version>
@@ -180,6 +187,57 @@
                 </requireMavenVersion>
               </rules>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <configuration>
+          <lineEndings>UNIX</lineEndings>
+          <formats>
+            <format>
+              <includes>
+                <include>pom.xml</include>
+                <include>**/pom.xml</include>
+                <include>**/*.yaml</include>
+                <include>**/*.yml</include>
+                <include>.editorconfig</include>
+                <include>.gitattributes</include>
+              </includes>
+              <excludes>
+                <exclude>target/**</exclude>
+                <exclude>**/target/**</exclude>
+                <exclude>.idea/**</exclude>
+                <exclude>fuzzing-engine/**</exclude>
+                <exclude>Диплом/**</exclude>
+                <exclude>Прочее/**</exclude>
+              </excludes>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </format>
+          </formats>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+            </includes>
+            <removeUnusedImports/>
+            <forbidWildcardImports/>
+            <palantirJavaFormat>
+              <version>${palantir-java-format.version}</version>
+              <style>PALANTIR</style>
+              <formatJavadoc>false</formatJavadoc>
+            </palantirJavaFormat>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check-code-style</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

@@ -17,7 +17,7 @@
   - Готово, когда: `./mvnw -q -DskipTests package` проходит на пустых модулях.
 - [x] `BOOT-002 [MVP]` Добавить Maven Wrapper, Maven Enforcer, dependency/plugin management, Java 21, Spring Boot BOM.
   - Готово, когда: сборка падает на неверной Java/Maven версии с понятным русским сообщением в docs.
-- [ ] `BOOT-003 [MVP]` Ввести code style: formatter/Spotless, Checkstyle или минимальный ruleset.
+- [x] `BOOT-003 [MVP]` Ввести code style: formatter/Spotless, Checkstyle или минимальный ruleset.
 - [ ] `BOOT-004 [MVP]` Создать общий package naming: `ru.<org>.cicd.<module>`; `<org>` заменить на выбранный namespace проекта.
 - [ ] `BOOT-005 [MVP]` Создать `docker-compose.yml` для Kafka, OpenSearch, PostgreSQL, storage backend заглушки.
 - [ ] `BOOT-006 [MVP]` Добавить `.env.example` без секретов.
