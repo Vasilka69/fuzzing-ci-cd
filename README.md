@@ -36,6 +36,7 @@
 | `docs/tasks/` | TASKS по отдельным исполняющим микросервисам. |
 | `services/*/AGENTS.md` | Локальные инструкции, которые сужают контекст до одного модуля. |
 | `docs/context/` | Контекст проекта, БД, структуры репозитория, AI workflow. |
+| `docs/context/BUILD_REQUIREMENTS.md` | Требования к JDK/Maven и ожидаемые Enforcer-сообщения. |
 | `docs/architecture/` | ADR по Maven-модулям, контрактам executor-ов и fuzzing kernel. |
 | `docs/checklists/` | Чеклисты ревью, безопасности и Definition of Done. |
 | `docs/templates/` | Шаблоны задач и планов перед кодом. |

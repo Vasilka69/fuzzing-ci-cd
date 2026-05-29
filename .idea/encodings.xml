@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/common/cicd-contracts/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/cicd-contracts/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/cicd-executor-core/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/cicd-executor-core/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/cicd-test-support/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/cicd-test-support/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-contracts/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-kafka/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-observability/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-storage-client/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-testing/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/build-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/build-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/deploy-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/deploy-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/fuzzing-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/fuzzing-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/script-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/script-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/storage-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/storage-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/vcs-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/vcs-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>

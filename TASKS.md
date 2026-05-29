@@ -13,9 +13,9 @@
 
 ## Уровень 0. Bootstrap репозитория
 
-- [ ] `BOOT-001 [MVP]` Создать Maven parent project с modules: `common/cicd-contracts`, `common/cicd-executor-core`, `common/cicd-test-support`, `services/*`.
+- [x] `BOOT-001 [MVP]` Создать Maven parent project с modules: `common/cicd-contracts`, `common/cicd-executor-core`, `common/cicd-test-support`, `services/*`.
   - Готово, когда: `./mvnw -q -DskipTests package` проходит на пустых модулях.
-- [ ] `BOOT-002 [MVP]` Добавить Maven Wrapper, Maven Enforcer, dependency/plugin management, Java 21, Spring Boot BOM.
+- [x] `BOOT-002 [MVP]` Добавить Maven Wrapper, Maven Enforcer, dependency/plugin management, Java 21, Spring Boot BOM.
   - Готово, когда: сборка падает на неверной Java/Maven версии с понятным русским сообщением в docs.
 - [ ] `BOOT-003 [MVP]` Ввести code style: formatter/Spotless, Checkstyle или минимальный ruleset.
 - [ ] `BOOT-004 [MVP]` Создать общий package naming: `ru.<org>.cicd.<module>`; `<org>` заменить на выбранный namespace проекта.
