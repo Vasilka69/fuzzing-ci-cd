@@ -19,8 +19,8 @@
   - Готово, когда: сборка падает на неверной Java/Maven версии с понятным русским сообщением в docs.
 - [x] `BOOT-003 [MVP]` Ввести code style: formatter/Spotless, Checkstyle или минимальный ruleset.
 - [x] `BOOT-004 [MVP]` Создать общий package naming: `ru.<org>.cicd.<module>`; `<org>` заменить на выбранный namespace проекта.
-- [ ] `BOOT-005 [MVP]` Создать `docker-compose.yml` для Kafka, OpenSearch, PostgreSQL, storage backend заглушки.
-- [ ] `BOOT-006 [MVP]` Добавить `.env.example` без секретов.
+- [x] `BOOT-005 [MVP]` Создать `docker-compose.yml` для Kafka, OpenSearch, PostgreSQL, storage backend заглушки.
+- [x] `BOOT-006 [MVP]` Добавить `.env.example` без секретов.
 - [ ] `BOOT-007 [MVP]` Добавить PR template и чеклисты из `docs/checklists`.
 - [ ] `BOOT-008 [DIPLOMA]` Добавить CI workflow: build/test, dependency scan, Docker build smoke check.
 
