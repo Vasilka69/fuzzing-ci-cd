@@ -42,7 +42,6 @@
 | `docs/templates/` | Шаблоны задач и планов перед кодом. |
 | `docs/prompts/` | Библиотека промптов для агентов. |
 | `docs/k8s/` | Требования к Docker/Kubernetes-развертыванию. |
-| `.github/pull_request_template.md` | PR-шаблон под agentic workflow. |
 
 ## Базовый принцип
 

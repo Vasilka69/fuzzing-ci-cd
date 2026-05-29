@@ -24,17 +24,15 @@
 ├── deploy/
 │   ├── docker/
 │   └── k8s/
-├── docs/
-│   ├── prd/
-│   ├── tasks/
-│   ├── context/
-│   ├── architecture/
-│   ├── checklists/
-│   ├── templates/
-│   ├── prompts/
-│   └── k8s/
-└── .github/
-    └── pull_request_template.md
+└── docs/
+    ├── prd/
+    ├── tasks/
+    ├── context/
+    ├── architecture/
+    ├── checklists/
+    ├── templates/
+    ├── prompts/
+    └── k8s/
 ```
 
 ## Правила зависимостей
