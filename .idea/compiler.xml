@@ -6,33 +6,29 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="common-storage-client" />
-        <module name="build-service" />
-        <module name="script-service" />
-        <module name="common-kafka" />
-        <module name="common-observability" />
-        <module name="vcs-service" />
-        <module name="common-contracts" />
-        <module name="common-testing" />
-        <module name="fuzzing-service" />
-        <module name="storage-service" />
-        <module name="deploy-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="common-contracts" target="17" />
+      <module name="common-kafka" target="17" />
+      <module name="common-observability" target="17" />
+      <module name="common-storage-client" target="17" />
+      <module name="common-testing" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="build-service" options="-parameters" />
+      <module name="build-service" options="" />
       <module name="common-contracts" options="-parameters" />
       <module name="common-kafka" options="-parameters" />
       <module name="common-observability" options="-parameters" />
       <module name="common-storage-client" options="-parameters" />
       <module name="common-testing" options="-parameters" />
-      <module name="deploy-service" options="-parameters" />
-      <module name="fuzzing-service" options="-parameters" />
-      <module name="script-service" options="-parameters" />
-      <module name="storage-service" options="-parameters" />
-      <module name="vcs-service" options="-parameters" />
+      <module name="deploy-service" options="" />
+      <module name="fuzzing-service" options="" />
+      <module name="script-service" options="" />
+      <module name="storage-service" options="" />
+      <module name="vcs-service" options="" />
     </option>
   </component>
 </project>
