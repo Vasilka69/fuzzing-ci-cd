@@ -1,0 +1,118 @@
+# PRD — Deploy-сервис (Deployment service)
+
+Дата: 2026-05-29
+Модуль: `services/deploy-service`
+Kafka topic: `jobs.deploy`
+Job templates: `deploy/ssh-bash`, `deploy/windows-cmd`, `deploy/file-copy`, `deploy/docker`, `deploy/docker-compose`, `deploy/systemd`
+
+## 1. Назначение
+
+Deploy-сервис доставляет release artifact в целевую среду, фиксирует release_id, deployment manifest, healthcheck и rollback metadata.
+
+## 2. Scope
+
+### In scope для MVP
+
+- file-copy deployment
+- ssh-bash deployment для Linux target
+- release_id generation/validation
+- manifest generation
+- basic healthcheck
+
+### Дипломно-достаточный scope
+
+- Docker, Docker Compose, systemd modes
+- rollback policy restore_previous_artifact
+- protected environment approval boundary handled by master contract
+- idempotency check_existing_release
+
+### Опционально / production-level, не обязательно для магистерской работы
+
+- progressive/canary deployments
+- Kubernetes deployment target management
+- blue-green orchestration
+- multi-region rollout
+- policy engine for approvals
+
+## 3. Входные параметры job
+
+- `deployment_type`
+- `release_id`
+- `artifact_uri`
+- `environment`
+- `target connection/credentials_ref`
+- `commands/compose/systemd config`
+- `healthcheck`
+- `rollback policy`
+- `idempotency policy`
+
+## 4. Результат job
+
+- `release identifier`
+- `deployment_manifest_uri`
+- `healthcheck result`
+- `rollback result/metadata`
+- `deployed artifact checksum`
+- `logs_uri или JOB_LOG документы`
+
+## 5. Общие требования executor-а
+
+- Получает сообщения только из `jobs.deploy`.
+- Проверяет `jobType`, `templatePath`, `schemaVersion`, `jobExecutionId`.
+- Публикует `JOB_RUNNING`, `JOB_LOG`, итоговый `JOB_FINISHED`.
+- Все события и логи содержат `jobExecutionId`.
+- Большие payload не кладутся в Kafka.
+- Секреты маскируются до записи в stdout/stderr/OpenSearch.
+- Повторная доставка по тому же `jobExecutionId` идемпотентна.
+- Workspace создается отдельно для каждой попытки и очищается согласно `workspacePolicy`.
+- Ошибки мапятся в единый словарь `error.type`.
+
+## 6. Архитектура модуля
+
+Рекомендуемая внутренняя структура:
+
+```text
+services/deploy-service/
+├── AGENTS.md
+├── Dockerfile
+├── pom.xml
+└── src/
+    ├── main/java/.../
+    │   ├── deployservice/
+    │   │   ├── config/
+    │   │   ├── consumer/
+    │   │   ├── handler/
+    │   │   ├── validation/
+    │   │   ├── runner/
+    │   │   └── result/
+    │   └── Application.java
+    └── test/java/...
+```
+
+## 7. Риски
+
+- неидемпотентные внешние побочные эффекты
+- rollback вместо cancel
+- утечка SSH key
+- команды deployment без audit trail
+- повторная доставка job после успешного deploy
+
+## 8. Тестирование
+
+- unit tests release_id/idempotency
+- integration test local ssh container
+- manifest schema contract test
+- healthcheck success/failure tests
+- rollback policy tests
+
+## 9. Acceptance criteria
+
+- [ ] Сервис стартует локально в test/local profile.
+- [ ] Сервис обрабатывает валидное job message своего типа.
+- [ ] Невалидные параметры дают `validation_error`, а не crash сервиса.
+- [ ] При успешной обработке есть `JOB_RUNNING`, `JOB_LOG`, `JOB_FINISHED/SUCCESS`.
+- [ ] При ошибке есть `JOB_FINISHED/FAILED` с корректным `error.type`.
+- [ ] Повторная доставка того же `jobExecutionId` не создает конфликтующие артефакты или побочные эффекты.
+- [ ] Dockerfile собирает image.
+- [ ] Kubernetes manifests содержат securityContext/resources/probes.
+- [ ] Документация и Javadoc обновлены для сложной логики.
