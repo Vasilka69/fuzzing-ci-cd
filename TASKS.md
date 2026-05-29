@@ -21,7 +21,8 @@
 - [x] `BOOT-004 [MVP]` Создать общий package naming: `ru.<org>.cicd.<module>`; `<org>` заменить на выбранный namespace проекта.
 - [x] `BOOT-005 [MVP]` Создать `docker-compose.yml` для Kafka, OpenSearch, PostgreSQL, storage backend заглушки.
 - [x] `BOOT-006 [MVP]` Добавить `.env.example` без секретов.
-- [ ] `BOOT-007 [MVP]` Добавить PR template и чеклисты из `docs/checklists`.
+- [x] `BOOT-007 [MVP]` Добавить PR template и чеклисты из `docs/checklists`.
+  - Пропущено: задача временно отменена, PR template и дополнительные чеклисты сейчас не добавляем.
 - [ ] `BOOT-008 [DIPLOMA]` Добавить CI workflow: build/test, dependency scan, Docker build smoke check.
 
 ## Уровень 1. Common contracts и executor runtime
