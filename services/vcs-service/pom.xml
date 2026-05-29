@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>vcs-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>vcs-service</name>
   <description>Executor-сервис для VCS-заданий.</description>

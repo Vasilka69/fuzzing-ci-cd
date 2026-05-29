@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>cicd-test-support</artifactId>
-  <packaging>pom</packaging>
 
   <name>cicd-test-support</name>
   <description>Общая тестовая поддержка для модулей executor-ов.</description>

@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>cicd-executor-core</artifactId>
-  <packaging>pom</packaging>
 
   <name>cicd-executor-core</name>
   <description>Общие runtime-компоненты executor-ов.</description>

@@ -46,6 +46,22 @@ common/* не зависит от services/*
 executor-ы не зависят от master-service/ui
 ```
 
+## Java package naming
+
+Выбранный namespace проекта: `ru.diplom.cicd`.
+
+```text
+common/cicd-contracts       -> ru.diplom.cicd.contracts
+common/cicd-executor-core   -> ru.diplom.cicd.executor.core
+common/cicd-test-support    -> ru.diplom.cicd.test.support
+services/vcs-service        -> ru.diplom.cicd.vcs
+services/storage-service    -> ru.diplom.cicd.storage
+services/build-service      -> ru.diplom.cicd.build
+services/fuzzing-service    -> ru.diplom.cicd.fuzzing
+services/deploy-service     -> ru.diplom.cicd.deploy
+services/script-service     -> ru.diplom.cicd.script
+```
+
 ## Maven команды
 
 ```bash

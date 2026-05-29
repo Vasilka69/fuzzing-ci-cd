@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>deploy-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>deploy-service</name>
   <description>Executor-сервис для deploy-заданий.</description>

@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>storage-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>storage-service</name>
   <description>Executor-сервис для storage-заданий.</description>

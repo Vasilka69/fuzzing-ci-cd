@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>build-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>build-service</name>
   <description>Executor-сервис для build-заданий.</description>

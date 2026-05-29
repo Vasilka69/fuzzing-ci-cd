@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>script-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>script-service</name>
   <description>Executor-сервис для script-заданий.</description>

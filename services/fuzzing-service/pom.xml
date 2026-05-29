@@ -12,7 +12,6 @@
   </parent>
 
   <artifactId>fuzzing-service</artifactId>
-  <packaging>pom</packaging>
 
   <name>fuzzing-service</name>
   <description>Executor-сервис для fuzzing-заданий.</description>
