@@ -50,7 +50,7 @@
 - Tests: JUnit 5, AssertJ, Mockito, Testcontainers, ArchUnit.
 - Containers: Dockerfile для каждого исполняемого сервиса; docker compose для локальной инфраструктуры.
 - Kubernetes: manifests или Helm/Kustomize templates для каждого сервиса.
-- Code quality: Spotless или Maven formatter, Checkstyle/PMD по необходимости, OWASP dependency-check или аналог, SBOM на hardening-этапе.
+- Code quality: Spotless или Maven formatter, Checkstyle/PMD по необходимости, SBOM на hardening-этапе.
 - Util: Lombok, Apache Commons
 
 ## 5. Обязательный workflow перед кодом
