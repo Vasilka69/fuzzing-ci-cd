@@ -51,7 +51,8 @@
 - [x] `SVC-004 [MVP]` Для каждого сервиса добавить Kubernetes Deployment/ConfigMap/ServiceAccount и, где нужен HTTP API, Service.
 - [x] `SVC-005 [MVP]` Для каждого сервиса добавить service-scoped `AGENTS.md`.
 - [x] `SVC-006 [DIPLOMA]` Для каждого сервиса добавить structured logging с `jobExecutionId`, `correlationId`, `sourceService`.
-- [ ] `SVC-007 [DIPLOMA]` Для каждого сервиса добавить metrics: job count, duration, failures by errorType, active jobs.
+- [x] `SVC-007 [DIPLOMA]` Для каждого сервиса добавить metrics: job count, duration, failures by errorType, active jobs.
+  - Готово: метрики реализованы централизованно в `cicd-executor-core`, endpoint `/actuator/metrics` открыт во всех executor-сервисах.
 
 ## Уровень 3. MVP по сервисам
 

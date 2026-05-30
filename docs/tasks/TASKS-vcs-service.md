@@ -42,7 +42,8 @@ Topic: `jobs.vcs`
 
 ## Уровень 3. Общие hardening-задачи сервиса
 
-- [ ] `VCS-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+- [x] `VCS-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+  - Готово централизованно через `cicd-executor-core`; `/actuator/metrics` открыт в сервисе.
 - [ ] `VCS-702 [HARDENING]` Добавить graceful shutdown: consumer перестает брать новые сообщения, активная job корректно завершается/отменяется.
 - [ ] `VCS-703 [HARDENING]` Добавить negative tests на отсутствие секретов в logs/events/artifacts.
 - [ ] `VCS-704 [HARDENING]` Добавить Kubernetes resource tuning и documented defaults.

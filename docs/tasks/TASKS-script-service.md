@@ -42,7 +42,8 @@ Topic: `jobs.script`
 
 ## Уровень 3. Общие hardening-задачи сервиса
 
-- [ ] `SCRIPT-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+- [x] `SCRIPT-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+  - Готово централизованно через `cicd-executor-core`; `/actuator/metrics` открыт в сервисе.
 - [ ] `SCRIPT-702 [HARDENING]` Добавить graceful shutdown: consumer перестает брать новые сообщения, активная job корректно завершается/отменяется.
 - [ ] `SCRIPT-703 [HARDENING]` Добавить negative tests на отсутствие секретов в logs/events/artifacts.
 - [ ] `SCRIPT-704 [HARDENING]` Добавить Kubernetes resource tuning и documented defaults.

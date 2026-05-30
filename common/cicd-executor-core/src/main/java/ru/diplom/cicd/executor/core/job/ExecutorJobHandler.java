@@ -39,6 +39,7 @@ public final class ExecutorJobHandler {
     private final SecretRedactor secretRedactor;
     private final SandboxPolicyValidator sandboxPolicyValidator;
     private final IdempotencyGuard idempotencyGuard;
+    private final ExecutorJobMetrics metrics;
     private final String workerId;
     private final Clock clock;
     private final Supplier<UUID> messageIdSupplier;
@@ -65,6 +66,25 @@ public final class ExecutorJobHandler {
                 logPublisher,
                 secretRedactor,
                 idempotencyGuard,
+                ExecutorJobMetrics.noop(),
+                workerId);
+    }
+
+    public ExecutorJobHandler(
+            WorkspaceManager workspaceManager,
+            ExecutorEventPublisher eventPublisher,
+            ExecutorLogPublisher logPublisher,
+            SecretRedactor secretRedactor,
+            IdempotencyGuard idempotencyGuard,
+            ExecutorJobMetrics metrics,
+            String workerId) {
+        this(
+                workspaceManager,
+                eventPublisher,
+                logPublisher,
+                secretRedactor,
+                idempotencyGuard,
+                metrics,
                 workerId,
                 Clock.systemUTC(),
                 UUID::randomUUID);
@@ -80,12 +100,36 @@ public final class ExecutorJobHandler {
             String workerId,
             Clock clock,
             Supplier<UUID> messageIdSupplier) {
+        this(
+                workspaceManager,
+                eventPublisher,
+                logPublisher,
+                secretRedactor,
+                idempotencyGuard,
+                ExecutorJobMetrics.noop(),
+                workerId,
+                clock,
+                messageIdSupplier);
+    }
+
+    @SuppressWarnings("java:S107")
+    ExecutorJobHandler(
+            WorkspaceManager workspaceManager,
+            ExecutorEventPublisher eventPublisher,
+            ExecutorLogPublisher logPublisher,
+            SecretRedactor secretRedactor,
+            IdempotencyGuard idempotencyGuard,
+            ExecutorJobMetrics metrics,
+            String workerId,
+            Clock clock,
+            Supplier<UUID> messageIdSupplier) {
         this.workspaceManager = Objects.requireNonNull(workspaceManager, "workspaceManager");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher");
         this.logPublisher = Objects.requireNonNull(logPublisher, "logPublisher");
         this.secretRedactor = Objects.requireNonNull(secretRedactor, "secretRedactor");
         this.sandboxPolicyValidator = new SandboxPolicyValidator();
         this.idempotencyGuard = Objects.requireNonNull(idempotencyGuard, "idempotencyGuard");
+        this.metrics = Objects.requireNonNull(metrics, "metrics");
         this.workerId = workerId == null || workerId.isBlank() ? "executor-worker" : workerId;
         this.clock = Objects.requireNonNull(clock, "clock");
         this.messageIdSupplier = Objects.requireNonNull(messageIdSupplier, "messageIdSupplier");
@@ -105,6 +149,7 @@ public final class ExecutorJobHandler {
         WorkspaceHandle workspace = null;
         IdempotencyClaim idempotencyClaim = null;
         ExecutionStatus cleanupStatus = ExecutionStatus.FAILED;
+        metrics.jobStarted();
 
         try {
             validate(job);
@@ -112,6 +157,7 @@ public final class ExecutorJobHandler {
             if (!idempotencyClaim.shouldExecute()) {
                 ExecutorEventMessage skippedEvent = skippedDuplicateEvent(job, startedAt, idempotencyClaim.decision());
                 publishEvent(skippedEvent);
+                metrics.jobFinished(job, skippedEvent);
                 cleanupStatus = ExecutionStatus.SKIPPED;
                 return skippedEvent;
             }
@@ -145,6 +191,7 @@ public final class ExecutorJobHandler {
                     null,
                     result.additionalData());
             publishEvent(finishedEvent);
+            metrics.jobFinished(job, finishedEvent);
             completeIdempotencyClaim(idempotencyClaim, finishedEvent);
             cleanupStatus = result.status();
             return finishedEvent;
@@ -154,6 +201,7 @@ public final class ExecutorJobHandler {
             }
             ExecutorEventMessage failedEvent = failedEvent(job, startedAt, exception);
             publishEvent(failedEvent);
+            metrics.jobFinished(job, failedEvent);
             completeIdempotencyClaim(idempotencyClaim, failedEvent);
             cleanupStatus = exception.status();
             return failedEvent;
@@ -167,6 +215,7 @@ public final class ExecutorJobHandler {
                     ExecutionStatus.FAILED);
             ExecutorEventMessage failedEvent = failedEvent(job, startedAt, typedException);
             publishEvent(failedEvent);
+            metrics.jobFinished(job, failedEvent);
             cleanupStatus = ExecutionStatus.FAILED;
             return failedEvent;
         } catch (Exception exception) {
@@ -179,6 +228,7 @@ public final class ExecutorJobHandler {
                     ExecutionStatus.FAILED);
             ExecutorEventMessage failedEvent = failedEvent(job, startedAt, typedException);
             publishEvent(failedEvent);
+            metrics.jobFinished(job, failedEvent);
             completeIdempotencyClaim(idempotencyClaim, failedEvent);
             return failedEvent;
         } finally {
@@ -188,6 +238,7 @@ public final class ExecutorJobHandler {
             if (idempotencyClaim != null) {
                 idempotencyClaim.close();
             }
+            metrics.jobStopped();
         }
     }
 

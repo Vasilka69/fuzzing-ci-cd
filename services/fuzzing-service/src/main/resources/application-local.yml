@@ -8,11 +8,6 @@ spring:
       group-id: ${KAFKA_CONSUMER_GROUP:fuzzing-service-local}
       client-id: ${KAFKA_CLIENT_ID:fuzzing-service-local}
 
-logging:
-  structured:
-    format:
-      console: ${LOGGING_STRUCTURED_FORMAT_CONSOLE:}
-
 cicd:
   executor:
     topic: ${CICD_EXECUTOR_TOPIC:jobs.fuzzing}

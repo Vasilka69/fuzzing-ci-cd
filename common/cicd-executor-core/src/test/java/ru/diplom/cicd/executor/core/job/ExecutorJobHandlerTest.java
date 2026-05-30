@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
@@ -20,6 +21,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.MDC;
@@ -287,6 +289,74 @@ class ExecutorJobHandlerTest {
         assertEquals("boom", finishedEvent.error().details());
         assertNotNull(finishedEvent.error().metadata().get("exceptionClass"));
         assertTrue(workspaceManager.cleanupFailed);
+    }
+
+    @Test
+    void handleRecordsJobMetricsForSuccessAndFailures() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        ExecutorJobMetrics metrics = new ExecutorJobMetrics(meterRegistry);
+        CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                workspaceManager,
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                IdempotencyGuard.noop(),
+                metrics,
+                "core-worker-1",
+                new TickClock(),
+                new DeterministicUuidSupplier());
+
+        ExecutorEventMessage successEvent = handler.handle(job(), context -> {
+            assertEquals(
+                    1.0,
+                    meterRegistry.get(ExecutorJobMetrics.JOBS_ACTIVE).gauge().value());
+            return ExecutorJobResult.success("ok");
+        });
+        ExecutorEventMessage failureEvent = handler.handle(job(), context -> {
+            throw new ExecutorJobException(
+                    ErrorType.INFRASTRUCTURE_ERROR,
+                    "executor.storage.unavailable",
+                    "Storage временно недоступен",
+                    null,
+                    Map.of(),
+                    ExecutionStatus.FAILED);
+        });
+
+        assertEquals(ExecutionStatus.SUCCESS, successEvent.status());
+        assertEquals(ExecutionStatus.FAILED, failureEvent.status());
+        assertEquals(
+                0.0, meterRegistry.get(ExecutorJobMetrics.JOBS_ACTIVE).gauge().value());
+        assertEquals(
+                1.0,
+                meterRegistry
+                        .get(ExecutorJobMetrics.JOBS_TOTAL)
+                        .tags("jobType", "BUILD", "templatePath", "build/maven", "status", "SUCCESS")
+                        .counter()
+                        .count());
+        assertEquals(
+                1.0,
+                meterRegistry
+                        .get(ExecutorJobMetrics.JOBS_TOTAL)
+                        .tags("jobType", "BUILD", "templatePath", "build/maven", "status", "FAILED")
+                        .counter()
+                        .count());
+        assertEquals(
+                1.0,
+                meterRegistry
+                        .get(ExecutorJobMetrics.JOBS_FAILURES_TOTAL)
+                        .tags("jobType", "BUILD", "templatePath", "build/maven", "errorType", "INFRASTRUCTURE_ERROR")
+                        .counter()
+                        .count());
+        assertEquals(
+                1,
+                meterRegistry
+                        .get(ExecutorJobMetrics.JOBS_DURATION)
+                        .tags("jobType", "BUILD", "templatePath", "build/maven", "status", "SUCCESS")
+                        .timer()
+                        .totalTime(TimeUnit.MILLISECONDS));
     }
 
     private ExecutorJobHandler handler(

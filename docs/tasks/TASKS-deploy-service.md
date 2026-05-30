@@ -40,7 +40,8 @@ Topic: `jobs.deploy`
 
 ## Уровень 3. Общие hardening-задачи сервиса
 
-- [ ] `DEPLOY-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+- [x] `DEPLOY-701 [HARDENING]` Добавить structured metrics: active jobs, duration, success/failure count by errorType.
+  - Готово централизованно через `cicd-executor-core`; `/actuator/metrics` открыт в сервисе.
 - [ ] `DEPLOY-702 [HARDENING]` Добавить graceful shutdown: consumer перестает брать новые сообщения, активная job корректно завершается/отменяется.
 - [ ] `DEPLOY-703 [HARDENING]` Добавить negative tests на отсутствие секретов в logs/events/artifacts.
 - [ ] `DEPLOY-704 [HARDENING]` Добавить Kubernetes resource tuning и documented defaults.

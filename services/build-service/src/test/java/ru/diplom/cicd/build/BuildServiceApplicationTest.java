@@ -24,11 +24,13 @@ class BuildServiceApplicationTest {
     private Environment environment;
 
     @Test
-    void healthEndpointIsAvailable() throws Exception {
+    void actuatorHealthAndMetricsEndpointsAreAvailable() throws Exception {
         MockMvc mockMvc =
                 MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/metrics")).andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/metrics/cicd.executor.jobs.active")).andExpect(status().isOk());
     }
 
     @Test
