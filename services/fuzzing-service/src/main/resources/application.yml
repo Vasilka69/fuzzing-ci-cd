@@ -1,0 +1,36 @@
+server:
+  port: ${SERVER_PORT:8084}
+
+spring:
+  application:
+    name: fuzzing-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:fuzzing-service-executor}
+      client-id: ${KAFKA_CLIENT_ID:fuzzing-service}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: ru.diplom.cicd.contracts.*
+        spring.json.value.default.type: ru.diplom.cicd.contracts.job.JobMessage
+    listener:
+      ack-mode: manual
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+cicd:
+  executor:
+    topic: ${CICD_EXECUTOR_TOPIC:jobs.fuzzing}
+    worker-id: ${CICD_WORKER_ID:fuzzing-worker-1}

@@ -45,7 +45,7 @@
 
 ## Уровень 2. Каркас всех executor-сервисов
 
-- [ ] `SVC-001 [MVP]` Для каждого сервиса создать Spring Boot module, `application.yml`, health endpoint, Kafka consumer config.
+- [x] `SVC-001 [MVP]` Для каждого сервиса создать Spring Boot module, `application.yml`, health endpoint, Kafka consumer config.
 - [ ] `SVC-002 [MVP]` Для каждого сервиса добавить local profile и test profile.
 - [ ] `SVC-003 [MVP]` Для каждого сервиса добавить Dockerfile multi-stage build.
 - [ ] `SVC-004 [MVP]` Для каждого сервиса добавить Kubernetes Deployment/ConfigMap/ServiceAccount и, где нужен HTTP API, Service.
