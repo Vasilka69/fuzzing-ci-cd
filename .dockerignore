@@ -1,0 +1,13 @@
+.git
+.idea
+.codex
+.agents
+target
+**/target
+fuzzing-engine
+Диплом
+Прочее
+*.iml
+.env
+.env.*
+!.env.example
