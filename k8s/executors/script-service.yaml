@@ -25,6 +25,7 @@ data:
   CICD_EXECUTOR_TOPIC: "jobs.script"
   CICD_WORKER_ID: "script-worker-1"
   WORKER_ID: "script-worker-1"
+  LOGGING_STRUCTURED_FORMAT_CONSOLE: "logstash"
   EXECUTOR_EVENTS_TRANSPORT: "kafka"
   OPENSEARCH_LOGS_ENABLED: "true"
   OPENSEARCH_ENDPOINT: "http://opensearch:9200"

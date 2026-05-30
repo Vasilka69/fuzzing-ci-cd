@@ -19,6 +19,16 @@ spring:
     listener:
       ack-mode: manual
 
+logging:
+  structured:
+    format:
+      console: ${LOGGING_STRUCTURED_FORMAT_CONSOLE:}
+    json:
+      context:
+        include: true
+      add:
+        sourceService: ${spring.application.name}
+
 management:
   endpoints:
     web:

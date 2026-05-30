@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.MDC;
 import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.error.ErrorType;
 import ru.diplom.cicd.contracts.event.EventType;
@@ -98,6 +99,31 @@ class ExecutorJobHandlerTest {
         assertFalse(workspaceManager.cleanupFailed);
         assertSame(finishedEvent, idempotencyClaim.completedEvent);
         assertTrue(idempotencyClaim.closed);
+    }
+
+    @Test
+    void handleSetsJobFieldsToMdcAndRestoresPreviousContext() {
+        CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        ExecutorJobHandler handler = handler(workspaceManager, eventPublisher, logPublisher);
+
+        MDC.put("requestId", "existing-request");
+        try {
+            ExecutorEventMessage finishedEvent = handler.handle(job(), context -> {
+                assertEquals(JOB_EXECUTION_ID.toString(), MDC.get(ExecutorJobLoggingContext.JOB_EXECUTION_ID));
+                assertEquals("00000000-0000-0000-0000-000000000002", MDC.get(ExecutorJobLoggingContext.CORRELATION_ID));
+                assertEquals("existing-request", MDC.get("requestId"));
+                return ExecutorJobResult.success("ok");
+            });
+
+            assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
+            assertEquals("existing-request", MDC.get("requestId"));
+            assertNull(MDC.get(ExecutorJobLoggingContext.JOB_EXECUTION_ID));
+            assertNull(MDC.get(ExecutorJobLoggingContext.CORRELATION_ID));
+        } finally {
+            MDC.clear();
+        }
     }
 
     @Test

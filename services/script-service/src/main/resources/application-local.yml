@@ -8,6 +8,11 @@ spring:
       group-id: ${KAFKA_CONSUMER_GROUP:script-service-local}
       client-id: ${KAFKA_CLIENT_ID:script-service-local}
 
+logging:
+  structured:
+    format:
+      console: ${LOGGING_STRUCTURED_FORMAT_CONSOLE:}
+
 cicd:
   executor:
     topic: ${CICD_EXECUTOR_TOPIC:jobs.script}

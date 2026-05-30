@@ -76,6 +76,8 @@ resources:
 - `STORAGE_ENDPOINT`
 - `WORKSPACE_ROOT`
 - `WORKER_ID`
+- `LOGGING_STRUCTURED_FORMAT_CONSOLE` — `logstash` для structured logs в deploy,
+  пустое значение для человекочитаемого локального формата.
 
 Секреты передаются только через Kubernetes Secret/Vault/SecretResolver, не через ConfigMap.
 

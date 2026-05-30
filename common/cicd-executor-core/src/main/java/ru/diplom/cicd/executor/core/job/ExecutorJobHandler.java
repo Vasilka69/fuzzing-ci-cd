@@ -95,6 +95,12 @@ public final class ExecutorJobHandler {
         Objects.requireNonNull(job, "job");
         Objects.requireNonNull(executorJob, "executorJob");
 
+        try (ExecutorJobLoggingContext ignored = ExecutorJobLoggingContext.open(job)) {
+            return handleWithLoggingContext(job, executorJob);
+        }
+    }
+
+    private ExecutorEventMessage handleWithLoggingContext(JobMessage job, ExecutorJob executorJob) {
         Instant startedAt = clock.instant();
         WorkspaceHandle workspace = null;
         IdempotencyClaim idempotencyClaim = null;
