@@ -31,7 +31,7 @@
 - [x] `CORE-001 [MVP]` Реализовать DTO `JobMessage`, `ExecutorEventMessage`, `ArtifactDescriptor`, `ExecutorError`, `ResourceLimits`, `WorkspacePolicy`, `SandboxPolicy`.
 - [x] `CORE-002 [MVP]` Зафиксировать enums `JobType`, `EventType`, `ExecutionStatus`, `ErrorType` согласно `AGENTS.md`.
 - [x] `CORE-003 [MVP]` Добавить JSON serialization tests: camelCase, `schemaVersion=1`, backward-compatible unknown fields ignored only where безопасно.
-- [ ] `CORE-004 [MVP]` Реализовать `ExecutorEventPublisher` interface и Kafka implementation.
+- [x] `CORE-004 [MVP]` Реализовать `ExecutorEventPublisher` interface и Kafka implementation.
 - [ ] `CORE-005 [MVP]` Реализовать `ExecutorLogPublisher` interface и OpenSearch implementation.
 - [ ] `CORE-006 [MVP]` Реализовать `SecretRedactor` и unit tests на маскирование token/password/private key.
 - [ ] `CORE-007 [MVP]` Реализовать `WorkspaceManager`: create, resolve paths, cleanup, preserve-on-failure.

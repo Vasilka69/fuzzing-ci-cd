@@ -10,6 +10,7 @@
     "docs/architecture/ADR-0001-maven-multi-module.md",
     "docs/architecture/ADR-0002-executor-contracts.md",
     "docs/architecture/ADR-0003-fuzzing-kernel-integration.md",
+    "docs/architecture/ADR-0004-kafka-event-publisher-dependency.md",
     "docs/checklists/DEFINITION_OF_DONE.md",
     "docs/checklists/REVIEW_CHECKLIST.md",
     "docs/checklists/SECURITY_CHECKLIST.md",

@@ -112,8 +112,7 @@ class ContractDtoTest {
         assertEquals(EventType.JOB_FINISHED, message.eventType());
         assertEquals(ExecutionStatus.SUCCESS, message.status());
         assertFalse(message.metrics().containsKey("lateMutation"));
-        assertThrows(
-                UnsupportedOperationException.class, dtoArtifacts::clear);
+        assertThrows(UnsupportedOperationException.class, dtoArtifacts::clear);
     }
 
     @Test
@@ -143,8 +142,6 @@ class ContractDtoTest {
         List<String> capabilitiesDrop = policy.capabilitiesDrop();
         assertEquals(List.of("ALL"), capabilitiesDrop);
         assertFalse(policy.additionalData().containsKey("lateMutation"));
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> capabilitiesDrop.add("SYS_ADMIN"));
+        assertThrows(UnsupportedOperationException.class, () -> capabilitiesDrop.add("SYS_ADMIN"));
     }
 }
