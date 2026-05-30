@@ -36,7 +36,7 @@
 - [x] `CORE-006 [MVP]` Реализовать `SecretRedactor` и unit tests на маскирование token/password/private key.
 - [x] `CORE-007 [MVP]` Реализовать `WorkspaceManager`: create, resolve paths, cleanup, preserve-on-failure.
 - [x] `CORE-008 [MVP]` Реализовать `StorageClient` interface + local/http adapter stub.
-- [ ] `CORE-009 [MVP]` Реализовать общий `ExecutorJobHandler` pipeline: validate -> running event -> execute -> logs -> artifacts -> finished event -> cleanup.
+- [x] `CORE-009 [MVP]` Реализовать общий `ExecutorJobHandler` pipeline: validate -> running event -> execute -> logs -> artifacts -> finished event -> cleanup.
 - [ ] `CORE-010 [DIPLOMA]` Добавить idempotency guard по `jobExecutionId` через marker/state file в workspace/artifact namespace.
 - [ ] `CORE-011 [DIPLOMA]` Добавить `SandboxPolicyValidator`, который запрещает privileged, host network, Docker socket, hostPath.
 - [ ] `CORE-012 [DIPLOMA]` Добавить process runner с timeout, grace period, stdout/stderr chunking.
