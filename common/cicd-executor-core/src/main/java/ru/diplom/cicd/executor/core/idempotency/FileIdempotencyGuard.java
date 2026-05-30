@@ -62,31 +62,36 @@ public final class FileIdempotencyGuard implements IdempotencyGuard {
                 return new SkippedClaim(IdempotencyDecision.duplicateRunning(readUpdatedAt(statePath)));
             }
 
-            try {
-                IdempotencyState currentState = readState(statePath);
-                if (currentState != null && isDuplicateCompleted(currentState.status())) {
-                    release(lock, lockChannel);
-                    return new SkippedClaim(IdempotencyDecision.duplicateCompleted(
-                            currentState.status(),
-                            currentState.summary(),
-                            parseInstant(currentState.updatedAt()),
-                            currentState.metadata()));
-                }
-
-                writeState(
-                        statePath,
-                        IdempotencyState.running(
-                                job.schemaVersion(),
-                                job.messageId(),
-                                job.attempt(),
-                                clock.instant().toString()));
-                return new FileClaim(statePath, lock, lockChannel);
-            } catch (IOException | RuntimeException exception) {
-                release(lock, lockChannel);
-                throw exception;
-            }
+            return acquireLocked(job, statePath, lock, lockChannel);
         } catch (IOException exception) {
             throw new IdempotencyException("Не удалось проверить idempotency marker job: " + jobExecutionId, exception);
+        }
+    }
+
+    private IdempotencyClaim acquireLocked(JobMessage job, Path statePath, FileLock lock, FileChannel lockChannel)
+            throws IOException {
+        try {
+            IdempotencyState currentState = readState(statePath);
+            if (currentState != null && isDuplicateCompleted(currentState.status())) {
+                release(lock, lockChannel);
+                return new SkippedClaim(IdempotencyDecision.duplicateCompleted(
+                        currentState.status(),
+                        currentState.summary(),
+                        parseInstant(currentState.updatedAt()),
+                        currentState.metadata()));
+            }
+
+            writeState(
+                    statePath,
+                    IdempotencyState.running(
+                            job.schemaVersion(),
+                            job.messageId(),
+                            job.attempt(),
+                            clock.instant().toString()));
+            return new FileClaim(statePath, lock, lockChannel);
+        } catch (IOException | RuntimeException exception) {
+            release(lock, lockChannel);
+            throw exception;
         }
     }
 
