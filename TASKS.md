@@ -32,7 +32,7 @@
 - [x] `CORE-002 [MVP]` Зафиксировать enums `JobType`, `EventType`, `ExecutionStatus`, `ErrorType` согласно `AGENTS.md`.
 - [x] `CORE-003 [MVP]` Добавить JSON serialization tests: camelCase, `schemaVersion=1`, backward-compatible unknown fields ignored only where безопасно.
 - [x] `CORE-004 [MVP]` Реализовать `ExecutorEventPublisher` interface и Kafka implementation.
-- [ ] `CORE-005 [MVP]` Реализовать `ExecutorLogPublisher` interface и OpenSearch implementation.
+- [x] `CORE-005 [MVP]` Реализовать `ExecutorLogPublisher` interface и OpenSearch implementation.
 - [ ] `CORE-006 [MVP]` Реализовать `SecretRedactor` и unit tests на маскирование token/password/private key.
 - [ ] `CORE-007 [MVP]` Реализовать `WorkspaceManager`: create, resolve paths, cleanup, preserve-on-failure.
 - [ ] `CORE-008 [MVP]` Реализовать `StorageClient` interface + local/http adapter stub.
