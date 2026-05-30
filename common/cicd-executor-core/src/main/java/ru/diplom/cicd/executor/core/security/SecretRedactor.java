@@ -17,12 +17,13 @@ public final class SecretRedactor {
     private static final String SECRET_FIELD_NAMES =
             "password|passwd|pwd|token|access[-_]?token|refresh[-_]?token|api[-_]?key|private[-_]?key";
 
-//    Sonar жаловался, поэтому пока заменён
-//    private static final Pattern JSON_SECRET_VALUE =
-//            Pattern.compile("(?i)(\"(?:" + SECRET_FIELD_NAMES + ")\"\\s*:\\s*\")((?:\\\\.|[^\"\\\\])*)(\")");
+    @SuppressWarnings("java:S125")
+    //    Sonar жаловался, поэтому пока заменён
+    //    private static final Pattern JSON_SECRET_VALUE =
+    //            Pattern.compile("(?i)(\"(?:" + SECRET_FIELD_NAMES + ")\"\\s*:\\s*\")((?:\\\\.|[^\"\\\\])*)(\")");
 
     private static final Pattern JSON_SECRET_VALUE =
-        Pattern.compile("(\"(?i:" + SECRET_FIELD_NAMES + ")\"\\s*:\\s*\")((?:\\\\.|[^\"\\\\])*+)(\")");
+            Pattern.compile("(\"(?i:" + SECRET_FIELD_NAMES + ")\"\\s*:\\s*\")((?:\\\\.|[^\"\\\\])*+)(\")");
 
     private static final Pattern KEY_VALUE_SECRET =
             Pattern.compile("(?i)(\\b(?:" + SECRET_FIELD_NAMES + ")\\b\\s*[:=]\\s*)(\"[^\"]*\"|'[^']*'|[^\\s,;&]+)");
