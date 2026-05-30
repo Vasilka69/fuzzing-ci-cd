@@ -12,6 +12,7 @@
     "docs/architecture/ADR-0003-fuzzing-kernel-integration.md",
     "docs/architecture/ADR-0004-kafka-event-publisher-dependency.md",
     "docs/architecture/ADR-0005-jackson-opensearch-log-serialization.md",
+    "docs/architecture/ADR-0006-commons-exec-process-runner.md",
     "docs/checklists/DEFINITION_OF_DONE.md",
     "docs/checklists/REVIEW_CHECKLIST.md",
     "docs/checklists/SECURITY_CHECKLIST.md",
