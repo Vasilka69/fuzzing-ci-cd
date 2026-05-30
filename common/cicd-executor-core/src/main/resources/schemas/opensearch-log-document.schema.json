@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://diplom.local/schemas/opensearch-log-document.schema.json",
+  "title": "OpenSearchLogDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "documentId",
+    "ingestedAt",
+    "sourceService",
+    "schemaVersion",
+    "messageId",
+    "correlationId",
+    "pipelineRunId",
+    "pipelineId",
+    "stageId",
+    "jobId",
+    "jobExecutionId",
+    "jobType",
+    "templatePath",
+    "eventType",
+    "status",
+    "attempt",
+    "workerId",
+    "durationMs",
+    "metrics",
+    "summary",
+    "logs",
+    "additionalData"
+  ],
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ingestedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceService": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "messageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "correlationId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineRunId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "stageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobExecutionId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobType": {
+      "$ref": "#/$defs/jobType"
+    },
+    "templatePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eventType": {
+      "type": "string",
+      "const": "JOB_LOG"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "durationMs": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": ["string", "null"]
+    },
+    "logs": {
+      "type": "string",
+      "minLength": 1
+    },
+    "additionalData": {
+      "type": "object",
+      "required": ["logOnly"],
+      "properties": {
+        "logOnly": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobType": {
+      "type": "string",
+      "enum": ["vcs", "storage", "build", "fuzzing", "deploy", "script"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCESS",
+        "FAILED",
+        "TIMEOUT",
+        "CANCELING",
+        "CANCELED",
+        "RETRYING",
+        "SKIPPED",
+        "WAITING_APPROVAL"
+      ]
+    }
+  }
+}

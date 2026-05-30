@@ -40,7 +40,7 @@
 - [x] `CORE-010 [DIPLOMA]` Добавить idempotency guard по `jobExecutionId` через marker/state file в workspace/artifact namespace.
 - [x] `CORE-011 [DIPLOMA]` Добавить `SandboxPolicyValidator`, который запрещает privileged, host network, Docker socket, hostPath.
 - [x] `CORE-012 [DIPLOMA]` Добавить process runner с timeout, grace period, stdout/stderr chunking.
-- [ ] `CORE-013 [DIPLOMA]` Добавить OpenSearch document schema tests.
+- [x] `CORE-013 [DIPLOMA]` Добавить OpenSearch document schema tests.
 - [ ] `CORE-014 [HARDENING]` Добавить OpenTelemetry trace context propagation через Kafka headers.
 
 ## Уровень 2. Каркас всех executor-сервисов

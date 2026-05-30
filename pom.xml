@@ -17,6 +17,7 @@
     <maven.version>3.9.16</maven.version>
     <spring-boot.version>4.0.6</spring-boot.version>
     <commons-exec.version>1.6.0</commons-exec.version>
+    <json-schema-validator.version>2.0.1</json-schema-validator.version>
     <mockito.version>5.20.0</mockito.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -74,6 +75,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-exec</artifactId>
         <version>${commons-exec.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.networknt</groupId>
+        <artifactId>json-schema-validator</artifactId>
+        <version>${json-schema-validator.version}</version>
       </dependency>
 
       <dependency>
