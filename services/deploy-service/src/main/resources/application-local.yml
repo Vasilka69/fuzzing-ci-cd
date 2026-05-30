@@ -1,0 +1,14 @@
+server:
+  port: ${SERVER_PORT:8085}
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:deploy-service-local}
+      client-id: ${KAFKA_CLIENT_ID:deploy-service-local}
+
+cicd:
+  executor:
+    topic: ${CICD_EXECUTOR_TOPIC:jobs.deploy}
+    worker-id: ${CICD_WORKER_ID:deploy-local-worker-1}

@@ -1,0 +1,19 @@
+server:
+  port: 0
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: script-service-test
+      client-id: script-service-test
+
+management:
+  health:
+    kafka:
+      enabled: false
+
+cicd:
+  executor:
+    topic: jobs.script
+    worker-id: script-test-worker-1

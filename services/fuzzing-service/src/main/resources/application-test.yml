@@ -1,0 +1,19 @@
+server:
+  port: 0
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: fuzzing-service-test
+      client-id: fuzzing-service-test
+
+management:
+  health:
+    kafka:
+      enabled: false
+
+cicd:
+  executor:
+    topic: jobs.fuzzing
+    worker-id: fuzzing-test-worker-1

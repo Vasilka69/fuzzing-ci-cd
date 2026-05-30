@@ -1,0 +1,19 @@
+server:
+  port: 0
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: build-service-test
+      client-id: build-service-test
+
+management:
+  health:
+    kafka:
+      enabled: false
+
+cicd:
+  executor:
+    topic: jobs.build
+    worker-id: build-test-worker-1
