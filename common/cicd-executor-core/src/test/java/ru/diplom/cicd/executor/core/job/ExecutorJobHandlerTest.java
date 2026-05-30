@@ -152,6 +152,44 @@ class ExecutorJobHandlerTest {
     }
 
     @Test
+    void handleRejectsUnsafeSandboxPolicyBeforeWorkspaceAndServiceCode() {
+        CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        ExecutorJobHandler handler = handler(workspaceManager, eventPublisher, logPublisher);
+        JobMessage unsafeJob = job(new SandboxPolicy(
+                false,
+                true,
+                true,
+                false,
+                true,
+                List.of(),
+                List.of("ALL"),
+                "RuntimeDefault",
+                "none",
+                List.of(),
+                List.of(),
+                false,
+                Map.of()));
+
+        ExecutorEventMessage finishedEvent = handler.handle(unsafeJob, context -> {
+            throw new AssertionError("Unsafe sandbox policy не должна выполнять service code");
+        });
+
+        assertEquals(1, eventPublisher.events.size());
+        assertSame(finishedEvent, eventPublisher.events.getFirst());
+        assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
+        assertEquals(ExecutionStatus.FAILED, finishedEvent.status());
+        assertEquals(ErrorType.SECURITY_ERROR, finishedEvent.error().type());
+        assertEquals("executor.sandbox.policy-denied", finishedEvent.error().code());
+        assertEquals("Sandbox policy job нарушает требования безопасности", finishedEvent.summary());
+        assertEquals("host network запрещен", finishedEvent.error().details());
+        assertFalse(workspaceManager.createCalled);
+        assertFalse(workspaceManager.cleanupCalled);
+        assertTrue(logPublisher.events.isEmpty());
+    }
+
+    @Test
     void handleSkipsDuplicateCompletedJobWithoutExecutingServiceCode() {
         CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
@@ -294,7 +332,15 @@ class ExecutorJobHandlerTest {
         return job(1, JOB_EXECUTION_ID);
     }
 
+    private JobMessage job(SandboxPolicy sandboxPolicy) {
+        return job(1, JOB_EXECUTION_ID, sandboxPolicy);
+    }
+
     private JobMessage job(int schemaVersion, UUID jobExecutionId) {
+        return job(schemaVersion, jobExecutionId, safeSandboxPolicy());
+    }
+
+    private JobMessage job(int schemaVersion, UUID jobExecutionId, SandboxPolicy sandboxPolicy) {
         return new JobMessage(
                 schemaVersion,
                 UUID.fromString("00000000-0000-0000-0000-000000000001"),
@@ -311,24 +357,28 @@ class ExecutorJobHandlerTest {
                 1800,
                 ResourceLimits.empty(),
                 new WorkspacePolicy("always", false),
-                new SandboxPolicy(
-                        false,
-                        false,
-                        true,
-                        false,
-                        true,
-                        List.of(),
-                        List.of("ALL"),
-                        "RuntimeDefault",
-                        "none",
-                        List.of(),
-                        List.of(),
-                        false,
-                        Map.of()),
+                sandboxPolicy,
                 Map.of(),
                 Map.of(),
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
+    }
+
+    private SandboxPolicy safeSandboxPolicy() {
+        return new SandboxPolicy(
+                false,
+                false,
+                true,
+                false,
+                true,
+                List.of(),
+                List.of("ALL"),
+                "RuntimeDefault",
+                "none",
+                List.of(),
+                List.of(),
+                false,
+                Map.of());
     }
 
     private ArtifactDescriptor artifact() {

@@ -23,6 +23,7 @@ import ru.diplom.cicd.executor.core.idempotency.IdempotencyDecision;
 import ru.diplom.cicd.executor.core.idempotency.IdempotencyException;
 import ru.diplom.cicd.executor.core.idempotency.IdempotencyGuard;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
+import ru.diplom.cicd.executor.core.security.SandboxPolicyValidator;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.workspace.WorkspaceHandle;
 import ru.diplom.cicd.executor.core.workspace.WorkspaceManager;
@@ -36,6 +37,7 @@ public final class ExecutorJobHandler {
     private final ExecutorEventPublisher eventPublisher;
     private final ExecutorLogPublisher logPublisher;
     private final SecretRedactor secretRedactor;
+    private final SandboxPolicyValidator sandboxPolicyValidator;
     private final IdempotencyGuard idempotencyGuard;
     private final String workerId;
     private final Clock clock;
@@ -82,6 +84,7 @@ public final class ExecutorJobHandler {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher");
         this.logPublisher = Objects.requireNonNull(logPublisher, "logPublisher");
         this.secretRedactor = Objects.requireNonNull(secretRedactor, "secretRedactor");
+        this.sandboxPolicyValidator = new SandboxPolicyValidator();
         this.idempotencyGuard = Objects.requireNonNull(idempotencyGuard, "idempotencyGuard");
         this.workerId = workerId == null || workerId.isBlank() ? "executor-worker" : workerId;
         this.clock = Objects.requireNonNull(clock, "clock");
@@ -201,6 +204,7 @@ public final class ExecutorJobHandler {
         if (job.timeoutSeconds() < 1) {
             throw ExecutorJobException.validation("Timeout job должен быть положительным");
         }
+        sandboxPolicyValidator.validate(job.sandboxPolicy());
     }
 
     private ExecutorJobResult requireResult(ExecutorJobResult result) {
