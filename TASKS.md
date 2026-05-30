@@ -48,7 +48,7 @@
 - [x] `SVC-001 [MVP]` Для каждого сервиса создать Spring Boot module, `application.yml`, health endpoint, Kafka consumer config.
 - [x] `SVC-002 [MVP]` Для каждого сервиса добавить local profile и test profile.
 - [x] `SVC-003 [MVP]` Для каждого сервиса добавить Dockerfile multi-stage build.
-- [ ] `SVC-004 [MVP]` Для каждого сервиса добавить Kubernetes Deployment/ConfigMap/ServiceAccount и, где нужен HTTP API, Service.
+- [x] `SVC-004 [MVP]` Для каждого сервиса добавить Kubernetes Deployment/ConfigMap/ServiceAccount и, где нужен HTTP API, Service.
 - [ ] `SVC-005 [MVP]` Для каждого сервиса добавить service-scoped `AGENTS.md`.
 - [ ] `SVC-006 [DIPLOMA]` Для каждого сервиса добавить structured logging с `jobExecutionId`, `correlationId`, `sourceService`.
 - [ ] `SVC-007 [DIPLOMA]` Для каждого сервиса добавить metrics: job count, duration, failures by errorType, active jobs.

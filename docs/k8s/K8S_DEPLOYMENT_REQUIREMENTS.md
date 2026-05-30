@@ -26,6 +26,10 @@
 - Probes: readiness/liveness/startup where needed;
 - SecurityContext.
 
+MVP-манифесты executor-сервисов находятся в `k8s/executors/`. Для каждого сервиса
+описаны `Deployment`, `ConfigMap`, `ServiceAccount` и `Service` для actuator/health
+доступа внутри кластера.
+
 ## Базовый securityContext
 
 ```yaml

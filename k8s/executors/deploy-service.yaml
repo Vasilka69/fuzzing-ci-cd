@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deploy-service
+  labels:
+    app.kubernetes.io/name: deploy-service
+    app.kubernetes.io/component: executor
+    app.kubernetes.io/part-of: fuzzing-ci-cd
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-service-config
+  labels:
+    app.kubernetes.io/name: deploy-service
+    app.kubernetes.io/component: executor
+    app.kubernetes.io/part-of: fuzzing-ci-cd
+data:
+  SERVICE_NAME: "deploy-service"
+  SERVER_PORT: "8080"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_CONSUMER_GROUP: "deploy-service-executor"
+  KAFKA_CLIENT_ID: "deploy-service"
+  CICD_EXECUTOR_TOPIC: "jobs.deploy"
+  CICD_WORKER_ID: "deploy-worker-1"
+  WORKER_ID: "deploy-worker-1"
+  EXECUTOR_EVENTS_TRANSPORT: "kafka"
+  OPENSEARCH_LOGS_ENABLED: "true"
+  OPENSEARCH_ENDPOINT: "http://opensearch:9200"
+  OPENSEARCH_EVENTS_INDEX: "executor-events"
+  STORAGE_ENDPOINT: "http://storage-service:8080"
+  WORKSPACE_ROOT: "/workspace"
+  JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=/tmp -Duser.home=/tmp"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-service
+  labels:
+    app.kubernetes.io/name: deploy-service
+    app.kubernetes.io/component: executor
+    app.kubernetes.io/part-of: fuzzing-ci-cd
+    app.kubernetes.io/version: "0.1.0-SNAPSHOT"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: deploy-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: deploy-service
+        app.kubernetes.io/component: executor
+        app.kubernetes.io/part-of: fuzzing-ci-cd
+    spec:
+      serviceAccountName: deploy-service
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: deploy-service
+          image: fuzzing-ci-cd/deploy-service:0.1.0-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: deploy-service-config
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+              ephemeral-storage: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+              ephemeral-storage: "4Gi"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: workspace
+              mountPath: /workspace
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 18
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: workspace
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deploy-service
+  labels:
+    app.kubernetes.io/name: deploy-service
+    app.kubernetes.io/component: executor
+    app.kubernetes.io/part-of: fuzzing-ci-cd
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: deploy-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
