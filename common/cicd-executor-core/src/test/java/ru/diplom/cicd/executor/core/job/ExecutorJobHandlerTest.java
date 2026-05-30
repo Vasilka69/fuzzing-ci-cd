@@ -33,6 +33,10 @@ import ru.diplom.cicd.contracts.job.ResourceLimits;
 import ru.diplom.cicd.contracts.job.WorkspacePolicy;
 import ru.diplom.cicd.contracts.security.SandboxPolicy;
 import ru.diplom.cicd.executor.core.event.ExecutorEventPublisher;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyClaim;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyDecision;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyDecisionType;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyGuard;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.workspace.WorkspaceHandle;
@@ -50,7 +54,9 @@ class ExecutorJobHandlerTest {
         CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
         CapturingLogPublisher logPublisher = new CapturingLogPublisher();
-        ExecutorJobHandler handler = handler(workspaceManager, eventPublisher, logPublisher);
+        CapturingIdempotencyClaim idempotencyClaim = new CapturingIdempotencyClaim(IdempotencyDecision.started());
+        ExecutorJobHandler handler =
+                handler(workspaceManager, eventPublisher, logPublisher, new FixedIdempotencyGuard(idempotencyClaim));
         ArtifactDescriptor artifact = artifact();
         JobMessage job = job();
 
@@ -90,6 +96,8 @@ class ExecutorJobHandlerTest {
 
         assertTrue(workspaceManager.cleanupCalled);
         assertFalse(workspaceManager.cleanupFailed);
+        assertSame(finishedEvent, idempotencyClaim.completedEvent);
+        assertTrue(idempotencyClaim.closed);
     }
 
     @Test
@@ -144,6 +152,42 @@ class ExecutorJobHandlerTest {
     }
 
     @Test
+    void handleSkipsDuplicateCompletedJobWithoutExecutingServiceCode() {
+        CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        CapturingIdempotencyClaim idempotencyClaim =
+                new CapturingIdempotencyClaim(IdempotencyDecision.duplicateCompleted(
+                        ExecutionStatus.SUCCESS,
+                        "Сборка уже завершена успешно",
+                        Instant.parse("2026-05-30T09:01:00Z"),
+                        Map.of("previousMessageId", "00000000-0000-0000-0000-000000000201")));
+        ExecutorJobHandler handler =
+                handler(workspaceManager, eventPublisher, logPublisher, new FixedIdempotencyGuard(idempotencyClaim));
+
+        ExecutorEventMessage skippedEvent = handler.handle(job(), context -> {
+            throw new AssertionError("Duplicate job не должна выполнять service code");
+        });
+
+        assertEquals(1, eventPublisher.events.size());
+        assertSame(skippedEvent, eventPublisher.events.getFirst());
+        assertEquals(EventType.JOB_SKIPPED, skippedEvent.eventType());
+        assertEquals(ExecutionStatus.SKIPPED, skippedEvent.status());
+        assertEquals("Повторная доставка job пропущена: Сборка уже завершена успешно", skippedEvent.summary());
+        assertEquals(true, skippedEvent.additionalData().get("idempotentDuplicate"));
+        assertEquals(
+                IdempotencyDecisionType.DUPLICATE_COMPLETED.name(),
+                skippedEvent.additionalData().get("decisionType"));
+        assertEquals(
+                ExecutionStatus.SUCCESS.name(), skippedEvent.additionalData().get("previousStatus"));
+        assertFalse(workspaceManager.createCalled);
+        assertFalse(workspaceManager.cleanupCalled);
+        assertTrue(logPublisher.events.isEmpty());
+        assertNull(idempotencyClaim.completedEvent);
+        assertTrue(idempotencyClaim.closed);
+    }
+
+    @Test
     void handleFailsFastWhenJobExecutionIdIsMissingBecauseKafkaKeyCannotBeBuilt() {
         CapturingWorkspaceManager workspaceManager = new CapturingWorkspaceManager(tempDir);
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
@@ -190,9 +234,60 @@ class ExecutorJobHandlerTest {
                 eventPublisher,
                 logPublisher,
                 new SecretRedactor(),
+                IdempotencyGuard.noop(),
                 "core-worker-1",
                 new TickClock(),
                 new DeterministicUuidSupplier());
+    }
+
+    private ExecutorJobHandler handler(
+            CapturingWorkspaceManager workspaceManager,
+            CapturingEventPublisher eventPublisher,
+            CapturingLogPublisher logPublisher,
+            IdempotencyGuard idempotencyGuard) {
+        return new ExecutorJobHandler(
+                workspaceManager,
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                idempotencyGuard,
+                "core-worker-1",
+                new TickClock(),
+                new DeterministicUuidSupplier());
+    }
+
+    private record FixedIdempotencyGuard(IdempotencyClaim claim) implements IdempotencyGuard {
+
+        @Override
+        public IdempotencyClaim acquire(JobMessage job) {
+            return claim;
+        }
+    }
+
+    private static final class CapturingIdempotencyClaim implements IdempotencyClaim {
+
+        private final IdempotencyDecision decision;
+        private ExecutorEventMessage completedEvent;
+        private boolean closed;
+
+        private CapturingIdempotencyClaim(IdempotencyDecision decision) {
+            this.decision = decision;
+        }
+
+        @Override
+        public IdempotencyDecision decision() {
+            return decision;
+        }
+
+        @Override
+        public void complete(ExecutorEventMessage event) {
+            completedEvent = event;
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
     }
 
     private JobMessage job() {

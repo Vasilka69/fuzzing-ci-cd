@@ -18,6 +18,10 @@ import ru.diplom.cicd.contracts.event.ExecutionStatus;
 import ru.diplom.cicd.contracts.event.ExecutorEventMessage;
 import ru.diplom.cicd.contracts.job.JobMessage;
 import ru.diplom.cicd.executor.core.event.ExecutorEventPublisher;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyClaim;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyDecision;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyException;
+import ru.diplom.cicd.executor.core.idempotency.IdempotencyGuard;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.workspace.WorkspaceHandle;
@@ -32,6 +36,7 @@ public final class ExecutorJobHandler {
     private final ExecutorEventPublisher eventPublisher;
     private final ExecutorLogPublisher logPublisher;
     private final SecretRedactor secretRedactor;
+    private final IdempotencyGuard idempotencyGuard;
     private final String workerId;
     private final Clock clock;
     private final Supplier<UUID> messageIdSupplier;
@@ -42,21 +47,34 @@ public final class ExecutorJobHandler {
             ExecutorLogPublisher logPublisher,
             SecretRedactor secretRedactor,
             String workerId) {
+        this(workspaceManager, eventPublisher, logPublisher, secretRedactor, IdempotencyGuard.noop(), workerId);
+    }
+
+    public ExecutorJobHandler(
+            WorkspaceManager workspaceManager,
+            ExecutorEventPublisher eventPublisher,
+            ExecutorLogPublisher logPublisher,
+            SecretRedactor secretRedactor,
+            IdempotencyGuard idempotencyGuard,
+            String workerId) {
         this(
                 workspaceManager,
                 eventPublisher,
                 logPublisher,
                 secretRedactor,
+                idempotencyGuard,
                 workerId,
                 Clock.systemUTC(),
                 UUID::randomUUID);
     }
 
+    @SuppressWarnings("java:S107")
     ExecutorJobHandler(
             WorkspaceManager workspaceManager,
             ExecutorEventPublisher eventPublisher,
             ExecutorLogPublisher logPublisher,
             SecretRedactor secretRedactor,
+            IdempotencyGuard idempotencyGuard,
             String workerId,
             Clock clock,
             Supplier<UUID> messageIdSupplier) {
@@ -64,6 +82,7 @@ public final class ExecutorJobHandler {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher");
         this.logPublisher = Objects.requireNonNull(logPublisher, "logPublisher");
         this.secretRedactor = Objects.requireNonNull(secretRedactor, "secretRedactor");
+        this.idempotencyGuard = Objects.requireNonNull(idempotencyGuard, "idempotencyGuard");
         this.workerId = workerId == null || workerId.isBlank() ? "executor-worker" : workerId;
         this.clock = Objects.requireNonNull(clock, "clock");
         this.messageIdSupplier = Objects.requireNonNull(messageIdSupplier, "messageIdSupplier");
@@ -75,10 +94,19 @@ public final class ExecutorJobHandler {
 
         Instant startedAt = clock.instant();
         WorkspaceHandle workspace = null;
+        IdempotencyClaim idempotencyClaim = null;
         ExecutionStatus cleanupStatus = ExecutionStatus.FAILED;
 
         try {
             validate(job);
+            idempotencyClaim = idempotencyGuard.acquire(job);
+            if (!idempotencyClaim.shouldExecute()) {
+                ExecutorEventMessage skippedEvent = skippedDuplicateEvent(job, startedAt, idempotencyClaim.decision());
+                publishEvent(skippedEvent);
+                cleanupStatus = ExecutionStatus.SKIPPED;
+                return skippedEvent;
+            }
+
             workspace = workspaceManager.create(job.jobExecutionId(), job.workspacePolicy());
             publishEvent(event(
                     job,
@@ -108,6 +136,7 @@ public final class ExecutorJobHandler {
                     null,
                     result.additionalData());
             publishEvent(finishedEvent);
+            completeIdempotencyClaim(idempotencyClaim, finishedEvent);
             cleanupStatus = result.status();
             return finishedEvent;
         } catch (ExecutorJobException exception) {
@@ -116,7 +145,20 @@ public final class ExecutorJobHandler {
             }
             ExecutorEventMessage failedEvent = failedEvent(job, startedAt, exception);
             publishEvent(failedEvent);
+            completeIdempotencyClaim(idempotencyClaim, failedEvent);
             cleanupStatus = exception.status();
+            return failedEvent;
+        } catch (IdempotencyException exception) {
+            ExecutorJobException typedException = new ExecutorJobException(
+                    ErrorType.INFRASTRUCTURE_ERROR,
+                    "executor.job.idempotency",
+                    "Executor не смог проверить idempotency marker job",
+                    exception.getMessage(),
+                    Map.of("exceptionClass", exception.getClass().getName()),
+                    ExecutionStatus.FAILED);
+            ExecutorEventMessage failedEvent = failedEvent(job, startedAt, typedException);
+            publishEvent(failedEvent);
+            cleanupStatus = ExecutionStatus.FAILED;
             return failedEvent;
         } catch (Exception exception) {
             ExecutorJobException typedException = new ExecutorJobException(
@@ -128,10 +170,14 @@ public final class ExecutorJobHandler {
                     ExecutionStatus.FAILED);
             ExecutorEventMessage failedEvent = failedEvent(job, startedAt, typedException);
             publishEvent(failedEvent);
+            completeIdempotencyClaim(idempotencyClaim, failedEvent);
             return failedEvent;
         } finally {
             if (workspace != null) {
                 workspaceManager.cleanup(workspace, shouldPreserveAsFailure(cleanupStatus));
+            }
+            if (idempotencyClaim != null) {
+                idempotencyClaim.close();
             }
         }
     }
@@ -231,6 +277,35 @@ public final class ExecutorJobHandler {
                 Map.of());
     }
 
+    private ExecutorEventMessage skippedDuplicateEvent(
+            JobMessage job, Instant startedAt, IdempotencyDecision idempotencyDecision) {
+        return event(
+                job,
+                EventType.JOB_SKIPPED,
+                ExecutionStatus.SKIPPED,
+                resultDuration(startedAt),
+                List.of(),
+                Map.of(),
+                idempotencyDecision.summary(),
+                null,
+                null,
+                duplicateMetadata(idempotencyDecision));
+    }
+
+    private Map<String, Object> duplicateMetadata(IdempotencyDecision idempotencyDecision) {
+        Map<String, Object> metadata = new java.util.LinkedHashMap<>();
+        metadata.put("idempotentDuplicate", true);
+        metadata.put("decisionType", idempotencyDecision.type().name());
+        if (idempotencyDecision.previousStatus() != null) {
+            metadata.put("previousStatus", idempotencyDecision.previousStatus().name());
+        }
+        if (idempotencyDecision.updatedAt() != null) {
+            metadata.put("updatedAt", idempotencyDecision.updatedAt().toString());
+        }
+        metadata.putAll(idempotencyDecision.metadata());
+        return metadata;
+    }
+
     @SuppressWarnings("java:S107")
     private ExecutorEventMessage event(
             JobMessage job,
@@ -288,6 +363,12 @@ public final class ExecutorJobHandler {
 
     private void publishLog(ExecutorEventMessage event) {
         await(logPublisher.publish(event));
+    }
+
+    private void completeIdempotencyClaim(IdempotencyClaim idempotencyClaim, ExecutorEventMessage event) {
+        if (idempotencyClaim != null) {
+            idempotencyClaim.complete(event);
+        }
     }
 
     /**
