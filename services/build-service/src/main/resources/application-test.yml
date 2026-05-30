@@ -1,6 +1,3 @@
-server:
-  port: 0
-
 spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -22,3 +19,6 @@ cicd:
   executor:
     topic: jobs.build
     worker-id: build-test-worker-1
+
+server:
+  port: 0

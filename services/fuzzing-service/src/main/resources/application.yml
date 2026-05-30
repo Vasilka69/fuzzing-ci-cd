@@ -1,9 +1,10 @@
-server:
-  port: ${SERVER_PORT:8084}
-
 spring:
   application:
-    name: fuzzing-service
+    name: "@project.name@"
+    description: "@project.description@"
+    version: "@project.version@"
+  profiles:
+    active: "@spring.profiles.active@"
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
@@ -44,3 +45,6 @@ cicd:
   executor:
     topic: ${CICD_EXECUTOR_TOPIC:jobs.fuzzing}
     worker-id: ${CICD_WORKER_ID:fuzzing-worker-1}
+
+server:
+  port: ${SERVER_PORT:8084}

@@ -15,6 +15,7 @@
     "docs/checklists/REVIEW_CHECKLIST.md",
     "docs/checklists/SECURITY_CHECKLIST.md",
     "docs/context/AI_WORKFLOW.md",
+    "docs/context/BUILD_REQUIREMENTS.md",
     "docs/context/DB_CONTEXT.md",
     "docs/context/PROJECT_CONTEXT.md",
     "docs/context/REPO_STRUCTURE.md",
