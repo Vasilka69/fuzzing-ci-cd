@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://diplom.local/schemas/job-message.schema.json",
+  "title": "JobMessage",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "correlationId",
+    "pipelineRunId",
+    "pipelineId",
+    "stageId",
+    "jobId",
+    "jobExecutionId",
+    "jobType",
+    "templatePath",
+    "attempt",
+    "maxAttempts",
+    "timeoutSeconds",
+    "resourceLimits",
+    "workspacePolicy",
+    "inputs",
+    "params",
+    "secrets",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "messageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "correlationId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineRunId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "stageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobExecutionId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobType": {
+      "$ref": "#/$defs/jobType"
+    },
+    "templatePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxAttempts": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "resourceLimits": {
+      "$ref": "#/$defs/resourceLimits"
+    },
+    "workspacePolicy": {
+      "$ref": "#/$defs/workspacePolicy"
+    },
+    "sandboxPolicy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/sandboxPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputs": {
+      "$ref": "#/$defs/freeObject"
+    },
+    "params": {
+      "$ref": "#/$defs/freeObject"
+    },
+    "secrets": {
+      "$ref": "#/$defs/freeObject"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "freeObject": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "jobType": {
+      "enum": [
+        "vcs",
+        "storage",
+        "build",
+        "fuzzing",
+        "deploy",
+        "script"
+      ]
+    },
+    "resourceLimits": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cpuMillis": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "memoryBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "diskBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "maxProcesses": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "additionalLimits": {
+          "$ref": "#/$defs/freeObject"
+        }
+      }
+    },
+    "workspacePolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cleanup",
+        "preserveOnFailure"
+      ],
+      "properties": {
+        "cleanup": {
+          "type": "string"
+        },
+        "preserveOnFailure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sandboxPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "privileged": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hostNetwork": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "runAsNonRoot": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowPrivilegeEscalation": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "readOnlyRootFilesystem": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "capabilitiesAdd": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilitiesDrop": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "seccompProfileType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "networkPolicy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "egressAllowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hostPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dockerSocketMount": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "additionalData": {
+          "$ref": "#/$defs/freeObject"
+        }
+      }
+    }
+  }
+}

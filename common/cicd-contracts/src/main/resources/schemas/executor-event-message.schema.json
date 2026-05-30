@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://diplom.local/schemas/executor-event-message.schema.json",
+  "title": "ExecutorEventMessage",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "correlationId",
+    "pipelineRunId",
+    "pipelineId",
+    "stageId",
+    "jobId",
+    "jobExecutionId",
+    "jobType",
+    "templatePath",
+    "eventType",
+    "status",
+    "attempt",
+    "workerId",
+    "artifacts",
+    "metrics",
+    "summary",
+    "error",
+    "logs",
+    "additionalData"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "messageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "correlationId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineRunId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "pipelineId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "stageId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobExecutionId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "jobType": {
+      "$ref": "#/$defs/jobType"
+    },
+    "templatePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eventType": {
+      "$ref": "#/$defs/eventType"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workerId": {
+      "type": "string"
+    },
+    "durationMs": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "metrics": {
+      "$ref": "#/$defs/freeObject"
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/error"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "logs": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "additionalData": {
+      "$ref": "#/$defs/freeObject"
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "freeObject": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "jobType": {
+      "enum": [
+        "vcs",
+        "storage",
+        "build",
+        "fuzzing",
+        "deploy",
+        "script"
+      ]
+    },
+    "eventType": {
+      "enum": [
+        "JOB_ACCEPTED",
+        "JOB_RUNNING",
+        "JOB_PROGRESS",
+        "JOB_ARTIFACT",
+        "JOB_LOG",
+        "JOB_FINISHED",
+        "JOB_SKIPPED",
+        "JOB_CANCELED",
+        "JOB_HEARTBEAT"
+      ]
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCESS",
+        "FAILED",
+        "TIMEOUT",
+        "CANCELING",
+        "CANCELED",
+        "RETRYING",
+        "SKIPPED",
+        "WAITING_APPROVAL"
+      ]
+    },
+    "errorType": {
+      "enum": [
+        "validation_error",
+        "user_code_error",
+        "infrastructure_error",
+        "timeout",
+        "canceled",
+        "security_error",
+        "fuzzing_crash_found",
+        "cancel_failed",
+        "unknown"
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "artifactId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "artifactType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contentType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "checksumSha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "$ref": "#/$defs/freeObject"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/errorType"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "details": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "$ref": "#/$defs/freeObject"
+        }
+      }
+    }
+  }
+}

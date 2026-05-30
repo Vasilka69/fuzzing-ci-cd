@@ -33,6 +33,8 @@
     "docs/tasks/TASKS-vcs-service.md",
     "docs/templates/PLAN_RESPONSE_TEMPLATE.md",
     "docs/templates/TASK_TEMPLATE.md",
+    "common/cicd-contracts/src/main/resources/schemas/executor-event-message.schema.json",
+    "common/cicd-contracts/src/main/resources/schemas/job-message.schema.json",
     "services/build-service/AGENTS.md",
     "services/common/AGENTS.md",
     "services/deploy-service/AGENTS.md",

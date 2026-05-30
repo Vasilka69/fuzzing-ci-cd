@@ -23,13 +23,14 @@
 - [x] `BOOT-006 [MVP]` Добавить `.env.example` без секретов.
 - [x] `BOOT-007 [MVP]` Добавить PR template и чеклисты из `docs/checklists`.
   - Пропущено: задача временно отменена, PR template и дополнительные чеклисты сейчас не добавляем.
-- [ ] `BOOT-008 [DIPLOMA]` Добавить CI workflow: build/test, dependency scan, Docker build smoke check.
+- [x] `BOOT-008 [DIPLOMA]` Добавить CI workflow: build/test, dependency scan, Docker build smoke check.
+  - Пропущено: задача временно отменена.
 
 ## Уровень 1. Common contracts и executor runtime
 
-- [ ] `CORE-001 [MVP]` Реализовать DTO `JobMessage`, `ExecutorEventMessage`, `ArtifactDescriptor`, `ExecutorError`, `ResourceLimits`, `WorkspacePolicy`, `SandboxPolicy`.
-- [ ] `CORE-002 [MVP]` Зафиксировать enums `JobType`, `EventType`, `ExecutionStatus`, `ErrorType` согласно `AGENTS.md`.
-- [ ] `CORE-003 [MVP]` Добавить JSON serialization tests: camelCase, `schemaVersion=1`, backward-compatible unknown fields ignored only where безопасно.
+- [x] `CORE-001 [MVP]` Реализовать DTO `JobMessage`, `ExecutorEventMessage`, `ArtifactDescriptor`, `ExecutorError`, `ResourceLimits`, `WorkspacePolicy`, `SandboxPolicy`.
+- [x] `CORE-002 [MVP]` Зафиксировать enums `JobType`, `EventType`, `ExecutionStatus`, `ErrorType` согласно `AGENTS.md`.
+- [x] `CORE-003 [MVP]` Добавить JSON serialization tests: camelCase, `schemaVersion=1`, backward-compatible unknown fields ignored only where безопасно.
 - [ ] `CORE-004 [MVP]` Реализовать `ExecutorEventPublisher` interface и Kafka implementation.
 - [ ] `CORE-005 [MVP]` Реализовать `ExecutorLogPublisher` interface и OpenSearch implementation.
 - [ ] `CORE-006 [MVP]` Реализовать `SecretRedactor` и unit tests на маскирование token/password/private key.
