@@ -43,7 +43,7 @@ Deploy-сервис доставляет release artifact в целевую ср
 - `environment`
 - `target connection/credentials_ref`
 - `commands/compose/systemd config`
-- `healthcheck`
+- `healthcheck` — опциональный объект; для MVP поддерживается `enabled`, по умолчанию `true`
 - `rollback policy`
 - `idempotency policy`
 
@@ -61,15 +61,24 @@ Deploy-сервис доставляет release artifact в целевую ср
 
 Для MVP `deploy/file-copy` итоговое событие содержит `deploymentType=file_copy`,
 `artifactUri`, `environment`, `destinationPath`, `relativeDestinationPath`, `bytesCopied`,
-`deployedArtifactChecksum`, `checksumVerified`, `releaseId` и, если передан, `connectionRef`.
+`deployedArtifactChecksum`, `checksumVerified`, `healthcheck`, `releaseId` и, если передан,
+`connectionRef`. Basic healthcheck проверяет наличие deployed artifact, размер и SHA-256 на
+локальном target root.
 
 Для MVP `deploy/ssh-bash` итоговое событие содержит `deploymentType=ssh_bash`,
 `artifactUri`, `environment`, `targetHost`, `targetPort`, `targetUser`, `destinationPath`,
 `backupExisting`, `bytesCopied`, `deployedArtifactChecksum`, `checksumVerified=false`,
-`commandCount`, `releaseId` и, если передан, `credentialsRef`. Сервис использует системные
-`ssh`/`scp` через общий process runner, не принимает значения SSH-секретов в params и фиксирует
-только `credentials_ref` для будущего SecretResolver. `copy.destination_path` должен быть absolute
-path без `..`, whitespace и control characters.
+`commandCount`, `healthcheck`, `releaseId` и, если передан, `credentialsRef`. Basic healthcheck
+после копирования и пользовательских команд выполняет SSH-проверку наличия файла в
+`copy.destination_path`. Сервис использует системные `ssh`/`scp` через общий process runner, не
+принимает значения SSH-секретов в params и фиксирует только `credentials_ref` для будущего
+SecretResolver. `copy.destination_path` должен быть absolute path без `..`, whitespace и control
+characters.
+
+MVP `healthcheck` в `JOB_FINISHED.additionalData` и `deployment-manifest.json` содержит
+`enabled`, `type`, `status`, `passed`, `durationMs`, `details`. Для `deploy/file-copy` type равен
+`file_exists_checksum`, для `deploy/ssh-bash` — `ssh_file_exists`. Провал healthcheck завершает job
+со статусом `FAILED` и `error.type=infrastructure_error`.
 
 Для MVP оба поддержанных шаблона публикуют deployment manifest как artifact типа
 `deployment_manifest` с именем `deployment-manifest.json` и `contentType=application/json`.

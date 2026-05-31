@@ -98,7 +98,8 @@ public final class DeployJob implements ExecutorJob {
                 "Deploy file-copy скачал artifact из storage: "
                         + result.parameters().artifactUri(),
                 "Deploy file-copy скопировал artifact в target path: " + result.destinationPath(),
-                "SHA-256 скопированного artifact: " + result.checksum());
+                "SHA-256 скопированного artifact: " + result.checksum(),
+                "Deploy healthcheck: " + result.healthcheck().status());
     }
 
     private String logs(SshBashDeploymentResult result) {
@@ -109,7 +110,8 @@ public final class DeployJob implements ExecutorJob {
                 "Deploy ssh-bash скопировал artifact через scp в target path: "
                         + result.parameters().destinationPath(),
                 "Deploy ssh-bash выполнил команд: " + result.commandResults().size(),
-                "SHA-256 отправленного artifact: " + result.artifactChecksum());
+                "SHA-256 отправленного artifact: " + result.artifactChecksum(),
+                "Deploy healthcheck: " + result.healthcheck().status());
     }
 
     private Map<String, Object> additionalData(FileCopyDeploymentResult result, DeploymentManifestResult manifest) {
@@ -123,6 +125,7 @@ public final class DeployJob implements ExecutorJob {
         data.put("bytesCopied", result.bytesCopied());
         data.put("deployedArtifactChecksum", result.checksum());
         data.put("checksumVerified", result.checksumVerified());
+        data.put("healthcheck", result.healthcheck().metadata());
         putIfPresent(data, "releaseId", parameters.releaseId());
         putIfPresent(data, "connectionRef", parameters.connectionRef());
         data.putAll(manifest.metadata());
@@ -145,6 +148,7 @@ public final class DeployJob implements ExecutorJob {
         // TODO: заменить на true после добавления remote checksum step для ssh-bash target.
         data.put("checksumVerified", false);
         data.put("commandCount", result.commandResults().size());
+        data.put("healthcheck", result.healthcheck().metadata());
         putIfPresent(data, "releaseId", parameters.releaseId());
         putIfPresent(data, "credentialsRef", parameters.target().credentialsRef());
         data.putAll(manifest.metadata());

@@ -47,6 +47,9 @@ class FileCopyDeploymentRunnerTest {
         assertEquals(Files.size(expectedDestination), result.bytesCopied());
         assertEquals(StorageChecksums.sha256(expectedDestination), result.checksum());
         assertTrue(result.checksumVerified());
+        assertEquals("file_exists_checksum", result.healthcheck().type());
+        assertEquals("SUCCESS", result.healthcheck().status());
+        assertTrue(result.healthcheck().passed());
     }
 
     private LocalStorageClient storageClientWithArtifact() throws Exception {

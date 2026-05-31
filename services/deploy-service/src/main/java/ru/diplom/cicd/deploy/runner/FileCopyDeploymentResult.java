@@ -8,4 +8,5 @@ public record FileCopyDeploymentResult(
         Path destinationPath,
         long bytesCopied,
         String checksum,
-        boolean checksumVerified) {}
+        boolean checksumVerified,
+        DeploymentHealthcheckResult healthcheck) {}

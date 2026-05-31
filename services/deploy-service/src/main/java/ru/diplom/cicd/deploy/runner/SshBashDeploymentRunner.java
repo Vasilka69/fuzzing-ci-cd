@@ -88,9 +88,17 @@ public final class SshBashDeploymentRunner {
                     ErrorType.USER_CODE_ERROR,
                     deadlineNanos));
         }
+        DeploymentHealthcheckResult healthcheck = healthcheck(parameters, deadlineNanos);
 
         return new SshBashDeploymentResult(
-                parameters, downloadedPath, artifactBytes, artifactChecksum, copyResult, backupResult, commandResults);
+                parameters,
+                downloadedPath,
+                artifactBytes,
+                artifactChecksum,
+                copyResult,
+                backupResult,
+                commandResults,
+                healthcheck);
     }
 
     private String sourceFileName(SshBashDeploymentParameters parameters) {
@@ -215,6 +223,53 @@ public final class SshBashDeploymentRunner {
         command.add("bash");
         command.add("-lc");
         command.add(bashCommand);
+        return List.copyOf(command);
+    }
+
+    private DeploymentHealthcheckResult healthcheck(SshBashDeploymentParameters parameters, long deadlineNanos) {
+        if (!parameters.healthcheck().enabled()) {
+            return DeploymentHealthcheckResult.skipped("ssh_file_exists");
+        }
+
+        long startedAt = System.nanoTime();
+        ProcessExecutionResult result = run(healthcheckCommand(parameters), remainingTimeout(deadlineNanos));
+        if (result.timedOut()) {
+            throw new ExecutorJobException(
+                    ErrorType.TIMEOUT,
+                    "deploy.healthcheck.timeout",
+                    "Deploy healthcheck превысил timeout job",
+                    errorDetails(result),
+                    Map.of("destinationPath", parameters.destinationPath().toString()),
+                    ExecutionStatus.TIMEOUT);
+        }
+        if (result.exitCode() != 0) {
+            throw new ExecutorJobException(
+                    ErrorType.INFRASTRUCTURE_ERROR,
+                    "deploy.healthcheck.failed",
+                    "Deploy healthcheck не подтвердил наличие artifact на SSH target",
+                    errorDetails(result),
+                    Map.of(
+                            "targetHost",
+                            parameters.target().host(),
+                            "destinationPath",
+                            parameters.destinationPath().toString(),
+                            "exitCode",
+                            result.exitCode()),
+                    ExecutionStatus.FAILED);
+        }
+        return DeploymentHealthcheckResult.success(
+                "ssh_file_exists",
+                Duration.ofNanos(System.nanoTime() - startedAt).toMillis(),
+                "SSH target подтвердил наличие artifact");
+    }
+
+    private List<String> healthcheckCommand(SshBashDeploymentParameters parameters) {
+        List<String> command = new ArrayList<>(sshBase(parameters.target()));
+        command.add("sh");
+        command.add("-c");
+        command.add("test -f \"$1\"");
+        command.add("sh");
+        command.add(parameters.destinationPath().toString());
         return List.copyOf(command);
     }
 

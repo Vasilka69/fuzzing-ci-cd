@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
@@ -21,6 +22,7 @@ import ru.diplom.cicd.executor.core.workspace.WorkspaceHandle;
  * MVP file-copy runner: скачивает release artifact из internal storage и копирует его
  * в локальный target root, не выполняя shell-команды и не принимая absolute paths из job params.
  */
+@SuppressWarnings("java:S1192")
 public final class FileCopyDeploymentRunner {
 
     private final StorageClient storageClient;
@@ -45,13 +47,15 @@ public final class FileCopyDeploymentRunner {
         copy(downloadedPath, destinationPath);
         String checksum = checksum(destinationPath);
         verifyChecksum(parameters, downloadedPath, checksum);
+        long bytesCopied = size(destinationPath);
         return new FileCopyDeploymentResult(
                 parameters,
                 downloadedPath,
                 destinationPath,
-                size(destinationPath),
+                bytesCopied,
                 checksum,
-                parameters.verifyChecksum());
+                parameters.verifyChecksum(),
+                healthcheck(parameters, destinationPath, bytesCopied, checksum));
     }
 
     private String sourceFileName(FileCopyDeploymentParameters parameters) {
@@ -125,6 +129,55 @@ public final class FileCopyDeploymentRunner {
         } catch (IOException exception) {
             throw infrastructureError("Deploy file-copy не смог определить размер скопированного artifact", exception);
         }
+    }
+
+    private DeploymentHealthcheckResult healthcheck(
+            FileCopyDeploymentParameters parameters,
+            Path destinationPath,
+            long expectedBytes,
+            String expectedChecksum) {
+        if (!parameters.healthcheck().enabled()) {
+            return DeploymentHealthcheckResult.skipped("file_exists_checksum");
+        }
+
+        long startedAt = System.nanoTime();
+        if (!Files.isRegularFile(destinationPath)) {
+            throw healthcheckFailed(
+                    "Deploy healthcheck не нашел скопированный artifact в target path",
+                    Map.of("destinationPath", destinationPath.toString()));
+        }
+        long actualBytes = size(destinationPath);
+        if (actualBytes != expectedBytes) {
+            throw healthcheckFailed(
+                    "Deploy healthcheck обнаружил несовпадение размера artifact",
+                    Map.of(
+                            "destinationPath",
+                            destinationPath.toString(),
+                            "expectedBytes",
+                            expectedBytes,
+                            "actualBytes",
+                            actualBytes));
+        }
+        String actualChecksum = checksum(destinationPath);
+        if (!expectedChecksum.equals(actualChecksum)) {
+            throw healthcheckFailed(
+                    "Deploy healthcheck обнаружил несовпадение SHA-256 artifact",
+                    Map.of("destinationPath", destinationPath.toString()));
+        }
+        return DeploymentHealthcheckResult.success(
+                "file_exists_checksum",
+                Duration.ofNanos(System.nanoTime() - startedAt).toMillis(),
+                "Artifact доступен, размер и SHA-256 совпадают");
+    }
+
+    private ExecutorJobException healthcheckFailed(String message, Map<String, Object> metadata) {
+        return new ExecutorJobException(
+                ErrorType.INFRASTRUCTURE_ERROR,
+                "deploy.healthcheck.failed",
+                message,
+                null,
+                metadata,
+                ExecutionStatus.FAILED);
     }
 
     private ExecutorJobException infrastructureError(String message, Exception exception) {

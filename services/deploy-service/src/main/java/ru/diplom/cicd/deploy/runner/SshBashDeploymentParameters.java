@@ -19,6 +19,7 @@ public record SshBashDeploymentParameters(
         Path destinationPath,
         boolean backupExisting,
         List<String> commands,
+        DeploymentHealthcheckPolicy healthcheck,
         String releaseId) {
 
     public static final String TEMPLATE_PATH = "deploy/ssh-bash";
@@ -45,6 +46,7 @@ public record SshBashDeploymentParameters(
         target = validateTarget(target);
         destinationPath = normalizeRemoteDestinationPath(destinationPath);
         commands = commands == null ? List.of() : List.copyOf(commands);
+        healthcheck = healthcheck == null ? DeploymentHealthcheckPolicy.defaultEnabled() : healthcheck;
         releaseId = DeploymentReleaseIds.validateOrNull(releaseId, RELEASE_ID_KEY);
     }
 
@@ -65,6 +67,7 @@ public record SshBashDeploymentParameters(
                 path(value(copy, DESTINATION_PATH_KEY, "destinationPath")),
                 booleanValue(value(copy, BACKUP_EXISTING_KEY, "backupExisting"), true, BACKUP_EXISTING_KEY),
                 stringList(value(params, COMMANDS_KEY), COMMANDS_KEY),
+                DeploymentHealthcheckPolicy.fromParams(params),
                 DeploymentReleaseIds.resolve(
                         value(params, RELEASE_ID_KEY, "releaseId"), RELEASE_ID_KEY, job.jobExecutionId()));
     }

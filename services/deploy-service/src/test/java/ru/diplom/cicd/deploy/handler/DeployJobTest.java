@@ -88,6 +88,7 @@ class DeployJobTest {
         assertEquals("local-demo-target", finishedEvent.additionalData().get("connectionRef"));
         assertEquals(14L, finishedEvent.additionalData().get("bytesCopied"));
         assertEquals(true, finishedEvent.additionalData().get("checksumVerified"));
+        assertHealthcheckSuccess(finishedEvent, "file_exists_checksum");
         assertEquals(1, finishedEvent.artifacts().size());
         ArtifactDescriptor manifestArtifact = finishedEvent.artifacts().getFirst();
         assertEquals("deployment_manifest", manifestArtifact.artifactType());
@@ -122,7 +123,10 @@ class DeployJobTest {
         assertEquals(
                 checksum, manifest.get("result").get("deployedArtifactChecksum").textValue());
         assertTrue(manifest.get("result").get("checksumVerified").booleanValue());
-        assertTrue(manifest.get("healthcheck").isNull());
+        assertEquals(
+                "file_exists_checksum", manifest.get("healthcheck").get("type").textValue());
+        assertEquals("SUCCESS", manifest.get("healthcheck").get("status").textValue());
+        assertTrue(manifest.get("healthcheck").get("passed").booleanValue());
         assertTrue(manifest.get("rollback").isNull());
 
         assertEquals(1, logPublisher.events.size());
@@ -131,6 +135,7 @@ class DeployJobTest {
         assertNotNull(logEvent.logs());
         assertTrue(logEvent.logs().contains("Deploy file-copy скачал artifact из storage"));
         assertTrue(logEvent.logs().contains("Deploy file-copy скопировал artifact в target path"));
+        assertTrue(logEvent.logs().contains("Deploy healthcheck: SUCCESS"));
         assertTrue(logEvent.logs().contains(checksum));
 
         JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
@@ -150,6 +155,9 @@ class DeployJobTest {
                 checksum,
                 json.get("additionalData").get("deployedArtifactChecksum").textValue());
         assertTrue(json.get("additionalData").get("checksumVerified").booleanValue());
+        assertEquals(
+                "SUCCESS",
+                json.get("additionalData").get("healthcheck").get("status").textValue());
         assertEquals(
                 "release-2026-05-31-001",
                 json.get("additionalData").get("releaseId").textValue());
@@ -271,6 +279,7 @@ class DeployJobTest {
         assertEquals(14L, finishedEvent.additionalData().get("bytesCopied"));
         assertEquals(false, finishedEvent.additionalData().get("checksumVerified"));
         assertEquals(1, finishedEvent.additionalData().get("commandCount"));
+        assertHealthcheckSuccess(finishedEvent, "ssh_file_exists");
         assertEquals(1, finishedEvent.artifacts().size());
         assertNull(finishedEvent.logs());
 
@@ -300,6 +309,9 @@ class DeployJobTest {
                 checksum, manifest.get("result").get("deployedArtifactChecksum").textValue());
         assertFalse(manifest.get("result").get("checksumVerified").booleanValue());
         assertEquals(1, manifest.get("result").get("commandCount").intValue());
+        assertEquals("ssh_file_exists", manifest.get("healthcheck").get("type").textValue());
+        assertEquals("SUCCESS", manifest.get("healthcheck").get("status").textValue());
+        assertTrue(manifest.get("healthcheck").get("passed").booleanValue());
 
         assertEquals(1, logPublisher.events.size());
         ExecutorEventMessage logEvent = logPublisher.events.getFirst();
@@ -307,6 +319,7 @@ class DeployJobTest {
         assertNotNull(logEvent.logs());
         assertTrue(logEvent.logs().contains("Deploy ssh-bash скачал artifact из storage"));
         assertTrue(logEvent.logs().contains("Deploy ssh-bash скопировал artifact через scp"));
+        assertTrue(logEvent.logs().contains("Deploy healthcheck: SUCCESS"));
         assertTrue(logEvent.logs().contains(checksum));
 
         JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
@@ -320,10 +333,47 @@ class DeployJobTest {
                 json.get("additionalData").get("destinationPath").textValue());
         assertEquals(1, json.get("additionalData").get("commandCount").intValue());
         assertEquals(
+                "SUCCESS",
+                json.get("additionalData").get("healthcheck").get("status").textValue());
+        assertEquals(
                 manifestArtifact.uri(),
                 json.get("additionalData").get("deploymentManifestUri").textValue());
         assertEquals(1, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
+    }
+
+    @Test
+    void handleSshBashJobFailsWhenHealthcheckDoesNotFindArtifact() throws Exception {
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        LocalStorageClient storageClient = storageClientWithArtifact();
+        Path remoteRoot = tempDir.resolve("remote-root-healthcheck-failed");
+        Path scripts = tempDir.resolve("fake-ssh-healthcheck-failed");
+        Files.createDirectories(scripts);
+        Path ssh = fakeSshWithFailedHealthcheck(scripts.resolve("ssh"));
+        Path scp = fakeScp(scripts.resolve("scp"), remoteRoot, tempDir.resolve("scp-healthcheck-failed.log"));
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("ssh-healthcheck-failed-workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "deploy-test-worker-1");
+        DeployJob job = deployJob(
+                storageClient,
+                tempDir.resolve("unused-target"),
+                new LocalProcessRunner(),
+                ssh.toString(),
+                scp.toString());
+
+        ExecutorEventMessage finishedEvent = handler.handle(sshBashJob(), job);
+
+        assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
+        assertEquals(ExecutionStatus.FAILED, finishedEvent.status());
+        assertEquals(ErrorType.INFRASTRUCTURE_ERROR, finishedEvent.error().type());
+        assertEquals("deploy.healthcheck.failed", finishedEvent.error().code());
+        assertTrue(finishedEvent.summary().contains("Deploy healthcheck"));
+        assertTrue(finishedEvent.artifacts().isEmpty());
+        assertTrue(logPublisher.events.isEmpty());
     }
 
     private JsonNode readManifest(LocalStorageClient storageClient, String uri) throws Exception {
@@ -333,6 +383,17 @@ class DeployJobTest {
                 .toCompletableFuture()
                 .join();
         return objectMapper().readTree(downloaded.toFile());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assertHealthcheckSuccess(ExecutorEventMessage event, String type) {
+        Map<String, Object> healthcheck =
+                (Map<String, Object>) event.additionalData().get("healthcheck");
+        assertNotNull(healthcheck);
+        assertEquals(true, healthcheck.get("enabled"));
+        assertEquals(type, healthcheck.get("type"));
+        assertEquals("SUCCESS", healthcheck.get("status"));
+        assertEquals(true, healthcheck.get("passed"));
     }
 
     private LocalStorageClient storageClientWithArtifact() throws Exception {
@@ -493,6 +554,25 @@ class DeployJobTest {
                 fi
                 exit 0
                 """.formatted(singleQuote(logPath)));
+    }
+
+    private Path fakeSshWithFailedHealthcheck(Path path) throws Exception {
+        return executableScript(path, """
+                #!/bin/sh
+                set -eu
+                while [ "$#" -gt 0 ]; do
+                  case "$1" in
+                    -p|-o) shift 2 ;;
+                    *) break ;;
+                  esac
+                done
+                shift
+                if [ "$#" -ge 3 ] && [ "$1" = "sh" ] && [ "$2" = "-c" ] && [ "$3" = 'test -f "$1"' ]; then
+                  echo "artifact is not available" >&2
+                  exit 1
+                fi
+                exit 0
+                """);
     }
 
     private Path fakeScp(Path path, Path remoteRoot, Path logPath) throws Exception {

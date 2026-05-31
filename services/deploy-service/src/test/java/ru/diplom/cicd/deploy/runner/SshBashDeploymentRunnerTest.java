@@ -58,6 +58,9 @@ class SshBashDeploymentRunnerTest {
         assertNotNull(result.backupResult());
         assertEquals(0, result.copyResult().exitCode());
         assertEquals(1, result.commandResults().size());
+        assertEquals("ssh_file_exists", result.healthcheck().type());
+        assertEquals("SUCCESS", result.healthcheck().status());
+        assertTrue(result.healthcheck().passed());
         assertTrue(Files.readString(tempDir.resolve("scp.log")).contains("deploy@linux-target.test:/srv/apps/app.jar"));
         assertTrue(Files.readString(tempDir.resolve("ssh.log")).contains("printf deploy-ok"));
     }

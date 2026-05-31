@@ -11,7 +11,8 @@ public record SshBashDeploymentResult(
         String artifactChecksum,
         ProcessExecutionResult copyResult,
         ProcessExecutionResult backupResult,
-        List<ProcessExecutionResult> commandResults) {
+        List<ProcessExecutionResult> commandResults,
+        DeploymentHealthcheckResult healthcheck) {
 
     public SshBashDeploymentResult {
         commandResults = commandResults == null ? List.of() : List.copyOf(commandResults);

@@ -26,7 +26,7 @@ import ru.diplom.cicd.executor.core.workspace.WorkspaceHandle;
  * Формирует deployment manifest как audit-документ без секретов и публикует его через storage.
  * В Kafka передается только URI и краткая metadata, чтобы не раздувать event payload.
  */
-@SuppressWarnings("java:S119")
+@SuppressWarnings({"java:S119", "java:S1192"})
 @Component
 public final class DeploymentManifestPublisher {
 
@@ -49,6 +49,7 @@ public final class DeploymentManifestPublisher {
         manifest.put("artifactUri", parameters.artifactUri());
         manifest.put("target", fileCopyTarget(parameters, result));
         manifest.put("result", fileCopyResult(result));
+        manifest.put("healthcheck", result.healthcheck().metadata());
         return writeAndUpload(job, workspace, manifest);
     }
 
@@ -58,6 +59,7 @@ public final class DeploymentManifestPublisher {
         manifest.put("artifactUri", parameters.artifactUri());
         manifest.put("target", sshBashTarget(parameters));
         manifest.put("result", sshBashResult(result));
+        manifest.put("healthcheck", result.healthcheck().metadata());
         return writeAndUpload(job, workspace, manifest);
     }
 

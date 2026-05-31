@@ -24,8 +24,8 @@ Topic: `jobs.deploy`
   - Готово: `release_id` валидируется для `deploy/file-copy` и `deploy/ssh-bash`; при отсутствии генерируется стабильный `release-<jobExecutionId>`; добавлены unit/integration tests и contract assertion `JOB_FINISHED`.
 - [x] `DEPLOY-004 [MVP]` manifest generation.
   - Готово: для `deploy/file-copy` и `deploy/ssh-bash` публикуется `deployment_manifest` artifact с `deployment-manifest.json`; `JOB_ARTIFACT` и `JOB_FINISHED` покрыты contract assertions.
-- [ ] `DEPLOY-005 [MVP]` basic healthcheck.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `DEPLOY-005 [MVP]` basic healthcheck.
+  - Готово: для `deploy/file-copy` проверяется наличие, размер и SHA-256 deployed artifact; для `deploy/ssh-bash` выполняется SSH file-exists check; результат попадает в `JOB_FINISHED.additionalData.healthcheck` и `deployment-manifest.json`, success/failure покрыты tests и contract assertions.
 
 ## Уровень 2. Дипломно-достаточная полнота
 
