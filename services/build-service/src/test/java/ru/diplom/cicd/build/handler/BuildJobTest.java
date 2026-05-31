@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.diplom.cicd.build.artifact.ExpectedArtifactResolver;
 import ru.diplom.cicd.build.runner.BuildRunner;
 import ru.diplom.cicd.build.snapshot.BuildSourceSnapshotPreparer;
 import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
@@ -70,7 +71,9 @@ class BuildJobTest {
                 new SecretRedactor(),
                 "build-test-worker-1");
         BuildJob job = new BuildJob(
-                new BuildRunner(processRunner), new BuildSourceSnapshotPreparer(storageClient, processRunner));
+                new BuildRunner(processRunner),
+                new BuildSourceSnapshotPreparer(storageClient, processRunner),
+                new ExpectedArtifactResolver());
 
         ExecutorEventMessage finishedEvent = handler.handle(buildJob(), job);
 
@@ -85,6 +88,13 @@ class BuildJobTest {
         assertEquals(".", finishedEvent.additionalData().get("workingDirectory"));
         assertEquals("./mvnw", finishedEvent.additionalData().get("entrypoint"));
         assertEquals(0, finishedEvent.additionalData().get("exitCode"));
+        assertEquals(List.of("target/*.jar"), finishedEvent.additionalData().get("expectedArtifactPatterns"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> expectedArtifacts =
+                (List<Map<String, Object>>) finishedEvent.additionalData().get("expectedArtifacts");
+        assertEquals(1, expectedArtifacts.size());
+        assertEquals("target/*.jar", expectedArtifacts.getFirst().get("pattern"));
+        assertEquals("target/app.jar", expectedArtifacts.getFirst().get("path"));
         assertTrue(finishedEvent.artifacts().isEmpty());
         assertNull(finishedEvent.logs());
 
@@ -114,6 +124,19 @@ class BuildJobTest {
                 json.get("additionalData").get("sourceSnapshotUri").textValue());
         assertEquals("source", json.get("additionalData").get("sourceDirectory").textValue());
         assertEquals("./mvnw", json.get("additionalData").get("entrypoint").textValue());
+        assertEquals(
+                "target/*.jar",
+                json.get("additionalData")
+                        .get("expectedArtifactPatterns")
+                        .get(0)
+                        .textValue());
+        assertEquals(
+                "target/app.jar",
+                json.get("additionalData")
+                        .get("expectedArtifacts")
+                        .get(0)
+                        .get("path")
+                        .textValue());
         assertEquals(0, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
@@ -146,7 +169,9 @@ class BuildJobTest {
                         "entrypoint",
                         "./mvnw",
                         "args",
-                        List.of("-q", "test")),
+                        List.of("-q", "test"),
+                        "expected_artifacts",
+                        List.of("target/*.jar")),
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
     }
@@ -260,7 +285,17 @@ class BuildJobTest {
                 return localProcessRunner.run(request);
             }
             this.buildRequest = request;
+            createBuildArtifact(request.workingDirectory());
             return result;
+        }
+
+        private void createBuildArtifact(Path workingDirectory) {
+            try {
+                Files.createDirectories(workingDirectory.resolve("target"));
+                Files.writeString(workingDirectory.resolve("target/app.jar"), "jar");
+            } catch (Exception exception) {
+                throw new AssertionError("Не удалось подготовить тестовый build artifact", exception);
+            }
         }
     }
 }

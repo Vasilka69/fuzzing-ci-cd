@@ -17,7 +17,8 @@ public record BuildParameters(
         Path workingDirectory,
         String entrypoint,
         List<String> args,
-        Map<String, String> environment) {
+        Map<String, String> environment,
+        List<String> expectedArtifactPatterns) {
 
     public static final String BUILD_TOOL_KEY = "build_tool";
     public static final String SOURCE_SNAPSHOT_URI_KEY = "source_snapshot_uri";
@@ -25,6 +26,7 @@ public record BuildParameters(
     public static final String ENTRYPOINT_KEY = "entrypoint";
     public static final String ARGS_KEY = "args";
     public static final String ENVIRONMENT_KEY = "environment";
+    public static final String EXPECTED_ARTIFACTS_KEY = "expected_artifacts";
 
     public BuildParameters {
         Objects.requireNonNull(buildTool, "buildTool");
@@ -33,6 +35,17 @@ public record BuildParameters(
         entrypoint = StringUtils.defaultIfBlank(entrypoint, buildTool.defaultEntrypoint());
         args = args == null ? List.of() : List.copyOf(args);
         environment = environment == null ? Map.of() : Map.copyOf(environment);
+        expectedArtifactPatterns = expectedArtifactPatterns == null ? List.of() : List.copyOf(expectedArtifactPatterns);
+    }
+
+    public BuildParameters(
+            BuildTool buildTool,
+            String sourceSnapshotUri,
+            Path workingDirectory,
+            String entrypoint,
+            List<String> args,
+            Map<String, String> environment) {
+        this(buildTool, sourceSnapshotUri, workingDirectory, entrypoint, args, environment, List.of());
     }
 
     public static BuildParameters from(JobMessage job) {
@@ -53,7 +66,8 @@ public record BuildParameters(
                 workingDirectory(value(job.params(), WORKING_DIRECTORY_KEY, "workingDirectory")),
                 requireOptionalString(value(job.params(), ENTRYPOINT_KEY), ENTRYPOINT_KEY),
                 args(value(job.params(), ARGS_KEY)),
-                environment(value(job.params(), ENVIRONMENT_KEY)));
+                environment(value(job.params(), ENVIRONMENT_KEY)),
+                expectedArtifactPatterns(value(job.params(), EXPECTED_ARTIFACTS_KEY, "expectedArtifacts")));
     }
 
     private static void validateRouting(JobMessage job) {
@@ -103,6 +117,24 @@ public record BuildParameters(
         List<String> result = new ArrayList<>();
         for (Object rawArg : rawArgs) {
             result.add(requireString(rawArg, ARGS_KEY));
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<String> expectedArtifactPatterns(Object value) {
+        if (value == null) {
+            return List.of();
+        }
+        if (!(value instanceof List<?> rawPatterns)) {
+            throw ExecutorJobException.validation("expected_artifacts должен быть массивом строк");
+        }
+        List<String> result = new ArrayList<>();
+        for (Object rawPattern : rawPatterns) {
+            String pattern = requireString(rawPattern, EXPECTED_ARTIFACTS_KEY);
+            if (StringUtils.isBlank(pattern)) {
+                throw ExecutorJobException.validation("expected_artifacts не должен содержать пустые glob-паттерны");
+            }
+            result.add(pattern);
         }
         return List.copyOf(result);
     }

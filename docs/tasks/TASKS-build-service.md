@@ -22,8 +22,9 @@ Topic: `jobs.build`
 - [x] `BUILD-002 [MVP]` скачивание source snapshot из storage.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: build job требует `source_snapshot_uri`, скачивает `storage://` snapshot через `StorageClient`, распаковывает tar.gz через общий `ProcessRunner` в workspace и запускает сборку из распакованного каталога; добавлены unit/integration-style tests и JSON assertion результата.
-- [ ] `BUILD-003 [MVP]` expected_artifacts glob resolver.
+- [x] `BUILD-003 [MVP]` expected_artifacts glob resolver.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: `expected_artifacts` читается из params, безопасно резолвится относительными glob-паттернами внутри working directory; найденные файлы попадают в `additionalData.expectedArtifacts`, добавлены unit tests resolver-а, проверка парсинга params и JSON assertion итогового события.
 - [ ] `BUILD-004 [MVP]` сбор stdout/stderr с ограничением размера.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `BUILD-005 [MVP]` публикация artifacts.

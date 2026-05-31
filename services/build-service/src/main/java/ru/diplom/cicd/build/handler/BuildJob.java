@@ -1,9 +1,13 @@
 package ru.diplom.cicd.build.handler;
 
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
+import ru.diplom.cicd.build.artifact.ExpectedArtifact;
+import ru.diplom.cicd.build.artifact.ExpectedArtifactResolver;
 import ru.diplom.cicd.build.runner.BuildExecutionResult;
 import ru.diplom.cicd.build.runner.BuildParameters;
 import ru.diplom.cicd.build.runner.BuildRunner;
@@ -19,10 +23,15 @@ public final class BuildJob implements ExecutorJob {
 
     private final BuildRunner buildRunner;
     private final BuildSourceSnapshotPreparer sourceSnapshotPreparer;
+    private final ExpectedArtifactResolver expectedArtifactResolver;
 
-    public BuildJob(BuildRunner buildRunner, BuildSourceSnapshotPreparer sourceSnapshotPreparer) {
+    public BuildJob(
+            BuildRunner buildRunner,
+            BuildSourceSnapshotPreparer sourceSnapshotPreparer,
+            ExpectedArtifactResolver expectedArtifactResolver) {
         this.buildRunner = Objects.requireNonNull(buildRunner, "buildRunner");
         this.sourceSnapshotPreparer = Objects.requireNonNull(sourceSnapshotPreparer, "sourceSnapshotPreparer");
+        this.expectedArtifactResolver = Objects.requireNonNull(expectedArtifactResolver, "expectedArtifactResolver");
     }
 
     @Override
@@ -32,6 +41,7 @@ public final class BuildJob implements ExecutorJob {
                 parameters, context.workspace().root(), context.job().timeoutSeconds());
         BuildExecutionResult result = buildRunner.build(
                 parameters, snapshotWorkspace.sourceRoot(), context.job().timeoutSeconds());
+        List<ExpectedArtifact> expectedArtifacts = resolveExpectedArtifacts(parameters, snapshotWorkspace);
         return new ExecutorJobResult(
                 ExecutionStatus.SUCCESS,
                 "Сборка %s завершена успешно".formatted(parameters.buildTool().wireValue()),
@@ -47,10 +57,25 @@ public final class BuildJob implements ExecutorJob {
                         result.processResult().duration().toMillis()),
                 logs(snapshotWorkspace, result),
                 null,
-                additionalData(result, snapshotWorkspace));
+                additionalData(result, snapshotWorkspace, expectedArtifacts));
     }
 
-    private Map<String, Object> additionalData(BuildExecutionResult result, SourceSnapshotWorkspace snapshotWorkspace) {
+    private List<ExpectedArtifact> resolveExpectedArtifacts(
+            BuildParameters parameters, SourceSnapshotWorkspace snapshotWorkspace) {
+        if (parameters.expectedArtifactPatterns().isEmpty()) {
+            return List.of();
+        }
+        Path workingDirectory = snapshotWorkspace
+                .sourceRoot()
+                .resolve(parameters.workingDirectory())
+                .normalize();
+        return expectedArtifactResolver.resolve(workingDirectory, parameters.expectedArtifactPatterns());
+    }
+
+    private Map<String, Object> additionalData(
+            BuildExecutionResult result,
+            SourceSnapshotWorkspace snapshotWorkspace,
+            List<ExpectedArtifact> expectedArtifacts) {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("buildTool", result.parameters().buildTool().wireValue());
         data.put("sourceSnapshotUri", result.parameters().sourceSnapshotUri());
@@ -60,7 +85,21 @@ public final class BuildJob implements ExecutorJob {
         data.put("args", result.parameters().args());
         data.put("exitCode", result.processResult().exitCode());
         data.put("durationMs", result.processResult().duration().toMillis());
+        if (!result.parameters().expectedArtifactPatterns().isEmpty()) {
+            data.put("expectedArtifactPatterns", result.parameters().expectedArtifactPatterns());
+            data.put(
+                    "expectedArtifacts",
+                    expectedArtifacts.stream().map(this::expectedArtifactData).toList());
+        }
         return Map.copyOf(data);
+    }
+
+    private Map<String, Object> expectedArtifactData(ExpectedArtifact artifact) {
+        return Map.of(
+                "pattern", artifact.pattern(),
+                "path", artifact.relativePathText(),
+                "sizeBytes", artifact.sizeBytes()
+        );
     }
 
     private String workingDirectory(BuildExecutionResult result) {

@@ -36,7 +36,9 @@ class BuildParametersTest {
                         "args",
                         List.of("-q", "test"),
                         "environment",
-                        Map.of("MAVEN_OPTS", "-Djava.awt.headless=true"))));
+                        Map.of("MAVEN_OPTS", "-Djava.awt.headless=true"),
+                        "expected_artifacts",
+                        List.of("target/*.jar"))));
 
         assertEquals(BuildTool.MAVEN, parameters.buildTool());
         assertEquals(SOURCE_SNAPSHOT_URI, parameters.sourceSnapshotUri());
@@ -44,6 +46,7 @@ class BuildParametersTest {
         assertEquals("./mvnw", parameters.entrypoint());
         assertEquals(List.of("-q", "test"), parameters.args());
         assertEquals("-Djava.awt.headless=true", parameters.environment().get("MAVEN_OPTS"));
+        assertEquals(List.of("target/*.jar"), parameters.expectedArtifactPatterns());
     }
 
     @Test
@@ -69,6 +72,17 @@ class BuildParametersTest {
     @Test
     void fromRejectsMissingSourceSnapshotUri() {
         JobMessage job = buildJob("build/maven", Map.of("build_tool", "maven"));
+
+        ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> BuildParameters.from(job));
+
+        assertEquals(ErrorType.VALIDATION_ERROR, exception.errorType());
+    }
+
+    @Test
+    void fromRejectsNonListExpectedArtifacts() {
+        JobMessage job = buildJob(
+                "build/maven",
+                Map.of("source_snapshot_uri", SOURCE_SNAPSHOT_URI, "expected_artifacts", "target/*.jar"));
 
         ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> BuildParameters.from(job));
 
