@@ -46,16 +46,12 @@ class ExpectedArtifactResolverTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-        "../*.jar",
-        "/tmp/*.jar",
-        "target/["
-    })
+    @ValueSource(strings = {"../*.jar", "/tmp/*.jar", "target/["})
     void resolveRejectsInvalidPattern(String pattern) {
         List<String> patterns = List.of(pattern);
 
         ExecutorJobException exception =
-            assertThrows(ExecutorJobException.class, () -> resolver.resolve(tempDir, patterns));
+                assertThrows(ExecutorJobException.class, () -> resolver.resolve(tempDir, patterns));
 
         assertEquals(ErrorType.VALIDATION_ERROR, exception.errorType());
     }

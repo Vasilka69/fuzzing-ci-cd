@@ -7,10 +7,12 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ public final class LocalProcessRunner implements ProcessRunner {
 
         long startedAtNanos = System.nanoTime();
         List<ProcessOutputChunk> chunks = Collections.synchronizedList(new ArrayList<>());
+        Set<ProcessStreamType> truncatedStreams = Collections.synchronizedSet(EnumSet.noneOf(ProcessStreamType.class));
         AtomicReference<RuntimeException> outputFailure = new AtomicReference<>();
         AtomicLong sequence = new AtomicLong();
         Object emitLock = new Object();
@@ -55,16 +58,20 @@ public final class LocalProcessRunner implements ProcessRunner {
                 new ChunkedProcessOutputStream(
                         ProcessStreamType.STDOUT,
                         request.outputChunkBytes(),
+                        request.maxOutputBytesPerStream(),
                         sequence,
                         emitLock,
                         outputConsumer,
+                        truncatedStreams,
                         outputFailure),
                 new ChunkedProcessOutputStream(
                         ProcessStreamType.STDERR,
                         request.outputChunkBytes(),
+                        request.maxOutputBytesPerStream(),
                         sequence,
                         emitLock,
                         outputConsumer,
+                        truncatedStreams,
                         outputFailure));
         streamHandler.setStopTimeout(request.gracePeriod().plus(FORCED_EXIT_WAIT));
 
@@ -76,12 +83,13 @@ public final class LocalProcessRunner implements ProcessRunner {
             executor.execute(commandLine(request.command()), environment(request), resultHandler);
             ProcessExit processExit = resultHandler.await(request.timeout());
             rethrowOutputFailure(outputFailure);
-            return result(processExit.exitCode(), false, false, startedAtNanos, chunks);
+            return result(processExit.exitCode(), false, false, startedAtNanos, chunks, truncatedStreams);
         } catch (TimeoutException exception) {
             boolean killedAfterGracePeriod = terminateAfterTimeout(processDestroyer.process(), request.gracePeriod());
             ProcessExit processExit = awaitAfterTermination(resultHandler, processDestroyer.process());
             rethrowOutputFailure(outputFailure);
-            return result(processExit.exitCode(), true, killedAfterGracePeriod, startedAtNanos, chunks);
+            return result(
+                    processExit.exitCode(), true, killedAfterGracePeriod, startedAtNanos, chunks, truncatedStreams);
         } catch (IOException exception) {
             throw new ProcessRunnerException("Не удалось запустить дочерний процесс executor-а", exception);
         } catch (InterruptedException exception) {
@@ -113,18 +121,24 @@ public final class LocalProcessRunner implements ProcessRunner {
             boolean timedOut,
             boolean killedAfterGracePeriod,
             long startedAtNanos,
-            List<ProcessOutputChunk> chunks) {
+            List<ProcessOutputChunk> chunks,
+            Set<ProcessStreamType> truncatedStreams) {
         Objects.requireNonNull(chunks, "chunks");
         List<ProcessOutputChunk> snapshot;
         synchronized (chunks) {
             snapshot = List.copyOf(chunks);
+        }
+        Set<ProcessStreamType> truncatedSnapshot;
+        synchronized (truncatedStreams) {
+            truncatedSnapshot = Set.copyOf(truncatedStreams);
         }
         return new ProcessExecutionResult(
                 exitCode,
                 timedOut,
                 killedAfterGracePeriod,
                 Duration.ofNanos(System.nanoTime() - startedAtNanos),
-                snapshot);
+                snapshot,
+                truncatedSnapshot);
     }
 
     private CommandLine commandLine(List<String> command) {
@@ -228,30 +242,43 @@ public final class LocalProcessRunner implements ProcessRunner {
 
         private final ProcessStreamType stream;
         private final int chunkBytes;
+        private final int maxOutputBytes;
         private final AtomicLong sequence;
         private final Object emitLock;
         private final ProcessOutputConsumer outputConsumer;
+        private final Set<ProcessStreamType> truncatedStreams;
         private final AtomicReference<RuntimeException> outputFailure;
         private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        private int capturedBytes;
 
+        @SuppressWarnings("java:S107")
         private ChunkedProcessOutputStream(
                 ProcessStreamType stream,
                 int chunkBytes,
+                int maxOutputBytes,
                 AtomicLong sequence,
                 Object emitLock,
                 ProcessOutputConsumer outputConsumer,
+                Set<ProcessStreamType> truncatedStreams,
                 AtomicReference<RuntimeException> outputFailure) {
             this.stream = stream;
             this.chunkBytes = chunkBytes;
+            this.maxOutputBytes = maxOutputBytes;
             this.sequence = sequence;
             this.emitLock = emitLock;
             this.outputConsumer = outputConsumer;
+            this.truncatedStreams = truncatedStreams;
             this.outputFailure = outputFailure;
         }
 
         @Override
         public synchronized void write(int value) throws IOException {
+            if (capturedBytes >= maxOutputBytes) {
+                markTruncated();
+                return;
+            }
             buffer.write(value);
+            capturedBytes++;
             if (buffer.size() >= chunkBytes) {
                 emit();
             }
@@ -263,12 +290,22 @@ public final class LocalProcessRunner implements ProcessRunner {
             int cursor = offset;
             int remaining = length;
             while (remaining > 0) {
-                int writable = Math.min(remaining, chunkBytes - buffer.size());
+                int availableBytes = maxOutputBytes - capturedBytes;
+                if (availableBytes <= 0) {
+                    markTruncated();
+                    return;
+                }
+                int writable = Math.min(Math.min(remaining, chunkBytes - buffer.size()), availableBytes);
                 buffer.write(bytes, cursor, writable);
+                capturedBytes += writable;
                 cursor += writable;
                 remaining -= writable;
                 if (buffer.size() >= chunkBytes) {
                     emit();
+                }
+                if (remaining > 0 && capturedBytes >= maxOutputBytes) {
+                    markTruncated();
+                    return;
                 }
             }
         }
@@ -298,6 +335,10 @@ public final class LocalProcessRunner implements ProcessRunner {
                     throw new IOException("Output chunk consumer завершился с ошибкой", exception);
                 }
             }
+        }
+
+        private void markTruncated() {
+            truncatedStreams.add(stream);
         }
     }
 

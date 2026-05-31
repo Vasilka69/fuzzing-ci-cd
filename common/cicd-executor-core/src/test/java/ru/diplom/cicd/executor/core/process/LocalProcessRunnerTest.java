@@ -106,6 +106,23 @@ class LocalProcessRunnerTest {
         assertEquals(result.outputChunks(), consumedChunks);
     }
 
+    @Test
+    void runLimitsCapturedOutputPerStream() {
+        ProcessExecutionResult result = runner.run(ProcessExecutionRequest.builder(javaCommand("large-output"))
+                .workingDirectory(tempDir)
+                .timeout(Duration.ofSeconds(5))
+                .outputChunkBytes(4)
+                .maxOutputBytesPerStream(5)
+                .build());
+
+        assertEquals(0, result.exitCode());
+        assertEquals("abcde", result.stdoutText(StandardCharsets.UTF_8));
+        assertEquals("12345", result.stderrText(StandardCharsets.UTF_8));
+        assertTrue(result.stdoutTruncated());
+        assertTrue(result.stderrTruncated());
+        assertTrue(result.outputChunks().stream().allMatch(chunk -> chunk.byteSize() <= 4));
+    }
+
     @SuppressWarnings("java:S5778")
     @Test
     void requestRejectsEmptyCommand() {
@@ -116,6 +133,19 @@ class LocalProcessRunnerTest {
                         .build());
 
         assertEquals("Команда процесса не может быть пустой", exception.getMessage());
+    }
+
+    @SuppressWarnings("java:S5778")
+    @Test
+    void requestRejectsInvalidOutputLimit() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> ProcessExecutionRequest.builder(javaCommand("streams"))
+                        .timeout(Duration.ofSeconds(1))
+                        .maxOutputBytesPerStream(0)
+                        .build());
+
+        assertEquals("Лимит сохраняемого stdout/stderr должен быть положительным", exception.getMessage());
     }
 
     private List<String> javaCommand(String... args) {
@@ -151,6 +181,10 @@ class LocalProcessRunnerTest {
                 }
                 case "env" -> System.out.println(System.getenv(args[1]));
                 case "sleep" -> Thread.sleep(Long.parseLong(args[1]));
+                case "large-output" -> {
+                    System.out.print("abcdefghi");
+                    System.err.print("123456789");
+                }
                 default -> throw new IllegalArgumentException("Неизвестный режим fixture: " + args[0]);
             }
         }

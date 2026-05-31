@@ -85,6 +85,9 @@ public final class BuildJob implements ExecutorJob {
         data.put("args", result.parameters().args());
         data.put("exitCode", result.processResult().exitCode());
         data.put("durationMs", result.processResult().duration().toMillis());
+        data.put("outputLimitBytesPerStream", BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM);
+        data.put("stdoutTruncated", result.processResult().stdoutTruncated());
+        data.put("stderrTruncated", result.processResult().stderrTruncated());
         if (!result.parameters().expectedArtifactPatterns().isEmpty()) {
             data.put("expectedArtifactPatterns", result.parameters().expectedArtifactPatterns());
             data.put(
@@ -98,8 +101,7 @@ public final class BuildJob implements ExecutorJob {
         return Map.of(
                 "pattern", artifact.pattern(),
                 "path", artifact.relativePathText(),
-                "sizeBytes", artifact.sizeBytes()
-        );
+                "sizeBytes", artifact.sizeBytes());
     }
 
     private String workingDirectory(BuildExecutionResult result) {

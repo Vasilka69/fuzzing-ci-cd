@@ -19,10 +19,12 @@ public record ProcessExecutionRequest(
         Duration timeout,
         Duration gracePeriod,
         int outputChunkBytes,
+        int maxOutputBytesPerStream,
         ProcessOutputConsumer outputConsumer) {
 
     public static final Duration DEFAULT_GRACE_PERIOD = Duration.ofSeconds(10);
     public static final int DEFAULT_OUTPUT_CHUNK_BYTES = 16 * 1024;
+    public static final int DEFAULT_MAX_OUTPUT_BYTES_PER_STREAM = 1024 * 1024;
 
     public ProcessExecutionRequest {
         command = validateCommand(command);
@@ -34,6 +36,9 @@ public record ProcessExecutionRequest(
         }
         if (outputChunkBytes < 1) {
             throw new IllegalArgumentException("Размер stdout/stderr chunk-а должен быть положительным");
+        }
+        if (maxOutputBytesPerStream < 1) {
+            throw new IllegalArgumentException("Лимит сохраняемого stdout/stderr должен быть положительным");
         }
         outputConsumer = outputConsumer == null ? ProcessOutputConsumer.NOOP : outputConsumer;
     }
@@ -93,6 +98,7 @@ public record ProcessExecutionRequest(
         private Duration timeout;
         private Duration gracePeriod = DEFAULT_GRACE_PERIOD;
         private int outputChunkBytes = DEFAULT_OUTPUT_CHUNK_BYTES;
+        private int maxOutputBytesPerStream = DEFAULT_MAX_OUTPUT_BYTES_PER_STREAM;
         private ProcessOutputConsumer outputConsumer = ProcessOutputConsumer.NOOP;
 
         private Builder(List<String> command) {
@@ -137,6 +143,11 @@ public record ProcessExecutionRequest(
             return this;
         }
 
+        public Builder maxOutputBytesPerStream(int maxOutputBytesPerStream) {
+            this.maxOutputBytesPerStream = maxOutputBytesPerStream;
+            return this;
+        }
+
         public Builder outputConsumer(ProcessOutputConsumer outputConsumer) {
             this.outputConsumer = outputConsumer;
             return this;
@@ -151,6 +162,7 @@ public record ProcessExecutionRequest(
                     timeout,
                     gracePeriod,
                     outputChunkBytes,
+                    maxOutputBytesPerStream,
                     outputConsumer);
         }
     }

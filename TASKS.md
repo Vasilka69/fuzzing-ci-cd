@@ -61,6 +61,7 @@
 - [x] `STOR-001..` Выполнить MVP задачи из `docs/tasks/TASKS-storage-service.md`.
   - Готово: все MVP задачи `STORAGE-001`..`STORAGE-005` закрыты в `docs/tasks/TASKS-storage-service.md`.
 - [ ] `BUILD-001..` Выполнить MVP задачи из `docs/tasks/TASKS-build-service.md`.
+  - В прогрессе: `BUILD-001`..`BUILD-004` закрыты; остается `BUILD-005`.
 - [ ] `FUZZ-001..` Выполнить MVP задачи из `docs/tasks/TASKS-fuzzing-service.md`.
 - [ ] `DEPLOY-001..` Выполнить MVP задачи из `docs/tasks/TASKS-deploy-service.md`.
 - [ ] `SCRIPT-001..` Выполнить MVP задачи из `docs/tasks/TASKS-script-service.md`.

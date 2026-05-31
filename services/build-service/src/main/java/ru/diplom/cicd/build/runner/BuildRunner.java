@@ -21,6 +21,7 @@ import ru.diplom.cicd.executor.core.process.ProcessRunnerException;
 public final class BuildRunner {
 
     private static final int ERROR_DETAILS_LIMIT = 1000;
+    public static final int MAX_OUTPUT_BYTES_PER_STREAM = 64 * 1024;
 
     private final ProcessRunner processRunner;
     private final BuildCommandBuilder commandBuilder;
@@ -72,6 +73,7 @@ public final class BuildRunner {
                     .workingDirectory(workingDirectory)
                     .environment(parameters.environment())
                     .timeout(timeout)
+                    .maxOutputBytesPerStream(MAX_OUTPUT_BYTES_PER_STREAM)
                     .build());
         } catch (ProcessRunnerException exception) {
             throw new ExecutorJobException(
@@ -120,15 +122,33 @@ public final class BuildRunner {
         if (StringUtils.isNotBlank(stdout)) {
             logs.append(stdout.stripTrailing()).append(System.lineSeparator());
         }
+        if (result.stdoutTruncated()) {
+            appendTruncationMarker(logs, "stdout");
+        }
         if (StringUtils.isNotBlank(stderr)) {
             logs.append(stderr.stripTrailing()).append(System.lineSeparator());
         }
+        if (result.stderrTruncated()) {
+            appendTruncationMarker(logs, "stderr");
+        }
+    }
+
+    private void appendTruncationMarker(StringBuilder logs, String streamName) {
+        logs.append("[")
+                .append(streamName)
+                .append(" усечен: сохранено не более ")
+                .append(MAX_OUTPUT_BYTES_PER_STREAM)
+                .append(" байт]")
+                .append(System.lineSeparator());
     }
 
     private String errorDetails(ProcessExecutionResult result) {
         String stderr = StringUtils.trimToEmpty(result.stderrText(StandardCharsets.UTF_8));
         String stdout = StringUtils.trimToEmpty(result.stdoutText(StandardCharsets.UTF_8));
         String details = StringUtils.isNotBlank(stderr) ? stderr : stdout;
+        if (StringUtils.isBlank(details) && (result.stdoutTruncated() || result.stderrTruncated())) {
+            details = "stdout/stderr команды сборки был усечен";
+        }
         return StringUtils.abbreviate(details, ERROR_DETAILS_LIMIT);
     }
 }

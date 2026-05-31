@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -88,6 +89,11 @@ class BuildJobTest {
         assertEquals(".", finishedEvent.additionalData().get("workingDirectory"));
         assertEquals("./mvnw", finishedEvent.additionalData().get("entrypoint"));
         assertEquals(0, finishedEvent.additionalData().get("exitCode"));
+        assertEquals(
+                BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM,
+                finishedEvent.additionalData().get("outputLimitBytesPerStream"));
+        assertEquals(false, finishedEvent.additionalData().get("stdoutTruncated"));
+        assertEquals(false, finishedEvent.additionalData().get("stderrTruncated"));
         assertEquals(List.of("target/*.jar"), finishedEvent.additionalData().get("expectedArtifactPatterns"));
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> expectedArtifacts =
@@ -125,6 +131,11 @@ class BuildJobTest {
         assertEquals("source", json.get("additionalData").get("sourceDirectory").textValue());
         assertEquals("./mvnw", json.get("additionalData").get("entrypoint").textValue());
         assertEquals(
+                BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM,
+                json.get("additionalData").get("outputLimitBytesPerStream").intValue());
+        assertFalse(json.get("additionalData").get("stdoutTruncated").booleanValue());
+        assertFalse(json.get("additionalData").get("stderrTruncated").booleanValue());
+        assertEquals(
                 "target/*.jar",
                 json.get("additionalData")
                         .get("expectedArtifactPatterns")
@@ -140,6 +151,44 @@ class BuildJobTest {
         assertEquals(0, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
+    }
+
+    @Test
+    void handleMavenJobPublishesTruncatedOutputMetadataAndJobLogMarker() throws Exception {
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        StorageClient storageClient = storageClientWithSourceSnapshot();
+        SnapshotAwareProcessRunner processRunner =
+                new SnapshotAwareProcessRunner(processResult(0, "abcde", "", Set.of(ProcessStreamType.STDOUT)));
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "build-test-worker-1");
+        BuildJob job = new BuildJob(
+                new BuildRunner(processRunner),
+                new BuildSourceSnapshotPreparer(storageClient, processRunner),
+                new ExpectedArtifactResolver());
+
+        ExecutorEventMessage finishedEvent = handler.handle(buildJob(), job);
+
+        assertNull(finishedEvent.logs());
+        assertEquals(true, finishedEvent.additionalData().get("stdoutTruncated"));
+        assertEquals(false, finishedEvent.additionalData().get("stderrTruncated"));
+        assertEquals(
+                BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM,
+                finishedEvent.additionalData().get("outputLimitBytesPerStream"));
+        assertEquals(1, logPublisher.events.size());
+        assertTrue(logPublisher.events.getFirst().logs().contains("[stdout усечен: сохранено не более 65536 байт]"));
+
+        JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
+        assertTrue(json.get("additionalData").get("stdoutTruncated").booleanValue());
+        assertFalse(json.get("additionalData").get("stderrTruncated").booleanValue());
+        assertEquals(
+                BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM,
+                json.get("additionalData").get("outputLimitBytesPerStream").intValue());
+        assertTrue(json.get("logs").isNull());
     }
 
     private JobMessage buildJob() {
@@ -233,6 +282,11 @@ class BuildJobTest {
     }
 
     private static ProcessExecutionResult processResult(int exitCode, String stdout, String stderr) {
+        return processResult(exitCode, stdout, stderr, Set.of());
+    }
+
+    private static ProcessExecutionResult processResult(
+            int exitCode, String stdout, String stderr, Set<ProcessStreamType> truncatedStreams) {
         return new ProcessExecutionResult(
                 exitCode,
                 false,
@@ -240,7 +294,8 @@ class BuildJobTest {
                 Duration.ofMillis(1),
                 List.of(
                         processChunk(ProcessStreamType.STDOUT, 0, stdout),
-                        processChunk(ProcessStreamType.STDERR, 1, stderr)));
+                        processChunk(ProcessStreamType.STDERR, 1, stderr)),
+                truncatedStreams);
     }
 
     private static ProcessOutputChunk processChunk(ProcessStreamType stream, long sequence, String text) {

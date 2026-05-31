@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.diplom.cicd.contracts.error.ErrorType;
@@ -71,6 +72,21 @@ class BuildRunnerTest {
         assertEquals("build.process.failed", exception.code());
     }
 
+    @Test
+    void buildRequestsOutputLimitAndAddsTruncationMarkers() {
+        CapturingProcessRunner processRunner = new CapturingProcessRunner(
+                processResult(0, "abcde", "12345", Set.of(ProcessStreamType.STDOUT, ProcessStreamType.STDERR)));
+        BuildRunner runner = new BuildRunner(processRunner);
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.MAVEN, SOURCE_SNAPSHOT_URI, Path.of("."), "./mvnw", List.of("test"), Map.of());
+
+        BuildExecutionResult result = runner.build(parameters, tempDir, 10);
+
+        assertEquals(BuildRunner.MAX_OUTPUT_BYTES_PER_STREAM, processRunner.request.maxOutputBytesPerStream());
+        assertTrue(result.logs().contains("[stdout усечен: сохранено не более 65536 байт]"));
+        assertTrue(result.logs().contains("[stderr усечен: сохранено не более 65536 байт]"));
+    }
+
     private void createWrapper(String name, String output) throws Exception {
         createWrapper(tempDir.resolve(name), output);
     }
@@ -81,6 +97,11 @@ class BuildRunnerTest {
     }
 
     private static ProcessExecutionResult processResult(int exitCode, String stdout, String stderr) {
+        return processResult(exitCode, stdout, stderr, Set.of());
+    }
+
+    private static ProcessExecutionResult processResult(
+            int exitCode, String stdout, String stderr, Set<ProcessStreamType> truncatedStreams) {
         return new ProcessExecutionResult(
                 exitCode,
                 false,
@@ -88,7 +109,8 @@ class BuildRunnerTest {
                 Duration.ofMillis(1),
                 List.of(
                         processChunk(ProcessStreamType.STDOUT, 0, stdout),
-                        processChunk(ProcessStreamType.STDERR, 1, stderr)));
+                        processChunk(ProcessStreamType.STDERR, 1, stderr)),
+                truncatedStreams);
     }
 
     private static ProcessOutputChunk processChunk(ProcessStreamType stream, long sequence, String text) {
@@ -99,6 +121,22 @@ class BuildRunnerTest {
 
         @Override
         public ProcessExecutionResult run(ProcessExecutionRequest request) {
+            return result;
+        }
+    }
+
+    private static final class CapturingProcessRunner implements ProcessRunner {
+
+        private final ProcessExecutionResult result;
+        private ProcessExecutionRequest request;
+
+        private CapturingProcessRunner(ProcessExecutionResult result) {
+            this.result = result;
+        }
+
+        @Override
+        public ProcessExecutionResult run(ProcessExecutionRequest request) {
+            this.request = request;
             return result;
         }
     }
