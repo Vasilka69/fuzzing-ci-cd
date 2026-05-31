@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+mkdir -p target
+{
+  printf 'demo-app artifact\n'
+  printf 'built-by=build-service\n'
+  printf 'source=demo/sample-repositories/demo-app\n'
+} > target/demo-app.jar
+
+printf 'demo-app build completed\n'

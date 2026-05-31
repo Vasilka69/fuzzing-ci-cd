@@ -24,12 +24,17 @@ public final class KafkaDemoJobPublisher {
         this.kafkaTemplate = Objects.requireNonNull(kafkaTemplate, "kafkaTemplate");
     }
 
-    public void publish(List<DemoJobPublication> publications, Duration sendTimeout) {
+    public void publish(List<DemoJobPublication> publications, Duration sendTimeout, Duration stageDelay) {
         List<DemoJobPublication> safePublications = List.copyOf(publications);
         Duration effectiveTimeout = sendTimeout == null ? Duration.ofSeconds(10) : sendTimeout;
+        Duration effectiveStageDelay = stageDelay == null ? Duration.ZERO : stageDelay;
         log.info("Публикуется demo pipeline: jobs={}", safePublications.size());
-        for (DemoJobPublication publication : safePublications) {
+        for (int index = 0; index < safePublications.size(); index++) {
+            DemoJobPublication publication = safePublications.get(index);
             publish(publication, effectiveTimeout);
+            if (index < safePublications.size() - 1) {
+                waitBeforeNextStage(effectiveStageDelay);
+            }
         }
         log.info("Demo pipeline опубликован: jobs={}", safePublications.size());
     }
@@ -37,14 +42,14 @@ public final class KafkaDemoJobPublisher {
     private void publish(DemoJobPublication publication, Duration sendTimeout) {
         try {
             kafkaTemplate
-                .send(publication.topic(), publication.key(), publication.message())
-                .get(sendTimeout.toMillis(), TimeUnit.MILLISECONDS);
+                    .send(publication.topic(), publication.key(), publication.message())
+                    .get(sendTimeout.toMillis(), TimeUnit.MILLISECONDS);
             if (log.isInfoEnabled()) {
                 log.info(
-                    "Demo job опубликован: topic={}, key={}, templatePath={}",
-                    publication.topic(),
-                    publication.key(),
-                    publication.message().templatePath());
+                        "Demo job опубликован: topic={}, key={}, templatePath={}",
+                        publication.topic(),
+                        publication.key(),
+                        publication.message().templatePath());
             }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -56,6 +61,18 @@ public final class KafkaDemoJobPublisher {
                             + " с key="
                             + publication.key(),
                     exception);
+        }
+    }
+
+    private void waitBeforeNextStage(Duration stageDelay) {
+        if (stageDelay.isZero() || stageDelay.isNegative()) {
+            return;
+        }
+        try {
+            Thread.sleep(stageDelay.toMillis());
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Публикация demo pipeline была прервана между стадиями", exception);
         }
     }
 }

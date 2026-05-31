@@ -4,6 +4,8 @@ spring:
     consumer:
       group-id: deploy-service-test
       client-id: deploy-service-test
+    listener:
+      auto-startup: false
 
 management:
   health:

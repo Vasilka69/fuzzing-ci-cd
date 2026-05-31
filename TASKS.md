@@ -73,10 +73,14 @@
 
 - [x] `DEMO-001 [MVP]` Создать mock master publisher, который публикует job messages в topics по заранее заданному demo pipeline.
   - Готово: добавлен Maven-модуль `demo/mock-master-publisher`; он публикует воспроизводимый набор `JobMessage` для VCS -> Build -> Fuzzing -> Deploy/Script в topics executor-ов с Kafka key = `jobExecutionId`.
-- [ ] `DEMO-002 [MVP]` Создать demo artifacts/sample repositories для VCS -> Build -> Fuzzing -> Deploy/Script.
-- [ ] `DEMO-003 [MVP]` Создать README demo-сценария с командами запуска.
-- [ ] `DEMO-004 [DIPLOMA]` Создать docker compose demo, где все executor-ы поднимаются вместе с Kafka/OpenSearch/storage.
-- [ ] `DEMO-005 [DIPLOMA]` Сохранить sample executor events/logs и показать, что `JOB_FINISHED.logs = null`, а текст есть в `JOB_LOG`.
+- [x] `DEMO-002 [MVP]` Создать demo artifacts/sample repositories для VCS -> Build -> Fuzzing -> Deploy/Script.
+  - Готово: добавлен `demo/sample-repositories/demo-app`; compose-init превращает его в локальный Git repo `file:///demo/repositories/demo-app`, build создает `target/demo-app.jar`, fuzzing формирует AFL-like report bundle, deploy/script используют build/fuzzing artifacts.
+- [x] `DEMO-003 [MVP]` Создать README demo-сценария с командами запуска.
+  - Готово: добавлен `demo/README.md` с командами запуска, проверки Kafka/OpenSearch и очистки demo volumes.
+- [x] `DEMO-004 [DIPLOMA]` Создать docker compose demo, где все executor-ы поднимаются вместе с Kafka/OpenSearch/storage.
+  - Готово: добавлен `docker-compose.demo.yml`; он поднимает все executor-сервисы, mock master publisher, общий local storage/workspace/idempotency volume и локальный Git repo init рядом с базовой инфраструктурой из `docker-compose.yml`.
+- [x] `DEMO-005 [DIPLOMA]` Сохранить sample executor events/logs и показать, что `JOB_FINISHED.logs = null`, а текст есть в `JOB_LOG`.
+  - Готово: добавлены `demo/samples/executor-events.jsonl` и `demo/samples/opensearch-log-documents.jsonl`; sample показывает `JOB_FINISHED.logs = null` и отдельный OpenSearch `JOB_LOG` document с текстом.
 
 ## Уровень 5. Дипломно-достаточная полнота
 

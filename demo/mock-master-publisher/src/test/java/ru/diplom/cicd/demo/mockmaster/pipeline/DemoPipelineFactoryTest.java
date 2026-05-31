@@ -45,27 +45,25 @@ class DemoPipelineFactoryTest {
                 .map(DemoJobPublication::message)
                 .toList();
 
-        assertThat(messages)
-            .isNotEmpty()
-            .allSatisfy(message -> {
-                assertThat(message.schemaVersion()).isEqualTo(1);
-                assertThat(message.messageId()).isNotNull();
-                assertThat(message.correlationId()).isNotNull();
-                assertThat(message.pipelineRunId()).isNotNull();
-                assertThat(message.pipelineId()).isNotNull();
-                assertThat(message.stageId()).isNotNull();
-                assertThat(message.jobId()).isNotNull();
-                assertThat(message.jobExecutionId()).isNotNull();
-                assertThat(message.attempt()).isEqualTo(1);
-                assertThat(message.maxAttempts()).isEqualTo(1);
-                assertThat(message.timeoutSeconds()).isPositive();
-                assertThat(message.workspacePolicy().cleanup()).isEqualTo("always");
-                assertThat(message.sandboxPolicy().runAsNonRoot()).isTrue();
-                assertThat(message.sandboxPolicy().allowPrivilegeEscalation()).isFalse();
-                assertThat(message.sandboxPolicy().networkPolicy()).isEqualTo("none");
-                assertThat(message.secrets()).containsEntry("refs", List.of());
-                assertThat(message.createdAt()).isEqualTo(NOW);
-            });
+        assertThat(messages).isNotEmpty().allSatisfy(message -> {
+            assertThat(message.schemaVersion()).isEqualTo(1);
+            assertThat(message.messageId()).isNotNull();
+            assertThat(message.correlationId()).isNotNull();
+            assertThat(message.pipelineRunId()).isNotNull();
+            assertThat(message.pipelineId()).isNotNull();
+            assertThat(message.stageId()).isNotNull();
+            assertThat(message.jobId()).isNotNull();
+            assertThat(message.jobExecutionId()).isNotNull();
+            assertThat(message.attempt()).isEqualTo(1);
+            assertThat(message.maxAttempts()).isEqualTo(1);
+            assertThat(message.timeoutSeconds()).isPositive();
+            assertThat(message.workspacePolicy().cleanup()).isEqualTo("always");
+            assertThat(message.sandboxPolicy().runAsNonRoot()).isTrue();
+            assertThat(message.sandboxPolicy().allowPrivilegeEscalation()).isFalse();
+            assertThat(message.sandboxPolicy().networkPolicy()).isEqualTo("none");
+            assertThat(message.secrets()).containsEntry("refs", List.of());
+            assertThat(message.createdAt()).isEqualTo(NOW);
+        });
     }
 
     @Test
@@ -75,9 +73,9 @@ class DemoPipelineFactoryTest {
         List<DemoJobPublication> publications = factory.create(properties);
 
         assertThat(publications)
-            .isNotEmpty()
-            .allSatisfy(publication -> assertThat(publication.key())
-                .isEqualTo(publication.message().jobExecutionId().toString()));
+                .isNotEmpty()
+                .allSatisfy(publication -> assertThat(publication.key())
+                        .isEqualTo(publication.message().jobExecutionId().toString()));
     }
 
     @Test
@@ -101,9 +99,11 @@ class DemoPipelineFactoryTest {
         assertThat(messages.get(3).params()).containsEntry("artifact_uri", buildArtifactUri);
         assertThat(messages.get(4).inputs()).containsEntry("fuzzingReportUri", fuzzingReportUri);
         assertThat(messages.get(4).params())
-            .containsEntry("input_artifacts", List.of(
-                Map.of("uri", buildArtifactUri, "path", "input/build-artifacts.tar.gz"),
-                Map.of("uri", fuzzingReportUri, "path", "input/fuzzing-report.tar.gz")));
+                .containsEntry(
+                        "input_artifacts",
+                        List.of(
+                                Map.of("uri", buildArtifactUri, "path", "input/build-artifacts.tar.gz"),
+                                Map.of("uri", fuzzingReportUri, "path", "input/fuzzing-report.tar.gz")));
     }
 
     @Test

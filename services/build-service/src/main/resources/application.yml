@@ -17,6 +17,11 @@ spring:
       properties:
         spring.json.trusted.packages: ru.diplom.cicd.contracts.*
         spring.json.value.default.type: ru.diplom.cicd.contracts.job.JobMessage
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
     listener:
       ack-mode: manual
 

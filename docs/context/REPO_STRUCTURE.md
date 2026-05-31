@@ -10,12 +10,16 @@
 ├── mvnw / mvnw.cmd
 ├── .env.example
 ├── docker-compose.yml
+├── docker-compose.demo.yml
 ├── common/
 │   ├── cicd-contracts/
 │   ├── cicd-executor-core/
 │   └── cicd-test-support/
 ├── demo/
-│   └── mock-master-publisher/
+│   ├── README.md
+│   ├── mock-master-publisher/
+│   ├── sample-repositories/
+│   └── samples/
 ├── services/
 │   ├── vcs-service/
 │   ├── storage-service/

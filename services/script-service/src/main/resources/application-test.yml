@@ -4,6 +4,8 @@ spring:
     consumer:
       group-id: script-service-test
       client-id: script-service-test
+    listener:
+      auto-startup: false
 
 management:
   health:

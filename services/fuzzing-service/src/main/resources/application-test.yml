@@ -4,6 +4,8 @@ spring:
     consumer:
       group-id: fuzzing-service-test
       client-id: fuzzing-service-test
+    listener:
+      auto-startup: false
 
 management:
   health:

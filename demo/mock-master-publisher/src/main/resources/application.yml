@@ -15,7 +15,9 @@ cicd:
   demo:
     mock-master:
       run-id: ${CICD_DEMO_RUN_ID:demo-pipeline}
+      repository-url: ${CICD_DEMO_REPOSITORY_URL:file:///demo/repositories/demo-app}
       send-timeout: 10s
+      stage-delay: ${CICD_DEMO_STAGE_DELAY:0s}
       topics:
         vcs: jobs.vcs
         build: jobs.build

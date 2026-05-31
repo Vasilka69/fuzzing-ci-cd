@@ -4,6 +4,8 @@ spring:
     consumer:
       group-id: storage-service-test
       client-id: storage-service-test
+    listener:
+      auto-startup: false
 
 management:
   health:

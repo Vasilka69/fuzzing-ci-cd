@@ -4,6 +4,8 @@ spring:
     consumer:
       group-id: vcs-service-test
       client-id: vcs-service-test
+    listener:
+      auto-startup: false
 
 management:
   health:

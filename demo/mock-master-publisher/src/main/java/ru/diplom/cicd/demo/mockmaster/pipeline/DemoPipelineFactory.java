@@ -36,6 +36,7 @@ public final class DemoPipelineFactory {
     public List<DemoJobPublication> create(MockMasterPublisherProperties properties) {
         MockMasterPublisherProperties.Topics topics = properties.effectiveTopics();
         String runId = properties.effectiveRunId();
+        String repositoryUrl = properties.effectiveRepositoryUrl();
         Instant createdAt = Instant.now(clock);
 
         UUID correlationId = uuid(runId, "correlation");
@@ -69,7 +70,7 @@ public final class DemoPipelineFactory {
                                 "vcs_type",
                                 "git",
                                 "repository_url",
-                                "https://example.com/diplom/demo-app.git",
+                                repositoryUrl,
                                 "ref",
                                 "main",
                                 "ref_type",
@@ -98,6 +99,8 @@ public final class DemoPipelineFactory {
                                 sourceSnapshotUri,
                                 "working_directory",
                                 ".",
+                                "entrypoint",
+                                "./mvnw",
                                 "args",
                                 List.of("-q", "-DskipTests", "package"),
                                 "expected_artifacts",
@@ -128,6 +131,8 @@ public final class DemoPipelineFactory {
                                 30,
                                 "local_grammar",
                                 "dsl",
+                                "kernel_command",
+                                demoFuzzingKernelCommand(),
                                 "source_snapshot_uri",
                                 sourceSnapshotUri,
                                 "target_artifact_uri",
@@ -247,6 +252,19 @@ public final class DemoPipelineFactory {
                 List.of(),
                 false,
                 Map.of());
+    }
+
+    private static List<String> demoFuzzingKernelCommand() {
+        return List.of(
+                "sh",
+                "-c",
+                String.join(
+                        "\n",
+                        "set -eu",
+                        "mkdir -p \"$AFL_OUTPUT_DIR/queue\"",
+                        "printf 'demo seed\\n' > \"$AFL_OUTPUT_DIR/queue/id:000000,src:demo\"",
+                        "printf 'execs_done : 1\\npaths_total : 1\\nunique_crashes : 0\\n' > \"$AFL_OUTPUT_DIR/fuzzer_stats\"",
+                        "printf 'demo fuzzing finished\\n'"));
     }
 
     private static UUID uuid(String runId, String discriminator) {

@@ -5,10 +5,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "cicd.demo.mock-master")
-public record MockMasterPublisherProperties(String runId, Duration sendTimeout, Topics topics) {
+public record MockMasterPublisherProperties(
+        String runId, Duration sendTimeout, Duration stageDelay, String repositoryUrl, Topics topics) {
 
     private static final String DEFAULT_RUN_ID = "demo-pipeline";
     private static final Duration DEFAULT_SEND_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration DEFAULT_STAGE_DELAY = Duration.ZERO;
+    private static final String DEFAULT_REPOSITORY_URL = "file:///demo/repositories/demo-app";
+
+    public MockMasterPublisherProperties(String runId, Duration sendTimeout, Topics topics) {
+        this(runId, sendTimeout, null, null, topics);
+    }
 
     public String effectiveRunId() {
         return StringUtils.defaultIfBlank(runId, DEFAULT_RUN_ID).trim();
@@ -16,6 +23,14 @@ public record MockMasterPublisherProperties(String runId, Duration sendTimeout, 
 
     public Duration effectiveSendTimeout() {
         return sendTimeout == null ? DEFAULT_SEND_TIMEOUT : sendTimeout;
+    }
+
+    public Duration effectiveStageDelay() {
+        return stageDelay == null ? DEFAULT_STAGE_DELAY : stageDelay;
+    }
+
+    public String effectiveRepositoryUrl() {
+        return StringUtils.defaultIfBlank(repositoryUrl, DEFAULT_REPOSITORY_URL).trim();
     }
 
     public Topics effectiveTopics() {

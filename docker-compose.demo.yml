@@ -1,0 +1,202 @@
+services:
+  demo-runtime-init:
+    image: ${DEMO_BUSYBOX_IMAGE:-busybox:1.37.0}
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p /demo/runtime/storage /demo/runtime/workspaces /demo/runtime/idempotency /demo/deploy-targets
+        chmod -R 0777 /demo/runtime /demo/deploy-targets
+    volumes:
+      - demo-runtime:/demo/runtime
+      - demo-deploy-targets:/demo/deploy-targets
+    networks:
+      - cicd-local
+    restart: "no"
+
+  demo-repo-init:
+    image: ${DEMO_GIT_IMAGE:-alpine/git:2.49.1}
+    depends_on:
+      demo-runtime-init:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -ec
+      - |
+        rm -rf /demo/repositories/demo-app
+        mkdir -p /demo/repositories/demo-app
+        cp -R /demo/templates/demo-app/. /demo/repositories/demo-app/
+        cd /demo/repositories/demo-app
+        git init -b main
+        git config user.name "Demo Master"
+        git config user.email "demo-master@example.invalid"
+        chmod +x mvnw
+        git add .
+        git update-index --chmod=+x mvnw
+        git commit -m "Initial demo app"
+        chmod -R a+rX /demo/repositories/demo-app
+    volumes:
+      - ./demo/sample-repositories:/demo/templates:ro
+      - demo-repositories:/demo/repositories
+    networks:
+      - cicd-local
+    restart: "no"
+
+  vcs-service:
+    build:
+      context: .
+      dockerfile: services/vcs-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+      demo-repo-init:
+        condition: service_completed_successfully
+    environment: &executor-env
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      CICD_EXECUTOR_OPENSEARCH_ENDPOINT: http://opensearch:9200
+      CICD_EXECUTOR_STORAGE_ROOT: /demo/runtime/storage
+      CICD_EXECUTOR_WORKSPACE_ROOT: /demo/runtime/workspaces
+      CICD_EXECUTOR_IDEMPOTENCY_ROOT: /demo/runtime/idempotency
+      CICD_EXECUTOR_RESULTS_TOPIC: jobs.results
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: logstash
+    volumes:
+      - demo-runtime:/demo/runtime
+      - demo-repositories:/demo/repositories:ro
+    networks:
+      - cicd-local
+
+  storage-service:
+    build:
+      context: .
+      dockerfile: services/storage-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *executor-env
+      CICD_EXECUTOR_TOPIC: jobs.storage
+      CICD_STORAGE_LOCAL_ROOT: /demo/runtime/storage
+    volumes:
+      - demo-runtime:/demo/runtime
+    networks:
+      - cicd-local
+
+  build-service:
+    build:
+      context: .
+      dockerfile: services/build-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *executor-env
+      CICD_EXECUTOR_TOPIC: jobs.build
+    volumes:
+      - demo-runtime:/demo/runtime
+    networks:
+      - cicd-local
+
+  fuzzing-service:
+    build:
+      context: .
+      dockerfile: services/fuzzing-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *executor-env
+      CICD_EXECUTOR_TOPIC: jobs.fuzzing
+      CICD_FUZZING_START_FAKE_WORKER: "false"
+    volumes:
+      - demo-runtime:/demo/runtime
+    networks:
+      - cicd-local
+
+  deploy-service:
+    build:
+      context: .
+      dockerfile: services/deploy-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *executor-env
+      CICD_EXECUTOR_TOPIC: jobs.deploy
+      CICD_DEPLOY_FILE_COPY_TARGET_ROOT: /demo/deploy-targets
+    volumes:
+      - demo-runtime:/demo/runtime
+      - demo-deploy-targets:/demo/deploy-targets
+    networks:
+      - cicd-local
+
+  script-service:
+    build:
+      context: .
+      dockerfile: services/script-service/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      opensearch:
+        condition: service_healthy
+      demo-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      <<: *executor-env
+      CICD_EXECUTOR_TOPIC: jobs.script
+    volumes:
+      - demo-runtime:/demo/runtime
+    networks:
+      - cicd-local
+
+  mock-master-publisher:
+    build:
+      context: .
+      dockerfile: demo/mock-master-publisher/Dockerfile
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      vcs-service:
+        condition: service_started
+      build-service:
+        condition: service_started
+      fuzzing-service:
+        condition: service_started
+      deploy-service:
+        condition: service_started
+      script-service:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      CICD_DEMO_RUN_ID: ${CICD_DEMO_RUN_ID:-demo-pipeline}
+      CICD_DEMO_REPOSITORY_URL: file:///demo/repositories/demo-app
+      CICD_DEMO_STAGE_DELAY: ${CICD_DEMO_STAGE_DELAY:-4s}
+    volumes:
+      - demo-repositories:/demo/repositories:ro
+    networks:
+      - cicd-local
+    restart: "no"
+
+volumes:
+  demo-runtime:
+  demo-repositories:
+  demo-deploy-targets:

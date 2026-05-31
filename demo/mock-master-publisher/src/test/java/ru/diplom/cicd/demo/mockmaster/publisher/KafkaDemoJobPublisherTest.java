@@ -31,7 +31,7 @@ class KafkaDemoJobPublisherTest {
         when(kafkaTemplate.send("jobs.build", message.jobExecutionId().toString(), message))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        publisher.publish(List.of(new DemoJobPublication("jobs.build", message)), Duration.ofSeconds(1));
+        publisher.publish(List.of(new DemoJobPublication("jobs.build", message)), Duration.ofSeconds(1), Duration.ZERO);
 
         verify(kafkaTemplate).send("jobs.build", message.jobExecutionId().toString(), message);
     }
@@ -46,7 +46,7 @@ class KafkaDemoJobPublisherTest {
 
         List<DemoJobPublication> publications = List.of(new DemoJobPublication("jobs.build", message));
         Duration sendTimeout = Duration.ofSeconds(1);
-        assertThatThrownBy(() -> publisher.publish(publications, sendTimeout))
+        assertThatThrownBy(() -> publisher.publish(publications, sendTimeout, Duration.ZERO))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Не удалось опубликовать demo job в Kafka topic jobs.build");
     }
