@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
+import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
+import ru.diplom.cicd.deploy.manifest.DeploymentManifestPublisher;
+import ru.diplom.cicd.deploy.manifest.DeploymentManifestResult;
 import ru.diplom.cicd.deploy.runner.FileCopyDeploymentParameters;
 import ru.diplom.cicd.deploy.runner.FileCopyDeploymentResult;
 import ru.diplom.cicd.deploy.runner.FileCopyDeploymentRunner;
@@ -23,11 +26,15 @@ public final class DeployJob implements ExecutorJob {
 
     private final FileCopyDeploymentRunner fileCopyDeploymentRunner;
     private final SshBashDeploymentRunner sshBashDeploymentRunner;
+    private final DeploymentManifestPublisher manifestPublisher;
 
     public DeployJob(
-            FileCopyDeploymentRunner fileCopyDeploymentRunner, SshBashDeploymentRunner sshBashDeploymentRunner) {
+            FileCopyDeploymentRunner fileCopyDeploymentRunner,
+            SshBashDeploymentRunner sshBashDeploymentRunner,
+            DeploymentManifestPublisher manifestPublisher) {
         this.fileCopyDeploymentRunner = Objects.requireNonNull(fileCopyDeploymentRunner, "fileCopyDeploymentRunner");
         this.sshBashDeploymentRunner = Objects.requireNonNull(sshBashDeploymentRunner, "sshBashDeploymentRunner");
+        this.manifestPublisher = Objects.requireNonNull(manifestPublisher, "manifestPublisher");
     }
 
     @Override
@@ -42,27 +49,33 @@ public final class DeployJob implements ExecutorJob {
         FileCopyDeploymentParameters parameters = FileCopyDeploymentParameters.from(context.job());
         FileCopyDeploymentResult result =
                 fileCopyDeploymentRunner.deploy(context.job(), context.workspace(), parameters);
+        DeploymentManifestResult manifest = manifestPublisher.publish(context.job(), context.workspace(), result);
         return new ExecutorJobResult(
                 ExecutionStatus.SUCCESS,
                 "Deploy file-copy завершен успешно",
-                List.of(),
+                artifacts(manifest),
                 metrics(result),
                 logs(result),
                 null,
-                additionalData(result));
+                additionalData(result, manifest));
     }
 
     private ExecutorJobResult executeSshBash(ExecutorJobContext context) {
         SshBashDeploymentParameters parameters = SshBashDeploymentParameters.from(context.job());
         SshBashDeploymentResult result = sshBashDeploymentRunner.deploy(context.job(), context.workspace(), parameters);
+        DeploymentManifestResult manifest = manifestPublisher.publish(context.job(), context.workspace(), result);
         return new ExecutorJobResult(
                 ExecutionStatus.SUCCESS,
                 "Deploy ssh-bash завершен успешно",
-                List.of(),
+                artifacts(manifest),
                 metrics(result),
                 logs(result),
                 null,
-                additionalData(result));
+                additionalData(result, manifest));
+    }
+
+    private List<ArtifactDescriptor> artifacts(DeploymentManifestResult manifest) {
+        return List.of(manifest.artifact());
     }
 
     private Map<String, Object> metrics(FileCopyDeploymentResult result) {
@@ -99,7 +112,7 @@ public final class DeployJob implements ExecutorJob {
                 "SHA-256 отправленного artifact: " + result.artifactChecksum());
     }
 
-    private Map<String, Object> additionalData(FileCopyDeploymentResult result) {
+    private Map<String, Object> additionalData(FileCopyDeploymentResult result, DeploymentManifestResult manifest) {
         FileCopyDeploymentParameters parameters = result.parameters();
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("deploymentType", "file_copy");
@@ -112,10 +125,11 @@ public final class DeployJob implements ExecutorJob {
         data.put("checksumVerified", result.checksumVerified());
         putIfPresent(data, "releaseId", parameters.releaseId());
         putIfPresent(data, "connectionRef", parameters.connectionRef());
+        data.putAll(manifest.metadata());
         return Map.copyOf(data);
     }
 
-    private Map<String, Object> additionalData(SshBashDeploymentResult result) {
+    private Map<String, Object> additionalData(SshBashDeploymentResult result, DeploymentManifestResult manifest) {
         SshBashDeploymentParameters parameters = result.parameters();
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("deploymentType", "ssh_bash");
@@ -133,6 +147,7 @@ public final class DeployJob implements ExecutorJob {
         data.put("commandCount", result.commandResults().size());
         putIfPresent(data, "releaseId", parameters.releaseId());
         putIfPresent(data, "credentialsRef", parameters.target().credentialsRef());
+        data.putAll(manifest.metadata());
         return Map.copyOf(data);
     }
 

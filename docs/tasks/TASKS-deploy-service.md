@@ -22,8 +22,8 @@ Topic: `jobs.deploy`
   - Готово: реализован `deploy/ssh-bash` через системные `ssh`/`scp` поверх общего process runner; добавлены validation tests, fake-ssh integration test и contract assertion `JOB_FINISHED`.
 - [x] `DEPLOY-003 [MVP]` release_id generation/validation.
   - Готово: `release_id` валидируется для `deploy/file-copy` и `deploy/ssh-bash`; при отсутствии генерируется стабильный `release-<jobExecutionId>`; добавлены unit/integration tests и contract assertion `JOB_FINISHED`.
-- [ ] `DEPLOY-004 [MVP]` manifest generation.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `DEPLOY-004 [MVP]` manifest generation.
+  - Готово: для `deploy/file-copy` и `deploy/ssh-bash` публикуется `deployment_manifest` artifact с `deployment-manifest.json`; `JOB_ARTIFACT` и `JOB_FINISHED` покрыты contract assertions.
 - [ ] `DEPLOY-005 [MVP]` basic healthcheck.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 

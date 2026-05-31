@@ -71,6 +71,12 @@ Deploy-сервис доставляет release artifact в целевую ср
 только `credentials_ref` для будущего SecretResolver. `copy.destination_path` должен быть absolute
 path без `..`, whitespace и control characters.
 
+Для MVP оба поддержанных шаблона публикуют deployment manifest как artifact типа
+`deployment_manifest` с именем `deployment-manifest.json` и `contentType=application/json`.
+Итоговое событие содержит `deploymentManifestUri`, `deploymentManifestArtifactId`,
+`deploymentManifestSizeBytes` и `deploymentManifestChecksumSha256`; сам JSON manifest хранится
+в internal storage и не передается inline через Kafka.
+
 ## 5. Общие требования executor-а
 
 - Получает сообщения только из `jobs.deploy`.

@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.error.ErrorType;
 import ru.diplom.cicd.contracts.event.EventType;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
@@ -30,6 +31,7 @@ import ru.diplom.cicd.contracts.job.JobType;
 import ru.diplom.cicd.contracts.job.ResourceLimits;
 import ru.diplom.cicd.contracts.job.WorkspacePolicy;
 import ru.diplom.cicd.contracts.security.SandboxPolicy;
+import ru.diplom.cicd.deploy.manifest.DeploymentManifestPublisher;
 import ru.diplom.cicd.deploy.runner.FileCopyDeploymentParameters;
 import ru.diplom.cicd.deploy.runner.FileCopyDeploymentRunner;
 import ru.diplom.cicd.deploy.runner.SshBashDeploymentParameters;
@@ -42,6 +44,7 @@ import ru.diplom.cicd.executor.core.process.ProcessRunner;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.storage.LocalStorageClient;
 import ru.diplom.cicd.executor.core.storage.StorageChecksums;
+import ru.diplom.cicd.executor.core.storage.StorageDownloadRequest;
 import ru.diplom.cicd.executor.core.storage.StorageUploadRequest;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 
@@ -71,8 +74,9 @@ class DeployJobTest {
 
         ExecutorEventMessage finishedEvent = handler.handle(deployJob(), job);
 
-        assertEquals(2, eventPublisher.events.size());
+        assertEquals(3, eventPublisher.events.size());
         assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
+        assertEquals(EventType.JOB_ARTIFACT, eventPublisher.events.get(1).eventType());
         assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
         assertEquals("Deploy file-copy завершен успешно", finishedEvent.summary());
@@ -84,7 +88,15 @@ class DeployJobTest {
         assertEquals("local-demo-target", finishedEvent.additionalData().get("connectionRef"));
         assertEquals(14L, finishedEvent.additionalData().get("bytesCopied"));
         assertEquals(true, finishedEvent.additionalData().get("checksumVerified"));
-        assertTrue(finishedEvent.artifacts().isEmpty());
+        assertEquals(1, finishedEvent.artifacts().size());
+        ArtifactDescriptor manifestArtifact = finishedEvent.artifacts().getFirst();
+        assertEquals("deployment_manifest", manifestArtifact.artifactType());
+        assertEquals("deployment-manifest.json", manifestArtifact.name());
+        assertEquals("application/json", manifestArtifact.contentType());
+        assertEquals(manifestArtifact.uri(), finishedEvent.additionalData().get("deploymentManifestUri"));
+        assertEquals(
+                manifestArtifact.checksumSha256(),
+                finishedEvent.additionalData().get("deploymentManifestChecksumSha256"));
         assertNull(finishedEvent.logs());
 
         Path deployedArtifact = targetRoot.resolve("apps/app.jar");
@@ -92,6 +104,26 @@ class DeployJobTest {
         assertEquals("deployable jar", Files.readString(deployedArtifact));
         String checksum = StorageChecksums.sha256(deployedArtifact);
         assertEquals(checksum, finishedEvent.additionalData().get("deployedArtifactChecksum"));
+        JsonNode manifest = readManifest(storageClient, manifestArtifact.uri());
+        assertEquals(1, manifest.get("schemaVersion").intValue());
+        assertEquals("deployment_manifest", manifest.get("artifactType").textValue());
+        assertEquals(JOB_EXECUTION_ID.toString(), manifest.get("jobExecutionId").textValue());
+        assertEquals("deploy/file-copy", manifest.get("templatePath").textValue());
+        assertEquals("file_copy", manifest.get("deploymentType").textValue());
+        assertEquals("release-2026-05-31-001", manifest.get("releaseId").textValue());
+        assertEquals("testing", manifest.get("environment").textValue());
+        assertEquals(ARTIFACT_URI, manifest.get("artifactUri").textValue());
+        assertEquals(
+                "apps/app.jar",
+                manifest.get("target").get("relativeDestinationPath").textValue());
+        assertEquals(
+                "local-demo-target", manifest.get("target").get("connectionRef").textValue());
+        assertEquals(14L, manifest.get("result").get("bytesCopied").longValue());
+        assertEquals(
+                checksum, manifest.get("result").get("deployedArtifactChecksum").textValue());
+        assertTrue(manifest.get("result").get("checksumVerified").booleanValue());
+        assertTrue(manifest.get("healthcheck").isNull());
+        assertTrue(manifest.get("rollback").isNull());
 
         assertEquals(1, logPublisher.events.size());
         ExecutorEventMessage logEvent = logPublisher.events.getFirst();
@@ -124,7 +156,13 @@ class DeployJobTest {
         assertEquals(
                 "local-demo-target",
                 json.get("additionalData").get("connectionRef").textValue());
-        assertEquals(0, json.get("artifacts").size());
+        assertEquals(
+                manifestArtifact.uri(),
+                json.get("additionalData").get("deploymentManifestUri").textValue());
+        assertEquals(1, json.get("artifacts").size());
+        assertEquals(
+                "deployment_manifest",
+                json.get("artifacts").get(0).get("artifactType").textValue());
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
     }
@@ -214,8 +252,9 @@ class DeployJobTest {
 
         ExecutorEventMessage finishedEvent = handler.handle(sshBashJob(), job);
 
-        assertEquals(2, eventPublisher.events.size());
+        assertEquals(3, eventPublisher.events.size());
         assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
+        assertEquals(EventType.JOB_ARTIFACT, eventPublisher.events.get(1).eventType());
         assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
         assertEquals("Deploy ssh-bash завершен успешно", finishedEvent.summary());
@@ -232,7 +271,7 @@ class DeployJobTest {
         assertEquals(14L, finishedEvent.additionalData().get("bytesCopied"));
         assertEquals(false, finishedEvent.additionalData().get("checksumVerified"));
         assertEquals(1, finishedEvent.additionalData().get("commandCount"));
-        assertTrue(finishedEvent.artifacts().isEmpty());
+        assertEquals(1, finishedEvent.artifacts().size());
         assertNull(finishedEvent.logs());
 
         Path deployedArtifact = remoteRoot.resolve("srv/apps/app.jar");
@@ -240,6 +279,27 @@ class DeployJobTest {
         assertEquals("deployable jar", Files.readString(deployedArtifact));
         String checksum = StorageChecksums.sha256(deployedArtifact);
         assertEquals(checksum, finishedEvent.additionalData().get("deployedArtifactChecksum"));
+        ArtifactDescriptor manifestArtifact = finishedEvent.artifacts().getFirst();
+        assertEquals("deployment_manifest", manifestArtifact.artifactType());
+        assertEquals(manifestArtifact.uri(), finishedEvent.additionalData().get("deploymentManifestUri"));
+        JsonNode manifest = readManifest(storageClient, manifestArtifact.uri());
+        assertEquals("ssh_bash", manifest.get("deploymentType").textValue());
+        assertEquals("ssh-release-2026-05-31-001", manifest.get("releaseId").textValue());
+        assertEquals("linux-target.test", manifest.get("target").get("host").textValue());
+        assertEquals(2222, manifest.get("target").get("port").intValue());
+        assertEquals("deploy", manifest.get("target").get("user").textValue());
+        assertEquals(
+                "ssh-demo-credentials",
+                manifest.get("target").get("credentialsRef").textValue());
+        assertEquals(
+                "/srv/apps/app.jar",
+                manifest.get("target").get("destinationPath").textValue());
+        assertTrue(manifest.get("target").get("backupExisting").booleanValue());
+        assertEquals(14L, manifest.get("result").get("bytesCopied").longValue());
+        assertEquals(
+                checksum, manifest.get("result").get("deployedArtifactChecksum").textValue());
+        assertFalse(manifest.get("result").get("checksumVerified").booleanValue());
+        assertEquals(1, manifest.get("result").get("commandCount").intValue());
 
         assertEquals(1, logPublisher.events.size());
         ExecutorEventMessage logEvent = logPublisher.events.getFirst();
@@ -259,7 +319,20 @@ class DeployJobTest {
                 "/srv/apps/app.jar",
                 json.get("additionalData").get("destinationPath").textValue());
         assertEquals(1, json.get("additionalData").get("commandCount").intValue());
+        assertEquals(
+                manifestArtifact.uri(),
+                json.get("additionalData").get("deploymentManifestUri").textValue());
+        assertEquals(1, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
+    }
+
+    private JsonNode readManifest(LocalStorageClient storageClient, String uri) throws Exception {
+        Path targetPath = tempDir.resolve("downloaded-manifests").resolve(UUID.randomUUID() + ".json");
+        Path downloaded = storageClient
+                .download(new StorageDownloadRequest(uri, targetPath))
+                .toCompletableFuture()
+                .join();
+        return objectMapper().readTree(downloaded.toFile());
     }
 
     private LocalStorageClient storageClientWithArtifact() throws Exception {
@@ -398,7 +471,8 @@ class DeployJobTest {
             String scpExecutable) {
         return new DeployJob(
                 new FileCopyDeploymentRunner(storageClient, targetRoot),
-                new SshBashDeploymentRunner(storageClient, processRunner, sshExecutable, scpExecutable));
+                new SshBashDeploymentRunner(storageClient, processRunner, sshExecutable, scpExecutable),
+                new DeploymentManifestPublisher(storageClient, objectMapper()));
     }
 
     private Path fakeSsh(Path path, Path logPath) throws Exception {

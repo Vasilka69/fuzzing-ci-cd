@@ -1,5 +1,6 @@
 package ru.diplom.cicd.deploy.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,11 @@ public class ApplicationConfig {
     @Bean
     ProcessRunner processRunner() {
         return new LocalProcessRunner();
+    }
+
+    @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
     @Bean
