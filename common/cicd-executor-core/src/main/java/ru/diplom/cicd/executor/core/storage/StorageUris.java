@@ -4,18 +4,18 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
-final class StorageUris {
+public final class StorageUris {
 
     private static final String SCHEME = "storage";
     private static final Pattern ALLOWED_NAMESPACE = Pattern.compile("[A-Za-z0-9._/-]+");
 
     private StorageUris() {}
 
-    static String toStorageUri(String namespacePath) {
+    public static String toStorageUri(String namespacePath) {
         return SCHEME + "://" + normalizeNamespacePath(namespacePath);
     }
 
-    static String namespacePath(String storageUri) {
+    public static String namespacePath(String storageUri) {
         URI uri;
         try {
             uri = URI.create(storageUri);
@@ -45,7 +45,7 @@ final class StorageUris {
         return normalizeNamespacePath(stripLeadingSlash(namespace.toString()));
     }
 
-    static String normalizeNamespacePath(String namespacePath) {
+    public static String normalizeNamespacePath(String namespacePath) {
         if (namespacePath == null || namespacePath.isBlank()) {
             throw new IllegalArgumentException("Storage namespace должен быть непустым");
         }

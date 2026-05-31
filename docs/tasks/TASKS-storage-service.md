@@ -16,8 +16,8 @@ Topic: `jobs.storage`
 
 ## Уровень 1. MVP
 
-- [ ] `STORAGE-001 [MVP]` локальный filesystem backend.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `STORAGE-001 [MVP]` локальный filesystem backend.
+  - Готово: реализован local filesystem backend для `storage/source-snapshot`, есть unit test backend-а и integration-style test через `ExecutorJobHandler` с contract assertion итогового `JOB_FINISHED`.
 - [ ] `STORAGE-002 [MVP]` storage:// URI namespace.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `STORAGE-003 [MVP]` upload/download REST API для executor-ов.

@@ -42,6 +42,9 @@ management:
       show-details: never
 
 cicd:
+  storage:
+    local:
+      root: ${CICD_STORAGE_LOCAL_ROOT:${java.io.tmpdir}/cicd-storage-service}
   executor:
     topic: ${CICD_EXECUTOR_TOPIC:jobs.storage}
     worker-id: ${CICD_WORKER_ID:storage-worker-1}
