@@ -32,6 +32,7 @@ import ru.diplom.cicd.executor.core.event.ExecutorEventPublisher;
 import ru.diplom.cicd.executor.core.job.ExecutorJobHandler;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
+import ru.diplom.cicd.executor.core.storage.StorageUris;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 import ru.diplom.cicd.storage.backend.LocalFilesystemStorageBackend;
 
@@ -77,6 +78,9 @@ class StorageSourceSnapshotJobTest {
         assertEquals("source_snapshot", artifact.artifactType());
         assertEquals("source-snapshot.tar.gz", artifact.name());
         assertEquals(finishedEvent.additionalData().get("storageUri"), artifact.uri());
+        assertEquals(
+                "source-snapshots/00000000-0000-0000-0000-000000000207/source-snapshot.tar.gz",
+                StorageUris.namespacePath(artifact.uri()));
         assertEquals("application/gzip", artifact.contentType());
         assertEquals(15L, artifact.sizeBytes());
         assertEquals(64, artifact.checksumSha256().length());
