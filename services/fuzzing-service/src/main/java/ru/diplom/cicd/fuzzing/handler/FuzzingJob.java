@@ -51,6 +51,7 @@ public final class FuzzingJob implements ExecutorJob {
         data.put("localGrammar", parameters.localGrammar());
         data.put("budgetSeconds", parameters.budgetSeconds());
         appendLocalGrammarMetadata(data, parameters);
+        result.optionalPrepareCommand().ifPresent(command -> data.put("kernelPrepareCommand", command));
         data.put("kernelCommand", result.command());
         data.put("exitCode", result.processResult().exitCode());
         data.put("durationMs", result.processResult().duration().toMillis());

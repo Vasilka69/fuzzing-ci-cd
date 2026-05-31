@@ -25,8 +25,9 @@ Topic: `jobs.fuzzing`
 - [x] `FUZZING-003 [MVP]` демонстрационный target DSL.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: для `local_grammar=dsl` сервис задает демонстрационный target `./build/target_dsl` по умолчанию, публикует metadata prompt/seeds/dictionary в `JOB_FINISHED.additionalData` без inline logs/payload и покрыт unit + JSON contract assertions.
-- [ ] `FUZZING-004 [MVP]` AFL++ run with budget.
+- [x] `FUZZING-004 [MVP]` AFL++ run with budget.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: adapter готовит ядро через `make all`, запускает AFL++ напрямую командой `afl-fuzz -V <budget_seconds>` через общий `ProcessRunner`, поднимает fake worker как IPC helper, пишет AFL output в workspace-local директорию и покрыт unit + JSON contract assertions. Пути настраиваются через `CICD_FUZZING_KERNEL_ROOT`, `CICD_FUZZING_AFLPP_ROOT`, `CICD_FUZZING_START_FAKE_WORKER`.
 - [ ] `FUZZING-005 [MVP]` crash report and artifacts.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 

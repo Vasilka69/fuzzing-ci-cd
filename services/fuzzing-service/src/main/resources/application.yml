@@ -45,6 +45,10 @@ cicd:
   executor:
     topic: ${CICD_EXECUTOR_TOPIC:jobs.fuzzing}
     worker-id: ${CICD_WORKER_ID:fuzzing-worker-1}
+  fuzzing:
+    kernel-root: ${CICD_FUZZING_KERNEL_ROOT:fuzzing-engine/afl-llm-engine}
+    aflpp-root: ${CICD_FUZZING_AFLPP_ROOT:../AFLplusplus}
+    start-fake-worker: ${CICD_FUZZING_START_FAKE_WORKER:true}
 
 server:
   port: ${SERVER_PORT:8084}

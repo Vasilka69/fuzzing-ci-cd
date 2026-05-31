@@ -56,7 +56,8 @@ class FuzzingJobTest {
     void handleFuzzingJobPublishesFinishedEventWithoutInlineLogs() throws Exception {
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
         CapturingLogPublisher logPublisher = new CapturingLogPublisher();
-        CapturingProcessRunner processRunner = new CapturingProcessRunner(processResult(0, "ipc smoke ok\n", ""));
+        CapturingProcessRunner processRunner = new CapturingProcessRunner(
+                processResult(0, "kernel prepared\n", ""), processResult(0, "afl run ok\n", ""));
         ExecutorJobHandler handler = new ExecutorJobHandler(
                 new LocalWorkspaceManager(tempDir.resolve("workspaces")),
                 eventPublisher,
@@ -79,8 +80,15 @@ class FuzzingJobTest {
         assertEquals("targets/dsl/seeds", finishedEvent.additionalData().get("demoTargetSeedCorpusPath"));
         assertEquals("targets/dsl/dsl.dict", finishedEvent.additionalData().get("demoTargetDictionaryPath"));
         assertEquals(10L, finishedEvent.additionalData().get("budgetSeconds"));
-        assertEquals(
-                List.of("make", "ipc-smoke"), finishedEvent.additionalData().get("kernelCommand"));
+        assertEquals(List.of("make", "all"), finishedEvent.additionalData().get("kernelPrepareCommand"));
+        @SuppressWarnings("unchecked")
+        List<String> kernelCommand =
+                (List<String>) finishedEvent.additionalData().get("kernelCommand");
+        assertTrue(kernelCommand.getFirst().endsWith("AFLplusplus/afl-fuzz"));
+        assertTrue(kernelCommand.contains("-V"));
+        assertEquals("10", kernelCommand.get(kernelCommand.indexOf("-V") + 1));
+        assertTrue(kernelCommand.contains("--"));
+        assertEquals("./build/target_dsl", kernelCommand.getLast());
         assertEquals(0, finishedEvent.additionalData().get("exitCode"));
         assertEquals(16, finishedEvent.additionalData().get("llmWorkerQueueSize"));
         assertEquals(1, finishedEvent.additionalData().get("llmWorkerCount"));
@@ -96,11 +104,33 @@ class FuzzingJobTest {
         assertTrue(finishedEvent.artifacts().isEmpty());
         assertNull(finishedEvent.logs());
 
-        assertEquals(List.of("make", "ipc-smoke"), processRunner.request.command());
+        assertEquals(2, processRunner.requests.size());
+        assertEquals(List.of("make", "all"), processRunner.requests.getFirst().command());
+        assertTrue(processRunner.request.command().getFirst().endsWith("AFLplusplus/afl-fuzz"));
+        assertTrue(processRunner.request.command().contains("-i"));
+        assertTrue(processRunner.request.command().contains("-o"));
+        assertTrue(processRunner.request.command().contains("-x"));
+        assertTrue(processRunner.request.command().contains("-V"));
+        assertEquals(
+                "10",
+                processRunner
+                        .request
+                        .command()
+                        .get(processRunner.request.command().indexOf("-V") + 1));
         assertEquals(tempDir.resolve("kernel").toAbsolutePath().normalize(), processRunner.request.workingDirectory());
         assertEquals("fake", processRunner.request.environment().get("CICD_FUZZING_MODE"));
         assertEquals("dsl", processRunner.request.environment().get("CICD_FUZZING_LOCAL_GRAMMAR"));
         assertEquals("10", processRunner.request.environment().get("CICD_FUZZING_BUDGET_SECONDS"));
+        assertEquals("1", processRunner.request.environment().get("AFL_CUSTOM_MUTATOR_ONLY"));
+        assertEquals("1", processRunner.request.environment().get("AFL_NO_UI"));
+        assertEquals("1", processRunner.request.environment().get("AFL_SKIP_CPUFREQ"));
+        assertTrue(processRunner.request.environment().get("AFL_OUTPUT_DIR").contains("afl-output"));
+        assertTrue(processRunner.request.environment().get("AFL_SEEDS_DIR").endsWith("targets/dsl/seeds"));
+        assertTrue(processRunner
+                .request
+                .environment()
+                .get("AFL_CUSTOM_MUTATOR_LIBRARY")
+                .endsWith("build/afl_llm_mutator.so"));
         assertEquals(
                 JOB_EXECUTION_ID.toString(), processRunner.request.environment().get("CICD_JOB_EXECUTION_ID"));
         assertEquals(TARGET_ARTIFACT_URI, processRunner.request.environment().get("CICD_TARGET_ARTIFACT_URI"));
@@ -129,7 +159,7 @@ class FuzzingJobTest {
         assertEquals(EventType.JOB_LOG, logEvent.eventType());
         assertNotNull(logEvent.logs());
         assertTrue(logEvent.logs().contains("Fuzzing adapter запустил готовое ядро"));
-        assertTrue(logEvent.logs().contains("ipc smoke ok"));
+        assertTrue(logEvent.logs().contains("afl run ok"));
 
         JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
         assertEquals("fuzzing", json.get("jobType").textValue());
@@ -153,10 +183,16 @@ class FuzzingJobTest {
         assertEquals(1, json.get("additionalData").get("llmWorkerCount").intValue());
         assertEquals(4096, json.get("additionalData").get("maxCandidateChars").intValue());
         assertEquals(
-                "make", json.get("additionalData").get("kernelCommand").get(0).textValue());
+                "make",
+                json.get("additionalData").get("kernelPrepareCommand").get(0).textValue());
         assertEquals(
-                "ipc-smoke",
-                json.get("additionalData").get("kernelCommand").get(1).textValue());
+                "all",
+                json.get("additionalData").get("kernelPrepareCommand").get(1).textValue());
+        assertTrue(json.get("additionalData")
+                .get("kernelCommand")
+                .get(0)
+                .textValue()
+                .endsWith("AFLplusplus/afl-fuzz"));
         assertEquals(
                 TARGET_ARTIFACT_URI,
                 json.get("additionalData").get("targetArtifactUri").textValue());
@@ -172,7 +208,8 @@ class FuzzingJobTest {
     void handleFuzzingJobMapsKernelTimeoutToTimeoutStatus() {
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
         CapturingLogPublisher logPublisher = new CapturingLogPublisher();
-        CapturingProcessRunner processRunner = new CapturingProcessRunner(processResult(-1, "", "timeout\n", true));
+        CapturingProcessRunner processRunner = new CapturingProcessRunner(
+                processResult(0, "kernel prepared\n", ""), processResult(-1, "", "timeout\n", true));
         ExecutorJobHandler handler = new ExecutorJobHandler(
                 new LocalWorkspaceManager(tempDir.resolve("workspaces")),
                 eventPublisher,
@@ -264,17 +301,19 @@ class FuzzingJobTest {
 
     private static final class CapturingProcessRunner implements ProcessRunner {
 
-        private final ProcessExecutionResult result;
+        private final List<ProcessExecutionResult> results;
+        private final List<ProcessExecutionRequest> requests = new ArrayList<>();
         private ProcessExecutionRequest request;
 
-        private CapturingProcessRunner(ProcessExecutionResult result) {
-            this.result = result;
+        private CapturingProcessRunner(ProcessExecutionResult... results) {
+            this.results = new ArrayList<>(List.of(results));
         }
 
         @Override
         public ProcessExecutionResult run(ProcessExecutionRequest request) {
             this.request = request;
-            return result;
+            requests.add(request);
+            return results.removeFirst();
         }
     }
 
