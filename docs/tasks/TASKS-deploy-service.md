@@ -18,8 +18,8 @@ Topic: `jobs.deploy`
 
 - [x] `DEPLOY-001 [MVP]` file-copy deployment.
   - Готово: реализован локальный file-copy из `storage://` artifact в configured target root; добавлены unit/integration tests и contract assertion `JOB_FINISHED`.
-- [ ] `DEPLOY-002 [MVP]` ssh-bash deployment для Linux target.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `DEPLOY-002 [MVP]` ssh-bash deployment для Linux target.
+  - Готово: реализован `deploy/ssh-bash` через системные `ssh`/`scp` поверх общего process runner; добавлены validation tests, fake-ssh integration test и contract assertion `JOB_FINISHED`.
 - [ ] `DEPLOY-003 [MVP]` release_id generation/validation.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `DEPLOY-004 [MVP]` manifest generation.

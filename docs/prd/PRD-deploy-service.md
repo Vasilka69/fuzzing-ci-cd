@@ -62,6 +62,14 @@ Deploy-сервис доставляет release artifact в целевую ср
 `artifactUri`, `environment`, `destinationPath`, `relativeDestinationPath`, `bytesCopied`,
 `deployedArtifactChecksum`, `checksumVerified` и, если переданы, `releaseId`/`connectionRef`.
 
+Для MVP `deploy/ssh-bash` итоговое событие содержит `deploymentType=ssh_bash`,
+`artifactUri`, `environment`, `targetHost`, `targetPort`, `targetUser`, `destinationPath`,
+`backupExisting`, `bytesCopied`, `deployedArtifactChecksum`, `checksumVerified=false`,
+`commandCount` и, если переданы, `releaseId`/`credentialsRef`. Сервис использует системные
+`ssh`/`scp` через общий process runner, не принимает значения SSH-секретов в params и фиксирует
+только `credentials_ref` для будущего SecretResolver. `copy.destination_path` должен быть absolute
+path без `..`, whitespace и control characters.
+
 ## 5. Общие требования executor-а
 
 - Получает сообщения только из `jobs.deploy`.

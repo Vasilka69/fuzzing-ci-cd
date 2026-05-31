@@ -126,7 +126,8 @@ public record FileCopyDeploymentParameters(
             case Boolean booleanValue -> {
                 return booleanValue;
             }
-            case String stringValue when "true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue) -> {
+            case String stringValue
+            when "true".equalsIgnoreCase(stringValue) || "false".equalsIgnoreCase(stringValue) -> {
                 return Boolean.parseBoolean(stringValue);
             }
             default -> throw ExecutorJobException.validation(key + " должен быть boolean");
