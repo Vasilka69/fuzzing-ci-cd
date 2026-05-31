@@ -46,6 +46,9 @@ Deploy-сервис доставляет release artifact в целевую ср
 - `rollback policy`
 - `idempotency policy`
 
+Для MVP `deploy/file-copy` поддерживает локальный target root executor-а. `target.destination_path`
+должен быть относительным путем внутри этого root; absolute path и `../` запрещены.
+
 ## 4. Результат job
 
 - `release identifier`
@@ -54,6 +57,10 @@ Deploy-сервис доставляет release artifact в целевую ср
 - `rollback result/metadata`
 - `deployed artifact checksum`
 - `logs_uri или JOB_LOG документы`
+
+Для MVP `deploy/file-copy` итоговое событие содержит `deploymentType=file_copy`,
+`artifactUri`, `environment`, `destinationPath`, `relativeDestinationPath`, `bytesCopied`,
+`deployedArtifactChecksum`, `checksumVerified` и, если переданы, `releaseId`/`connectionRef`.
 
 ## 5. Общие требования executor-а
 

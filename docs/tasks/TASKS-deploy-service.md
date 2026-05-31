@@ -16,8 +16,8 @@ Topic: `jobs.deploy`
 
 ## Уровень 1. MVP
 
-- [ ] `DEPLOY-001 [MVP]` file-copy deployment.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `DEPLOY-001 [MVP]` file-copy deployment.
+  - Готово: реализован локальный file-copy из `storage://` artifact в configured target root; добавлены unit/integration tests и contract assertion `JOB_FINISHED`.
 - [ ] `DEPLOY-002 [MVP]` ssh-bash deployment для Linux target.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `DEPLOY-003 [MVP]` release_id generation/validation.
