@@ -1,6 +1,6 @@
 # AGENTS.md — инструкции для AI coding agents
 
-Дата актуализации: 2026-05-29.
+Дата актуализации: 2026-05-31.
 
 Этот файл задает обязательные правила работы для AI-агентов в репозитории executor-слоя CI/CD-системы. Локальные `services/<service>/AGENTS.md` сужают контекст для конкретного микросервиса и имеют приоритет в рамках своей директории.
 
@@ -92,6 +92,16 @@
 - Каждый executor обязан поддерживать timeout, cleanup workspace, retry semantics, structured result, error typing и secret redaction.
 - Idempotency по `jobExecutionId` обязательна. Повторная доставка не должна создавать конфликтующие artifacts или повторный deployment.
 - Все пользовательские команды запускаются только через контролируемый adapter/runner, а не через произвольную конкатенацию shell string.
+
+### 6.1. Java и Spring coding practices
+
+- Для типовых операций использовать зрелые библиотеки из Java/Spring/Apache Commons/Maven экосистемы, если они уже есть в проекте или обоснованно добавлены. Не писать локальные string/null/path/collection/retry/archive/parser utilities без сильной причины.
+- Для строковой обработки в production-коде предпочитать `org.apache.commons.lang3.StringUtils`, когда требуется null-safe `blank`, `trim`, `default`, `truncate/abbreviate` или похожая типовая операция.
+- Сервисные классы внутри конкретного executor-сервиса оформлять через стереотипные аннотации Spring: `@Service` для бизнес/use-case/job handler логики, `@Component` для технических локальных компонентов. Не объявлять такие классы через `@Bean`, если `@Bean` не добавляет явного смысла.
+- `@Bean` использовать для infrastructure/external/common классов, фабричного создания, conditional wiring, адаптеров из common-модулей или объектов, которые нельзя/не нужно аннотировать Spring stereotype.
+- В каждом Spring Boot executor-сервисе должен быть главный Java config `config/ApplicationConfig.java`.
+- Entry point `*ServiceApplication` должен импортировать только главный config через `@Import(ApplicationConfig.class)` и исключать произвольные `@Configuration` из component scan. Новые Java config-классы подключать только импортом из `ApplicationConfig`, чтобы была единая точка управления конфигурацией.
+- Для boilerplate кода использовать Lombok по возможности (@AllArgsConstructor, @NoArgsConstructor, @Getter, @Service, @Data, @Slf4j и прочее)
 
 ## 7. Контракты сообщений
 

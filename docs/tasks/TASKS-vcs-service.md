@@ -16,8 +16,8 @@ Topic: `jobs.vcs`
 
 ## Уровень 1. MVP
 
-- [ ] `VCS-001 [MVP]` Git checkout shallow clone.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `VCS-001 [MVP]` Git checkout shallow clone.
+  - Готово: реализован `vcs/git` shallow clone через общий process runner, есть unit/integration tests и contract assertion итогового `JOB_FINISHED`.
 - [ ] `VCS-002 [MVP]` маскирование credentials в логах.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `VCS-003 [MVP]` архивация snapshot в tar.gz.
