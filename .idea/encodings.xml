@@ -12,6 +12,8 @@
     <file url="file://$PROJECT_DIR$/common/common-observability/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-storage-client/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common/common-testing/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/demo/mock-master-publisher/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/demo/mock-master-publisher/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/build-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/build-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/deploy-service/src/main/java" charset="UTF-8" />

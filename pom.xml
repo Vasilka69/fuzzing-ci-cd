@@ -48,6 +48,7 @@
     <module>common/cicd-contracts</module>
     <module>common/cicd-executor-core</module>
     <module>common/cicd-test-support</module>
+    <module>demo/mock-master-publisher</module>
     <module>services/vcs-service</module>
     <module>services/storage-service</module>
     <module>services/build-service</module>

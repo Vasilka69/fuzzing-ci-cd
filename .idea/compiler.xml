@@ -9,6 +9,7 @@
         <module name="cicd-test-support" />
         <module name="build-service" />
         <module name="script-service" />
+        <module name="mock-master-publisher" />
         <module name="vcs-service" />
         <module name="cicd-contracts" />
         <module name="fuzzing-service" />
@@ -39,6 +40,7 @@
       <module name="deploy-service" options="-parameters -parameters" />
       <module name="fuzzing-ci-cd" options="-parameters" />
       <module name="fuzzing-service" options="-parameters -parameters" />
+      <module name="mock-master-publisher" options="-parameters -parameters" />
       <module name="script-service" options="-parameters -parameters" />
       <module name="storage-service" options="-parameters -parameters" />
       <module name="vcs-service" options="-parameters -parameters" />

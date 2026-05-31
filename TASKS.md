@@ -71,7 +71,8 @@
 
 ## Уровень 4. Demo pipeline без UI/master
 
-- [ ] `DEMO-001 [MVP]` Создать mock master publisher, который публикует job messages в topics по заранее заданному demo pipeline.
+- [x] `DEMO-001 [MVP]` Создать mock master publisher, который публикует job messages в topics по заранее заданному demo pipeline.
+  - Готово: добавлен Maven-модуль `demo/mock-master-publisher`; он публикует воспроизводимый набор `JobMessage` для VCS -> Build -> Fuzzing -> Deploy/Script в topics executor-ов с Kafka key = `jobExecutionId`.
 - [ ] `DEMO-002 [MVP]` Создать demo artifacts/sample repositories для VCS -> Build -> Fuzzing -> Deploy/Script.
 - [ ] `DEMO-003 [MVP]` Создать README demo-сценария с командами запуска.
 - [ ] `DEMO-004 [DIPLOMA]` Создать docker compose demo, где все executor-ы поднимаются вместе с Kafka/OpenSearch/storage.

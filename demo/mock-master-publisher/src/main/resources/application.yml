@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: mock-master-publisher
+  main:
+    web-application-type: none
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+cicd:
+  demo:
+    mock-master:
+      run-id: ${CICD_DEMO_RUN_ID:demo-pipeline}
+      send-timeout: 10s
+      topics:
+        vcs: jobs.vcs
+        build: jobs.build
+        fuzzing: jobs.fuzzing
+        deploy: jobs.deploy
+        script: jobs.script

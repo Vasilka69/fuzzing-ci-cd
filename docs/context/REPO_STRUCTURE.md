@@ -14,6 +14,8 @@
 │   ├── cicd-contracts/
 │   ├── cicd-executor-core/
 │   └── cicd-test-support/
+├── demo/
+│   └── mock-master-publisher/
 ├── services/
 │   ├── vcs-service/
 │   ├── storage-service/
@@ -40,6 +42,7 @@
 ```text
 services/* -> common/cicd-executor-core -> common/cicd-contracts
 services/* -> common/cicd-test-support только в test scope
+demo/mock-master-publisher -> common/cicd-contracts
 common/* не зависит от services/*
 executor-ы не зависят от master-service/ui
 ```
@@ -52,6 +55,7 @@ executor-ы не зависят от master-service/ui
 common/cicd-contracts       -> ru.diplom.cicd.contracts
 common/cicd-executor-core   -> ru.diplom.cicd.executor.core
 common/cicd-test-support    -> ru.diplom.cicd.test.support
+demo/mock-master-publisher  -> ru.diplom.cicd.demo.mockmaster
 services/vcs-service        -> ru.diplom.cicd.vcs
 services/storage-service    -> ru.diplom.cicd.storage
 services/build-service      -> ru.diplom.cicd.build
@@ -64,6 +68,7 @@ services/script-service     -> ru.diplom.cicd.script
 
 ```bash
 ./mvnw -T 1C clean verify
+./mvnw -pl demo/mock-master-publisher -am test
 ./mvnw -pl services/build-service -am test
 ./mvnw -pl services/fuzzing-service -am verify
 ```
