@@ -39,6 +39,21 @@ class SshBashDeploymentParametersTest {
     }
 
     @Test
+    void fromGeneratesReleaseIdWhenMissing() {
+        SshBashDeploymentParameters parameters = SshBashDeploymentParameters.from(deployJob(Map.of(
+                "deployment_type",
+                "ssh_bash",
+                "artifact_uri",
+                ARTIFACT_URI,
+                "target",
+                validTarget(),
+                "copy",
+                Map.of("destination_path", "/srv/apps/app.jar"))));
+
+        assertEquals("release-00000000-0000-0000-0000-000000000557", parameters.releaseId());
+    }
+
+    @Test
     void fromRejectsRelativeDestinationPath() {
         JobMessage job = deployJob(Map.of(
                 "artifact_uri",
@@ -86,6 +101,24 @@ class SshBashDeploymentParametersTest {
                 assertThrows(ExecutorJobException.class, () -> SshBashDeploymentParameters.from(job));
 
         assertEquals("deployment_type не соответствует templatePath=deploy/ssh-bash", exception.getMessage());
+    }
+
+    @Test
+    void fromRejectsPathTraversalReleaseId() {
+        JobMessage job = deployJob(Map.of(
+                "artifact_uri",
+                ARTIFACT_URI,
+                "target",
+                validTarget(),
+                "copy",
+                Map.of("destination_path", "/srv/apps/app.jar"),
+                "release_id",
+                "release..prod"));
+
+        ExecutorJobException exception =
+                assertThrows(ExecutorJobException.class, () -> SshBashDeploymentParameters.from(job));
+
+        assertEquals("release_id не должен содержать path traversal", exception.getMessage());
     }
 
     private Map<String, Object> validParams() {

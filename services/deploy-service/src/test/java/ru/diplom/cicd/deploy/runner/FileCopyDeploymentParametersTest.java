@@ -47,6 +47,13 @@ class FileCopyDeploymentParametersTest {
     }
 
     @Test
+    void fromGeneratesReleaseIdWhenMissing() {
+        FileCopyDeploymentParameters parameters = FileCopyDeploymentParameters.from(deployJob(validParams()));
+
+        assertEquals("release-00000000-0000-0000-0000-000000000507", parameters.releaseId());
+    }
+
+    @Test
     void fromRejectsNonDeployJobType() {
         JobMessage job = job(JobType.BUILD, FileCopyDeploymentParameters.TEMPLATE_PATH, validParams());
 
@@ -78,6 +85,22 @@ class FileCopyDeploymentParametersTest {
                 assertThrows(ExecutorJobException.class, () -> FileCopyDeploymentParameters.from(job));
 
         assertEquals("artifact_uri должен использовать схему storage://", exception.getMessage());
+    }
+
+    @Test
+    void fromRejectsUnsafeReleaseId() {
+        JobMessage job = deployJob(Map.of(
+                "artifact_uri",
+                ARTIFACT_URI,
+                "target",
+                Map.of("destination_path", "apps/app.jar"),
+                "release_id",
+                "release prod"));
+
+        ExecutorJobException exception =
+                assertThrows(ExecutorJobException.class, () -> FileCopyDeploymentParameters.from(job));
+
+        assertEquals("release_id должен содержать только ASCII-буквы, цифры, '.', '_' или '-'", exception.getMessage());
     }
 
     private Map<String, Object> validParams() {

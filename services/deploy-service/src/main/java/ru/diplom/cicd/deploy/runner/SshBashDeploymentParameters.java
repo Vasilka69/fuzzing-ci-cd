@@ -45,7 +45,7 @@ public record SshBashDeploymentParameters(
         target = validateTarget(target);
         destinationPath = normalizeRemoteDestinationPath(destinationPath);
         commands = commands == null ? List.of() : List.copyOf(commands);
-        releaseId = trimToNull(releaseId);
+        releaseId = DeploymentReleaseIds.validateOrNull(releaseId, RELEASE_ID_KEY);
     }
 
     public static SshBashDeploymentParameters from(JobMessage job) {
@@ -65,7 +65,8 @@ public record SshBashDeploymentParameters(
                 path(value(copy, DESTINATION_PATH_KEY, "destinationPath")),
                 booleanValue(value(copy, BACKUP_EXISTING_KEY, "backupExisting"), true, BACKUP_EXISTING_KEY),
                 stringList(value(params, COMMANDS_KEY), COMMANDS_KEY),
-                optionalString(value(params, RELEASE_ID_KEY, "releaseId"), RELEASE_ID_KEY));
+                DeploymentReleaseIds.resolve(
+                        value(params, RELEASE_ID_KEY, "releaseId"), RELEASE_ID_KEY, job.jobExecutionId()));
     }
 
     private static void validateRouting(JobMessage job) {

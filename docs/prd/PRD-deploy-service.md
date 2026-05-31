@@ -37,7 +37,8 @@ Deploy-сервис доставляет release artifact в целевую ср
 ## 3. Входные параметры job
 
 - `deployment_type`
-- `release_id`
+- `release_id` — опциональный; если не передан, сервис генерирует стабильный
+  `release-<jobExecutionId>`
 - `artifact_uri`
 - `environment`
 - `target connection/credentials_ref`
@@ -60,12 +61,12 @@ Deploy-сервис доставляет release artifact в целевую ср
 
 Для MVP `deploy/file-copy` итоговое событие содержит `deploymentType=file_copy`,
 `artifactUri`, `environment`, `destinationPath`, `relativeDestinationPath`, `bytesCopied`,
-`deployedArtifactChecksum`, `checksumVerified` и, если переданы, `releaseId`/`connectionRef`.
+`deployedArtifactChecksum`, `checksumVerified`, `releaseId` и, если передан, `connectionRef`.
 
 Для MVP `deploy/ssh-bash` итоговое событие содержит `deploymentType=ssh_bash`,
 `artifactUri`, `environment`, `targetHost`, `targetPort`, `targetUser`, `destinationPath`,
 `backupExisting`, `bytesCopied`, `deployedArtifactChecksum`, `checksumVerified=false`,
-`commandCount` и, если переданы, `releaseId`/`credentialsRef`. Сервис использует системные
+`commandCount`, `releaseId` и, если передан, `credentialsRef`. Сервис использует системные
 `ssh`/`scp` через общий process runner, не принимает значения SSH-секретов в params и фиксирует
 только `credentials_ref` для будущего SecretResolver. `copy.destination_path` должен быть absolute
 path без `..`, whitespace и control characters.

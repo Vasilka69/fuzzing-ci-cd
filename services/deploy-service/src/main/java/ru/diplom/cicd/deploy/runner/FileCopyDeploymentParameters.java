@@ -34,7 +34,7 @@ public record FileCopyDeploymentParameters(
         artifactUri = requireStorageUri(artifactUri, ARTIFACT_URI_KEY);
         environment = defaultIfBlank(environment, "testing").trim();
         destinationPath = normalizeDestinationPath(destinationPath);
-        releaseId = trimToNull(releaseId);
+        releaseId = DeploymentReleaseIds.validateOrNull(releaseId, RELEASE_ID_KEY);
         connectionRef = trimToNull(connectionRef);
     }
 
@@ -48,7 +48,8 @@ public record FileCopyDeploymentParameters(
                 optionalString(value(params, ENVIRONMENT_KEY), ENVIRONMENT_KEY),
                 path(value(target, DESTINATION_PATH_KEY, "destinationPath")),
                 booleanValue(value(params, VERIFY_CHECKSUM_KEY, "verifyChecksum"), true, VERIFY_CHECKSUM_KEY),
-                optionalString(value(params, RELEASE_ID_KEY, "releaseId"), RELEASE_ID_KEY),
+                DeploymentReleaseIds.resolve(
+                        value(params, RELEASE_ID_KEY, "releaseId"), RELEASE_ID_KEY, job.jobExecutionId()),
                 optionalString(value(target, CONNECTION_REF_KEY, "connectionRef"), CONNECTION_REF_KEY));
     }
 

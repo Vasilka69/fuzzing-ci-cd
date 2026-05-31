@@ -153,6 +153,41 @@ class DeployJobTest {
         assertTrue(logPublisher.events.isEmpty());
     }
 
+    @Test
+    void handleFileCopyJobGeneratesReleaseIdWhenMissing() throws Exception {
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        DeployJob job = deployJob(storageClientWithArtifact(), tempDir.resolve("target"), new LocalProcessRunner());
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("generated-release-workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "deploy-test-worker-1");
+        JobMessage jobMessage = deployJob(Map.of(
+                "deployment_type",
+                "file_copy",
+                "artifact_uri",
+                ARTIFACT_URI,
+                "environment",
+                "testing",
+                "target",
+                Map.of("destination_path", "apps/generated.jar"),
+                "verify_checksum",
+                true));
+
+        ExecutorEventMessage finishedEvent = handler.handle(jobMessage, job);
+
+        assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
+        assertEquals(
+                "release-00000000-0000-0000-0000-000000000707",
+                finishedEvent.additionalData().get("releaseId"));
+        JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
+        assertEquals(
+                "release-00000000-0000-0000-0000-000000000707",
+                json.get("additionalData").get("releaseId").textValue());
+    }
+
     @SuppressWarnings("java:S5961")
     @Test
     void handleSshBashJobPublishesFinishedEventWithoutInlineLogs() throws Exception {
