@@ -16,8 +16,9 @@ Topic: `jobs.fuzzing`
 
 ## Уровень 1. MVP
 
-- [ ] `FUZZING-001 [MVP]` адаптер к готовому fuzzing-ядру без переписывания core.
+- [x] `FUZZING-001 [MVP]` адаптер к готовому fuzzing-ядру без переписывания core.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: добавлен process adapter boundary к `fuzzing-engine/afl-llm-engine`, запуск через общий `ProcessRunner`, unit tests и JSON contract assertion итогового `JOB_FINISHED`.
 - [ ] `FUZZING-002 [MVP]` fake LLM worker/local grammar mode.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `FUZZING-003 [MVP]` демонстрационный target DSL.
