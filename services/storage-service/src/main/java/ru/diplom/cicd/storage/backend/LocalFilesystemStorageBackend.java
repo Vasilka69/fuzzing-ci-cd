@@ -3,10 +3,14 @@ package ru.diplom.cicd.storage.backend;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -85,12 +89,76 @@ public final class LocalFilesystemStorageBackend {
         return artifactPath;
     }
 
+    /**
+     * Удаляет artifact или namespace subtree внутри storage root.
+     *
+     * <p>Повторный cleanup отсутствующего namespace считается успешным no-op, чтобы retry Kafka job не создавал
+     * конфликтующих побочных эффектов.
+     */
+    public StorageCleanupResult cleanup(String namespacePath, boolean recursive) {
+        String normalizedNamespacePath = StorageUris.normalizeNamespacePath(namespacePath);
+        String storageUri = StorageUris.toStorageUri(normalizedNamespacePath);
+        Path targetPath = resolve(normalizedNamespacePath);
+        if (!Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+            return new StorageCleanupResult(normalizedNamespacePath, storageUri, false, 0, 0);
+        }
+        if (Files.isDirectory(targetPath, LinkOption.NOFOLLOW_LINKS) && !recursive) {
+            throw new IllegalArgumentException(
+                    "Storage namespace является директорией, для удаления дерева нужен recursive=true: " + storageUri);
+        }
+
+        try {
+            CleanupStats stats = cleanupExistingPath(targetPath, recursive);
+            return new StorageCleanupResult(
+                    normalizedNamespacePath,
+                    storageUri,
+                    stats.deletedCount() > 0,
+                    stats.deletedCount(),
+                    stats.bytesFreed());
+        } catch (IOException exception) {
+            throw new StorageClientException("Не удалось удалить artifact из local storage: " + storageUri, exception);
+        }
+    }
+
     Path resolve(String namespacePath) {
         Path resolvedPath = root.resolve(namespacePath).normalize();
         if (!resolvedPath.startsWith(root)) {
             throw new StorageClientException("Storage namespace выходит за пределы root: " + namespacePath);
         }
         return resolvedPath;
+    }
+
+    private CleanupStats cleanupExistingPath(Path targetPath, boolean recursive) throws IOException {
+        if (!recursive) {
+            long bytesFreed = sizeIfRegularFile(targetPath);
+            boolean deleted = Files.deleteIfExists(targetPath);
+            return new CleanupStats(deleted ? 1 : 0, deleted ? bytesFreed : 0);
+        }
+
+        try (Stream<Path> paths = Files.walk(targetPath)) {
+            List<Path> deletionOrder = paths.sorted(Comparator.reverseOrder()).toList();
+            long bytesFreed = 0;
+            long deletedCount = 0;
+            for (Path path : deletionOrder) {
+                ensurePathInsideRoot(path);
+                bytesFreed += sizeIfRegularFile(path);
+                if (Files.deleteIfExists(path)) {
+                    deletedCount++;
+                }
+            }
+            return new CleanupStats(deletedCount, bytesFreed);
+        }
+    }
+
+    private void ensurePathInsideRoot(Path path) {
+        Path normalizedPath = path.toAbsolutePath().normalize();
+        if (!normalizedPath.startsWith(root)) {
+            throw new StorageClientException("Storage cleanup вышел за пределы root: " + path);
+        }
+    }
+
+    private static long sizeIfRegularFile(Path path) throws IOException {
+        return Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) ? Files.size(path) : 0;
     }
 
     private static void verifyExpectedChecksum(String actualChecksum, String expectedChecksum, String storageUri) {
@@ -112,4 +180,6 @@ public final class LocalFilesystemStorageBackend {
     private static UUID stableArtifactId(String storageUri) {
         return UUID.nameUUIDFromBytes(storageUri.getBytes(StandardCharsets.UTF_8));
     }
+
+    private record CleanupStats(long deletedCount, long bytesFreed) {}
 }

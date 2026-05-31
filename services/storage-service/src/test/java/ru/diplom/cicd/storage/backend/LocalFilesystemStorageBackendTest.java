@@ -1,6 +1,7 @@
 package ru.diplom.cicd.storage.backend;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -108,6 +109,59 @@ class LocalFilesystemStorageBackendTest {
                 assertThrows(StorageClientException.class, () -> backend.load("artifacts/missing.txt"));
 
         assertEquals("Артефакт не найден: storage://artifacts/missing.txt", exception.getMessage());
+    }
+
+    @Test
+    void cleanupDeletesSingleArtifactAndIsIdempotent() throws IOException {
+        Path artifact = tempDir.resolve("storage/temporary/job-1/output.txt");
+        Files.createDirectories(artifact.getParent());
+        Files.writeString(artifact, "temporary");
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+
+        StorageCleanupResult firstResult = backend.cleanup("temporary/job-1/output.txt", false);
+        StorageCleanupResult secondResult = backend.cleanup("temporary/job-1/output.txt", false);
+
+        assertEquals("temporary/job-1/output.txt", firstResult.namespacePath());
+        assertEquals("storage://temporary/job-1/output.txt", firstResult.storageUri());
+        assertTrue(firstResult.deleted());
+        assertEquals(1L, firstResult.deletedCount());
+        assertEquals(9L, firstResult.bytesFreed());
+        assertTrue(Files.notExists(artifact));
+        assertFalse(secondResult.deleted());
+        assertEquals(0L, secondResult.deletedCount());
+        assertEquals(0L, secondResult.bytesFreed());
+    }
+
+    @Test
+    void cleanupDeletesDirectoryOnlyWhenRecursiveRequested() throws IOException {
+        Path namespace = tempDir.resolve("storage/temporary/job-2");
+        Files.createDirectories(namespace.resolve("nested"));
+        Files.writeString(namespace.resolve("a.txt"), "alpha");
+        Files.writeString(namespace.resolve("nested/b.txt"), "beta");
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+
+        StorageCleanupResult result = backend.cleanup("temporary/job-2", true);
+
+        assertTrue(result.deleted());
+        assertEquals(4L, result.deletedCount());
+        assertEquals(9L, result.bytesFreed());
+        assertTrue(Files.notExists(namespace));
+    }
+
+    @Test
+    void cleanupRejectsDirectoryWithoutRecursiveFlag() throws IOException {
+        Path namespace = tempDir.resolve("storage/temporary/job-3");
+        Files.createDirectories(namespace);
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+
+        IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> backend.cleanup("temporary/job-3", false));
+
+        assertEquals(
+                "Storage namespace является директорией, для удаления дерева нужен recursive=true: "
+                        + "storage://temporary/job-3",
+                exception.getMessage());
+        assertTrue(Files.isDirectory(namespace));
     }
 
     @Test
