@@ -90,6 +90,11 @@ public final class FuzzingJob implements ExecutorJob {
         data.put("llmWorkerQueueSize", parameters.llmWorkerQueueSize());
         data.put("llmWorkerCount", parameters.llmWorkerCount());
         data.put("maxCandidateChars", parameters.maxCandidateChars());
+        if ("real".equals(parameters.mode().wireValue())) {
+            data.put("llmApiUrlProvidedByJob", parameters.llmApiUrl() != null);
+            data.put("llmApiTimeoutSeconds", parameters.llmApiTimeoutSeconds());
+            putIfPresent(data, "llmModel", parameters.llmModel());
+        }
         data.put("stdoutTruncated", result.processResult().stdoutTruncated());
         data.put("stderrTruncated", result.processResult().stderrTruncated());
         data.put("aflOutputDirectory", result.aflOutputDirectory().getFileName().toString());

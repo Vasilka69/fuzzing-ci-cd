@@ -21,6 +21,9 @@ public record FuzzingParameters(
         int llmWorkerQueueSize,
         int llmWorkerCount,
         int maxCandidateChars,
+        String llmApiUrl,
+        String llmModel,
+        int llmApiTimeoutSeconds,
         String targetArtifactUri,
         String sourceSnapshotUri,
         String seedCorpusUri,
@@ -38,6 +41,9 @@ public record FuzzingParameters(
     public static final String LLM_WORKER_QUEUE_SIZE_KEY = "llm_worker_queue_size";
     public static final String LLM_WORKER_COUNT_KEY = "llm_worker_count";
     public static final String MAX_CANDIDATE_CHARS_KEY = "max_candidate_chars";
+    public static final String LLM_API_URL_KEY = "llm_api_url";
+    public static final String LLM_MODEL_KEY = "llm_model";
+    public static final String LLM_API_TIMEOUT_SECONDS_KEY = "llm_api_timeout_seconds";
     public static final String TARGET_ARTIFACT_URI_KEY = "target_artifact_uri";
     public static final String SOURCE_SNAPSHOT_URI_KEY = "source_snapshot_uri";
     public static final String SEED_CORPUS_URI_KEY = "seed_corpus_uri";
@@ -53,6 +59,7 @@ public record FuzzingParameters(
     private static final int DEFAULT_LLM_WORKER_QUEUE_SIZE = 8;
     private static final int DEFAULT_LLM_WORKER_COUNT = 1;
     private static final int DEFAULT_MAX_CANDIDATE_CHARS = 2048;
+    private static final int DEFAULT_LLM_API_TIMEOUT_SECONDS = 20;
 
     public FuzzingParameters {
         mode = mode == null ? FuzzingMode.FAKE : mode;
@@ -61,18 +68,17 @@ public record FuzzingParameters(
         }
         localGrammar = normalizeLocalGrammar(localGrammar);
         kernelCommand = kernelCommand == null ? List.of() : List.copyOf(kernelCommand);
-        if (mode == FuzzingMode.REAL && kernelCommand.isEmpty()) {
-            throw ExecutorJobException.validation(
-                    "mode=real пока требует явный kernel_command; встроенный real LLM mode будет добавлен в FUZZING-101");
-        }
         kernelWorkingDirectory = normalizeRelativePath(
                 kernelWorkingDirectory == null ? Path.of(".") : kernelWorkingDirectory,
                 "kernel_working_directory должен быть относительным путем внутри fuzzing kernel root");
         targetCommand = normalizeTargetCommand(targetCommand, localGrammar);
-        environment = environment == null ? Map.of() : Map.copyOf(environment);
+        environment = validateEnvironment(environment);
         requirePositive(llmWorkerQueueSize, LLM_WORKER_QUEUE_SIZE_KEY);
         requirePositive(llmWorkerCount, LLM_WORKER_COUNT_KEY);
         requirePositive(maxCandidateChars, MAX_CANDIDATE_CHARS_KEY);
+        llmApiUrl = optionalHttpUrl(llmApiUrl, LLM_API_URL_KEY);
+        llmModel = StringUtils.trimToNull(llmModel);
+        requirePositive(llmApiTimeoutSeconds, LLM_API_TIMEOUT_SECONDS_KEY);
         targetArtifactUri = optionalStorageUri(targetArtifactUri, TARGET_ARTIFACT_URI_KEY);
         sourceSnapshotUri = optionalStorageUri(sourceSnapshotUri, SOURCE_SNAPSHOT_URI_KEY);
         seedCorpusUri = optionalStorageUri(seedCorpusUri, SEED_CORPUS_URI_KEY);
@@ -107,6 +113,12 @@ public record FuzzingParameters(
                         value(params, MAX_CANDIDATE_CHARS_KEY, "maxCandidateChars"),
                         MAX_CANDIDATE_CHARS_KEY,
                         DEFAULT_MAX_CANDIDATE_CHARS),
+                optionalString(value(params, LLM_API_URL_KEY, "llmApiUrl"), LLM_API_URL_KEY),
+                optionalString(value(params, LLM_MODEL_KEY, "llmModel"), LLM_MODEL_KEY),
+                positiveInt(
+                        value(params, LLM_API_TIMEOUT_SECONDS_KEY, "llmApiTimeoutSeconds"),
+                        LLM_API_TIMEOUT_SECONDS_KEY,
+                        DEFAULT_LLM_API_TIMEOUT_SECONDS),
                 optionalString(value(params, TARGET_ARTIFACT_URI_KEY, "targetArtifactUri"), TARGET_ARTIFACT_URI_KEY),
                 optionalString(value(params, SOURCE_SNAPSHOT_URI_KEY, "sourceSnapshotUri"), SOURCE_SNAPSHOT_URI_KEY),
                 optionalString(value(params, SEED_CORPUS_URI_KEY, "seedCorpusUri"), SEED_CORPUS_URI_KEY),
@@ -211,6 +223,17 @@ public record FuzzingParameters(
         return Map.copyOf(result);
     }
 
+    private static Map<String, String> validateEnvironment(Map<String, String> environment) {
+        if (environment == null) {
+            return Map.of();
+        }
+        if (environment.containsKey("LLM_API_KEY")) {
+            throw ExecutorJobException.validation(
+                    "LLM_API_KEY нельзя передавать через params.environment; используйте доверенную runtime-инъекцию секретов");
+        }
+        return Map.copyOf(environment);
+    }
+
     private static String normalizeLocalGrammar(String value) {
         String normalized = StringUtils.defaultIfBlank(value, DSL_GRAMMAR).trim();
         if (!DSL_GRAMMAR.equals(normalized)) {
@@ -247,6 +270,17 @@ public record FuzzingParameters(
             throw ExecutorJobException.validation(key + " должен использовать схему storage://");
         }
         return value;
+    }
+
+    private static String optionalHttpUrl(String value, String key) {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
+            throw ExecutorJobException.validation(key + " должен использовать схему http:// или https://");
+        }
+        return normalized;
     }
 
     private static String optionalString(Object value, String key) {

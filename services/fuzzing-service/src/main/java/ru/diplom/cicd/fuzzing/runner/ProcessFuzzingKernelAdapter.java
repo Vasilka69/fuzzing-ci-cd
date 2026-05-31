@@ -44,21 +44,46 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
     private final Path kernelRoot;
     private final Path aflppRoot;
     private final boolean startFakeWorker;
+    private final String configuredLlmApiUrl;
+    private final String configuredLlmApiKey;
+    private final String configuredLlmModel;
 
     @Autowired
     public ProcessFuzzingKernelAdapter(
             ProcessRunner processRunner,
             @Value("${cicd.fuzzing.kernel-root:fuzzing-engine/afl-llm-engine}") Path kernelRoot,
             @Value("${cicd.fuzzing.aflpp-root:../AFLplusplus}") Path aflppRoot,
-            @Value("${cicd.fuzzing.start-fake-worker:true}") boolean startFakeWorker) {
+            @Value("${cicd.fuzzing.start-fake-worker:true}") boolean startFakeWorker,
+            @Value("${cicd.fuzzing.llm-api-url:}") String configuredLlmApiUrl,
+            @Value("${cicd.fuzzing.llm-api-key:}") String configuredLlmApiKey,
+            @Value("${cicd.fuzzing.llm-model:}") String configuredLlmModel) {
         this.processRunner = Objects.requireNonNull(processRunner, "processRunner");
         this.kernelRoot = Objects.requireNonNull(kernelRoot, "kernelRoot");
         this.aflppRoot = normalizeAflppRoot(kernelRoot, aflppRoot);
         this.startFakeWorker = startFakeWorker;
+        this.configuredLlmApiUrl = StringUtils.trimToNull(configuredLlmApiUrl);
+        this.configuredLlmApiKey = StringUtils.trimToNull(configuredLlmApiKey);
+        this.configuredLlmModel = StringUtils.trimToNull(configuredLlmModel);
     }
 
     public ProcessFuzzingKernelAdapter(ProcessRunner processRunner, Path kernelRoot) {
-        this(processRunner, kernelRoot, Path.of(DEFAULT_AFLPP_DIR), false);
+        this(processRunner, kernelRoot, Path.of(DEFAULT_AFLPP_DIR), false, null, null, null);
+    }
+
+    public ProcessFuzzingKernelAdapter(
+            ProcessRunner processRunner,
+            Path kernelRoot,
+            String configuredLlmApiUrl,
+            String configuredLlmApiKey,
+            String configuredLlmModel) {
+        this(
+                processRunner,
+                kernelRoot,
+                Path.of(DEFAULT_AFLPP_DIR),
+                false,
+                configuredLlmApiUrl,
+                configuredLlmApiKey,
+                configuredLlmModel);
     }
 
     private Path normalizeAflppRoot(Path kernelRoot, Path configuredAflppRoot) {
@@ -90,7 +115,7 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
 
         List<String> command = command(workspace, parameters);
         ProcessExecutionResult result;
-        Process fakeWorker = startFakeWorkerIfNeeded(workingDirectory, environment, workspace, parameters);
+        Process fakeWorker = startLlmWorkerIfNeeded(workingDirectory, environment, workspace, parameters);
         try {
             result = runProcess(workingDirectory, environment, command, Duration.ofSeconds(job.timeoutSeconds()));
         } finally {
@@ -127,14 +152,14 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
                 logs(parameters, result));
     }
 
-    private Process startFakeWorkerIfNeeded(
+    private Process startLlmWorkerIfNeeded(
             Path workingDirectory,
             Map<String, String> environment,
             WorkspaceHandle workspace,
             FuzzingParameters parameters) {
-        // AFL++ остается основным процессом под ProcessRunner timeout; fake worker живет только как дочерний IPC
-        // helper.
-        if (!startFakeWorker || !parameters.kernelCommand().isEmpty() || parameters.mode() != FuzzingMode.FAKE) {
+        // AFL++ остается основным процессом под ProcessRunner timeout; LLM worker живет только как дочерний IPC
+        // helper и не управляет статусом job напрямую.
+        if (!startFakeWorker || !parameters.kernelCommand().isEmpty()) {
             return null;
         }
         List<String> command = List.of(
@@ -149,44 +174,58 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
             ProcessBuilder builder = new ProcessBuilder(command);
             builder.directory(workingDirectory.toFile());
             builder.environment().putAll(environment);
-            builder.redirectOutput(
-                    generatedRoot.resolve("fake-worker.stdout.log").toFile());
-            builder.redirectError(
-                    generatedRoot.resolve("fake-worker.stderr.log").toFile());
+            builder.redirectOutput(generatedRoot
+                    .resolve(parameters.mode().wireValue() + "-worker.stdout.log")
+                    .toFile());
+            builder.redirectError(generatedRoot
+                    .resolve(parameters.mode().wireValue() + "-worker.stderr.log")
+                    .toFile());
             Process process = builder.start();
-            waitForFakeWorker(process);
+            waitForLlmWorker(process, parameters);
             return process;
         } catch (IOException exception) {
             throw new ExecutorJobException(
                     ErrorType.INFRASTRUCTURE_ERROR,
-                    "fuzzing.fake-worker.start",
-                    "Не удалось запустить fake LLM worker для AFL++",
+                    "fuzzing.llm-worker.start",
+                    "Не удалось запустить LLM worker для AFL++",
                     exception.getMessage(),
-                    Map.of("exceptionClass", exception.getClass().getName()),
+                    Map.of(
+                            "exceptionClass",
+                            exception.getClass().getName(),
+                            "mode",
+                            parameters.mode().wireValue()),
                     ExecutionStatus.FAILED);
         }
     }
 
-    private void waitForFakeWorker(Process process) {
+    private void waitForLlmWorker(Process process, FuzzingParameters parameters) {
         try {
             Thread.sleep(FAKE_WORKER_STARTUP_WAIT);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new ExecutorJobException(
                     ErrorType.INFRASTRUCTURE_ERROR,
-                    "fuzzing.fake-worker.interrupted",
-                    "Ожидание запуска fake LLM worker было прервано",
+                    "fuzzing.llm-worker.interrupted",
+                    "Ожидание запуска LLM worker было прервано",
                     exception.getMessage(),
-                    Map.of("exceptionClass", exception.getClass().getName()),
+                    Map.of(
+                            "exceptionClass",
+                            exception.getClass().getName(),
+                            "mode",
+                            parameters.mode().wireValue()),
                     ExecutionStatus.FAILED);
         }
         if (!process.isAlive()) {
             throw new ExecutorJobException(
                     ErrorType.INFRASTRUCTURE_ERROR,
-                    "fuzzing.fake-worker.exited",
-                    "Fake LLM worker завершился до запуска AFL++",
-                    "Проверьте workspace log fake-worker.stderr.log",
-                    Map.of("exitCode", process.exitValue()),
+                    "fuzzing.llm-worker.exited",
+                    "LLM worker завершился до запуска AFL++",
+                    "Проверьте workspace log " + parameters.mode().wireValue() + "-worker.stderr.log",
+                    Map.of(
+                            "exitCode",
+                            process.exitValue(),
+                            "mode",
+                            parameters.mode().wireValue()),
                     ExecutionStatus.FAILED);
         }
     }
@@ -330,6 +369,8 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
         createWorkspaceDirectories(workspace, parameters);
         if (parameters.mode() == FuzzingMode.FAKE) {
             appendFakeWorkerEnvironment(environment, workspace, parameters);
+        } else {
+            appendRealWorkerEnvironment(environment, workspace, parameters);
         }
         putIfPresent(environment, "CICD_TARGET_ARTIFACT_URI", parameters.targetArtifactUri());
         putIfPresent(environment, "CICD_SOURCE_SNAPSHOT_URI", parameters.sourceSnapshotUri());
@@ -377,10 +418,29 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
 
     private void appendFakeWorkerEnvironment(
             Map<String, String> environment, WorkspaceHandle workspace, FuzzingParameters parameters) {
-        Path root = kernelRoot.toAbsolutePath().normalize();
-        Path generatedRoot = workspace.root().resolve("generated").normalize();
+        appendCommonWorkerEnvironment(environment, workspace, parameters);
         environment.put("LLM_API_URL", "");
         environment.put("LLM_API_KEY", "");
+    }
+
+    private void appendRealWorkerEnvironment(
+            Map<String, String> environment, WorkspaceHandle workspace, FuzzingParameters parameters) {
+        appendCommonWorkerEnvironment(environment, workspace, parameters);
+        String llmApiUrl = StringUtils.firstNonBlank(parameters.llmApiUrl(), configuredLlmApiUrl);
+        if (StringUtils.isBlank(llmApiUrl)) {
+            throw ExecutorJobException.validation(
+                    "mode=real требует llm_api_url в params или CICD_FUZZING_LLM_API_URL в runtime environment");
+        }
+        environment.put("LLM_API_URL", llmApiUrl);
+        putIfPresent(environment, "LLM_API_KEY", configuredLlmApiKey);
+        putIfPresent(environment, "LLM_MODEL", StringUtils.firstNonBlank(parameters.llmModel(), configuredLlmModel));
+        environment.put("LLM_API_TIMEOUT", Integer.toString(parameters.llmApiTimeoutSeconds()));
+    }
+
+    private void appendCommonWorkerEnvironment(
+            Map<String, String> environment, WorkspaceHandle workspace, FuzzingParameters parameters) {
+        Path root = kernelRoot.toAbsolutePath().normalize();
+        Path generatedRoot = workspace.root().resolve("generated").normalize();
         environment.put(
                 "LLM_MUTATOR_ADDR",
                 generatedRoot.resolve(DEFAULT_FAKE_WORKER_SOCKET).toString());

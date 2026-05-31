@@ -108,12 +108,42 @@ class FuzzingParametersTest {
     }
 
     @Test
-    void fromRejectsRealModeWithoutExplicitKernelCommand() {
-        JobMessage job = fuzzingJob(Map.of("mode", "real"));
+    void fromReadsRealModeEndpointParametersWithoutExplicitKernelCommand() {
+        FuzzingParameters parameters = FuzzingParameters.from(fuzzingJob(Map.of(
+                "mode",
+                "real",
+                "llm_api_url",
+                "http://127.0.0.1:11434/v1/chat/completions",
+                "llm_model",
+                "local-model",
+                "llm_api_timeout_seconds",
+                7)));
+
+        assertEquals(FuzzingMode.REAL, parameters.mode());
+        assertEquals(List.of(), parameters.kernelCommand());
+        assertEquals("http://127.0.0.1:11434/v1/chat/completions", parameters.llmApiUrl());
+        assertEquals("local-model", parameters.llmModel());
+        assertEquals(7, parameters.llmApiTimeoutSeconds());
+    }
+
+    @Test
+    void fromRejectsInvalidLlmApiUrl() {
+        JobMessage job = fuzzingJob(Map.of("mode", "real", "llm_api_url", "ftp://127.0.0.1/api"));
 
         ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> FuzzingParameters.from(job));
 
-        assertTrue(exception.getMessage().contains("mode=real пока требует явный kernel_command"));
+        assertEquals("llm_api_url должен использовать схему http:// или https://", exception.getMessage());
+    }
+
+    @Test
+    void fromRejectsLlmApiKeyInJobEnvironment() {
+        JobMessage job = fuzzingJob(Map.of("environment", Map.of("LLM_API_KEY", "raw-secret")));
+
+        ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> FuzzingParameters.from(job));
+
+        assertEquals(
+                "LLM_API_KEY нельзя передавать через params.environment; используйте доверенную runtime-инъекцию секретов",
+                exception.getMessage());
     }
 
     private JobMessage fuzzingJob(Map<String, Object> params) {

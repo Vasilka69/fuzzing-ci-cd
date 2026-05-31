@@ -42,6 +42,7 @@
     "services/build-service/AGENTS.md",
     "services/deploy-service/AGENTS.md",
     "services/fuzzing-service/AGENTS.md",
+    "services/fuzzing-service/README.md",
     "services/script-service/AGENTS.md",
     "services/storage-service/AGENTS.md",
     "services/vcs-service/AGENTS.md"

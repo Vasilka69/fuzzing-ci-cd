@@ -49,6 +49,9 @@ cicd:
     kernel-root: ${CICD_FUZZING_KERNEL_ROOT:fuzzing-engine/afl-llm-engine}
     aflpp-root: ${CICD_FUZZING_AFLPP_ROOT:../AFLplusplus}
     start-fake-worker: ${CICD_FUZZING_START_FAKE_WORKER:true}
+    llm-api-url: ${CICD_FUZZING_LLM_API_URL:}
+    llm-api-key: ${CICD_FUZZING_LLM_API_KEY:}
+    llm-model: ${CICD_FUZZING_LLM_MODEL:}
 
 server:
   port: ${SERVER_PORT:8084}

@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -232,6 +233,59 @@ class FuzzingJobTest {
     }
 
     @Test
+    void handleRealModeUsesOpenAiCompatibleWorkerEnvironmentWithoutSecretMetadata() throws Exception {
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        CapturingProcessRunner processRunner = new CapturingProcessRunner(
+                processResult(0, "kernel prepared\n", ""), processResult(0, "afl real run ok\n", ""));
+        CapturingStorageClient storageClient = new CapturingStorageClient();
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "fuzzing-test-worker-1");
+        FuzzingJob job = realModeFuzzingJob(processRunner, storageClient);
+        JobMessage message = fuzzingJob(Map.of(
+                "mode",
+                "real",
+                "llm_api_url",
+                "http://127.0.0.1:11434/v1/chat/completions",
+                "llm_model",
+                "local-code-model",
+                "llm_api_timeout_seconds",
+                5));
+
+        ExecutorEventMessage finishedEvent = handler.handle(message, job);
+
+        assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
+        assertEquals("real", finishedEvent.additionalData().get("mode"));
+        assertEquals(3, processRunner.requests.size());
+        ProcessExecutionRequest aflRequest = processRunner.requests.get(1);
+        assertEquals("real", aflRequest.environment().get("CICD_FUZZING_MODE"));
+        assertEquals(
+                "http://127.0.0.1:11434/v1/chat/completions",
+                aflRequest.environment().get("LLM_API_URL"));
+        assertEquals("runtime-secret-token", aflRequest.environment().get("LLM_API_KEY"));
+        assertEquals("local-code-model", aflRequest.environment().get("LLM_MODEL"));
+        assertEquals("5", aflRequest.environment().get("LLM_API_TIMEOUT"));
+        assertTrue(aflRequest.environment().get("LLM_MUTATOR_ADDR").endsWith("llm-mutator.sock"));
+        assertTrue(aflRequest.environment().get("LLM_MUTATOR_PROMPT_FILE").endsWith("targets/dsl/prompt.txt"));
+        assertTrue(aflRequest.environment().get("LLM_MUTATOR_SEED_DIR").endsWith("targets/dsl/seeds"));
+        assertEquals("16", aflRequest.environment().get("LLM_MUTATOR_QUEUE_SIZE"));
+        assertEquals("1", aflRequest.environment().get("LLM_MUTATOR_WORKERS"));
+        assertEquals("4096", aflRequest.environment().get("LLM_MUTATOR_MAX_CANDIDATE_CHARS"));
+
+        String finishedJson = objectMapper().writeValueAsString(finishedEvent);
+        assertFalse(finishedJson.contains("runtime-secret-token"));
+        assertFalse(finishedJson.contains("LLM_API_KEY"));
+        assertEquals(1, logPublisher.events.size());
+        String logJson = objectMapper().writeValueAsString(logPublisher.events.getFirst());
+        assertFalse(logJson.contains("runtime-secret-token"));
+        assertTrue(logPublisher.events.getFirst().logs().contains("afl real run ok"));
+    }
+
+    @Test
     void handleFuzzingJobMapsKernelTimeoutToTimeoutStatus() {
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
         CapturingLogPublisher logPublisher = new CapturingLogPublisher();
@@ -257,6 +311,17 @@ class FuzzingJobTest {
     }
 
     private JobMessage fuzzingJob() {
+        return fuzzingJob(Map.of());
+    }
+
+    private JobMessage fuzzingJob(Map<String, Object> parameterOverrides) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("budget_seconds", 10);
+        params.put("local_grammar", "dsl");
+        params.put("llm_worker_queue_size", 16);
+        params.put("max_candidate_chars", 4096);
+        params.put("target_artifact_uri", TARGET_ARTIFACT_URI);
+        params.putAll(parameterOverrides);
         return new JobMessage(
                 1,
                 UUID.fromString("00000000-0000-0000-0000-000000000401"),
@@ -275,17 +340,7 @@ class FuzzingJobTest {
                 new WorkspacePolicy("always", false),
                 safeSandboxPolicy(),
                 Map.of(),
-                Map.of(
-                        "budget_seconds",
-                        10,
-                        "local_grammar",
-                        "dsl",
-                        "llm_worker_queue_size",
-                        16,
-                        "max_candidate_chars",
-                        4096,
-                        "target_artifact_uri",
-                        TARGET_ARTIFACT_URI),
+                params,
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
     }
@@ -293,6 +348,13 @@ class FuzzingJobTest {
     private FuzzingJob fuzzingJob(CapturingProcessRunner processRunner, CapturingStorageClient storageClient) {
         return new FuzzingJob(
                 new ProcessFuzzingKernelAdapter(processRunner, tempDir.resolve("kernel")),
+                new FuzzingArtifactBundlePublisher(storageClient, processRunner, objectMapper()));
+    }
+
+    private FuzzingJob realModeFuzzingJob(CapturingProcessRunner processRunner, CapturingStorageClient storageClient) {
+        return new FuzzingJob(
+                new ProcessFuzzingKernelAdapter(
+                        processRunner, tempDir.resolve("kernel"), null, "runtime-secret-token", "configured-model"),
                 new FuzzingArtifactBundlePublisher(storageClient, processRunner, objectMapper()));
     }
 

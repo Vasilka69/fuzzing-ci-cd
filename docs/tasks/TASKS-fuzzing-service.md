@@ -34,8 +34,12 @@ Topic: `jobs.fuzzing`
 
 ## Уровень 2. Дипломно-достаточная полнота
 
-- [ ] `FUZZING-101 [DIPLOMA]` real OpenAI-compatible LLM endpoint mode.
+- [x] `FUZZING-101 [DIPLOMA]` real OpenAI-compatible LLM endpoint mode.
   - Готово, когда: поведение описано в README сервиса и покрыто тестом или demo-сценарием.
+  - Готово: `mode=real` запускает штатный AFL++/LLM worker с OpenAI-compatible `chat/completions`
+    endpoint через `llm_api_url` или `CICD_FUZZING_LLM_API_URL`; bearer key передается только
+    через runtime secret environment, не попадает в events/logs/artifact metadata, поведение
+    описано в `services/fuzzing-service/README.md` и покрыто unit/contract-style тестом.
 - [ ] `FUZZING-102 [DIPLOMA]` feedback loop: interesting inputs -> worker.
   - Готово, когда: поведение описано в README сервиса и покрыто тестом или demo-сценарием.
 - [ ] `FUZZING-103 [DIPLOMA]` custom mutator queue metrics hit/miss/fallback.
