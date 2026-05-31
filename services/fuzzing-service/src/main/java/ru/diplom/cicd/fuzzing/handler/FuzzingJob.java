@@ -50,6 +50,7 @@ public final class FuzzingJob implements ExecutorJob {
         data.put("mode", parameters.mode().wireValue());
         data.put("localGrammar", parameters.localGrammar());
         data.put("budgetSeconds", parameters.budgetSeconds());
+        appendLocalGrammarMetadata(data, parameters);
         data.put("kernelCommand", result.command());
         data.put("exitCode", result.processResult().exitCode());
         data.put("durationMs", result.processResult().duration().toMillis());
@@ -64,10 +65,18 @@ public final class FuzzingJob implements ExecutorJob {
         putIfPresent(data, "seedCorpusUri", parameters.seedCorpusUri());
         putIfPresent(data, "dictionaryUri", parameters.dictionaryUri());
         putIfPresent(data, "promptUri", parameters.promptUri());
-        if (!parameters.targetCommand().isEmpty()) {
-            data.put("targetCommand", parameters.targetCommand());
-        }
+        data.put("targetCommand", parameters.targetCommand());
         return Map.copyOf(data);
+    }
+
+    private void appendLocalGrammarMetadata(Map<String, Object> data, FuzzingParameters parameters) {
+        if (!FuzzingParameters.DSL_GRAMMAR.equals(parameters.localGrammar())) {
+            return;
+        }
+        data.put("demoTarget", FuzzingParameters.DSL_GRAMMAR);
+        data.put("demoTargetPromptPath", FuzzingParameters.DEFAULT_DSL_PROMPT_FILE);
+        data.put("demoTargetSeedCorpusPath", FuzzingParameters.DEFAULT_DSL_SEED_DIR);
+        data.put("demoTargetDictionaryPath", FuzzingParameters.DEFAULT_DSL_DICTIONARY_FILE);
     }
 
     private void putIfPresent(Map<String, Object> data, String key, String value) {

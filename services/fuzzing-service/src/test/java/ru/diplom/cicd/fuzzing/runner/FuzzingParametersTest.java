@@ -56,6 +56,13 @@ class FuzzingParametersTest {
     }
 
     @Test
+    void fromUsesDefaultDemoDslTargetCommand() {
+        FuzzingParameters parameters = FuzzingParameters.from(fuzzingJob(Map.of("local_grammar", "dsl")));
+
+        assertEquals(FuzzingParameters.DEFAULT_DSL_TARGET_COMMAND, parameters.targetCommand());
+    }
+
+    @Test
     void fromRejectsShellStringKernelCommand() {
         JobMessage job = fuzzingJob(Map.of("kernel_command", "make ipc-smoke"));
 

@@ -74,6 +74,10 @@ class FuzzingJobTest {
         assertEquals("Fuzzing-ядро завершило запуск адаптера успешно", finishedEvent.summary());
         assertEquals("fake", finishedEvent.additionalData().get("mode"));
         assertEquals("dsl", finishedEvent.additionalData().get("localGrammar"));
+        assertEquals("dsl", finishedEvent.additionalData().get("demoTarget"));
+        assertEquals("targets/dsl/prompt.txt", finishedEvent.additionalData().get("demoTargetPromptPath"));
+        assertEquals("targets/dsl/seeds", finishedEvent.additionalData().get("demoTargetSeedCorpusPath"));
+        assertEquals("targets/dsl/dsl.dict", finishedEvent.additionalData().get("demoTargetDictionaryPath"));
         assertEquals(10L, finishedEvent.additionalData().get("budgetSeconds"));
         assertEquals(
                 List.of("make", "ipc-smoke"), finishedEvent.additionalData().get("kernelCommand"));
@@ -110,6 +114,11 @@ class FuzzingJobTest {
                 .endsWith("targets/dsl/prompt.txt"));
         assertTrue(
                 processRunner.request.environment().get("LLM_MUTATOR_SEED_DIR").endsWith("targets/dsl/seeds"));
+        assertTrue(processRunner
+                .request
+                .environment()
+                .get("CICD_FUZZING_DSL_DICTIONARY_FILE")
+                .endsWith("targets/dsl/dsl.dict"));
         assertEquals("16", processRunner.request.environment().get("LLM_MUTATOR_QUEUE_SIZE"));
         assertEquals("1", processRunner.request.environment().get("LLM_MUTATOR_WORKERS"));
         assertEquals("4096", processRunner.request.environment().get("LLM_MUTATOR_MAX_CANDIDATE_CHARS"));
@@ -129,6 +138,16 @@ class FuzzingJobTest {
         assertEquals("SUCCESS", json.get("status").textValue());
         assertEquals("fake", json.get("additionalData").get("mode").textValue());
         assertEquals("dsl", json.get("additionalData").get("localGrammar").textValue());
+        assertEquals("dsl", json.get("additionalData").get("demoTarget").textValue());
+        assertEquals(
+                "targets/dsl/prompt.txt",
+                json.get("additionalData").get("demoTargetPromptPath").textValue());
+        assertEquals(
+                "targets/dsl/seeds",
+                json.get("additionalData").get("demoTargetSeedCorpusPath").textValue());
+        assertEquals(
+                "targets/dsl/dsl.dict",
+                json.get("additionalData").get("demoTargetDictionaryPath").textValue());
         assertEquals(10L, json.get("additionalData").get("budgetSeconds").longValue());
         assertEquals(16, json.get("additionalData").get("llmWorkerQueueSize").intValue());
         assertEquals(1, json.get("additionalData").get("llmWorkerCount").intValue());
@@ -202,9 +221,7 @@ class FuzzingJobTest {
                         "max_candidate_chars",
                         4096,
                         "target_artifact_uri",
-                        TARGET_ARTIFACT_URI,
-                        "target_command",
-                        List.of("./build/target_dsl")),
+                        TARGET_ARTIFACT_URI),
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
     }

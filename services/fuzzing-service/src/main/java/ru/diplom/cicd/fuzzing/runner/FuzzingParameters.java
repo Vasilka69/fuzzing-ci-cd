@@ -43,9 +43,13 @@ public record FuzzingParameters(
     public static final String SEED_CORPUS_URI_KEY = "seed_corpus_uri";
     public static final String DICTIONARY_URI_KEY = "dictionary_uri";
     public static final String PROMPT_URI_KEY = "prompt_uri";
+    public static final String DSL_GRAMMAR = "dsl";
+    public static final List<String> DEFAULT_DSL_TARGET_COMMAND = List.of("./build/target_dsl");
+    public static final String DEFAULT_DSL_PROMPT_FILE = "targets/dsl/prompt.txt";
+    public static final String DEFAULT_DSL_SEED_DIR = "targets/dsl/seeds";
+    public static final String DEFAULT_DSL_DICTIONARY_FILE = "targets/dsl/dsl.dict";
 
     private static final long DEFAULT_BUDGET_SECONDS = 30;
-    private static final String DEFAULT_LOCAL_GRAMMAR = "dsl";
     private static final int DEFAULT_LLM_WORKER_QUEUE_SIZE = 8;
     private static final int DEFAULT_LLM_WORKER_COUNT = 1;
     private static final int DEFAULT_MAX_CANDIDATE_CHARS = 2048;
@@ -64,7 +68,7 @@ public record FuzzingParameters(
         kernelWorkingDirectory = normalizeRelativePath(
                 kernelWorkingDirectory == null ? Path.of(".") : kernelWorkingDirectory,
                 "kernel_working_directory должен быть относительным путем внутри fuzzing kernel root");
-        targetCommand = targetCommand == null ? List.of() : List.copyOf(targetCommand);
+        targetCommand = normalizeTargetCommand(targetCommand, localGrammar);
         environment = environment == null ? Map.of() : Map.copyOf(environment);
         requirePositive(llmWorkerQueueSize, LLM_WORKER_QUEUE_SIZE_KEY);
         requirePositive(llmWorkerCount, LLM_WORKER_COUNT_KEY);
@@ -208,10 +212,17 @@ public record FuzzingParameters(
     }
 
     private static String normalizeLocalGrammar(String value) {
-        String normalized =
-                StringUtils.defaultIfBlank(value, DEFAULT_LOCAL_GRAMMAR).trim();
-        if (!DEFAULT_LOCAL_GRAMMAR.equals(normalized)) {
+        String normalized = StringUtils.defaultIfBlank(value, DSL_GRAMMAR).trim();
+        if (!DSL_GRAMMAR.equals(normalized)) {
             throw ExecutorJobException.validation("local_grammar сейчас поддерживает только dsl");
+        }
+        return normalized;
+    }
+
+    private static List<String> normalizeTargetCommand(List<String> value, String localGrammar) {
+        List<String> normalized = value == null ? List.of() : List.copyOf(value);
+        if (normalized.isEmpty() && DSL_GRAMMAR.equals(localGrammar)) {
+            return DEFAULT_DSL_TARGET_COMMAND;
         }
         return normalized;
     }

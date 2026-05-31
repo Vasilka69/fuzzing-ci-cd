@@ -27,9 +27,6 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
 
     private static final int ERROR_DETAILS_LIMIT = 1000;
     private static final String DEFAULT_FAKE_WORKER_SOCKET = "llm-mutator.sock";
-    private static final String DSL_PROMPT_FILE = "targets/dsl/prompt.txt";
-    private static final String DSL_SEED_DIR = "targets/dsl/seeds";
-    private static final String DSL_DICTIONARY_FILE = "targets/dsl/dsl.dict";
     // TODO(FUZZING-004): заменить smoke-команду на ограниченный по budget_seconds AFL++ запуск.
     private static final List<String> DEFAULT_KERNEL_COMMAND = List.of("make", "ipc-smoke");
 
@@ -148,8 +145,12 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
         environment.put(
                 "LLM_MUTATOR_ADDR",
                 generatedRoot.resolve(DEFAULT_FAKE_WORKER_SOCKET).toString());
-        environment.put("LLM_MUTATOR_PROMPT_FILE", root.resolve(DSL_PROMPT_FILE).toString());
-        environment.put("LLM_MUTATOR_SEED_DIR", root.resolve(DSL_SEED_DIR).toString());
+        environment.put(
+                "LLM_MUTATOR_PROMPT_FILE",
+                root.resolve(FuzzingParameters.DEFAULT_DSL_PROMPT_FILE).toString());
+        environment.put(
+                "LLM_MUTATOR_SEED_DIR",
+                root.resolve(FuzzingParameters.DEFAULT_DSL_SEED_DIR).toString());
         environment.put(
                 "LLM_MUTATOR_DISCOVERED_DIR",
                 generatedRoot.resolve("discovered").toString());
@@ -161,7 +162,7 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
         environment.put("LLM_MUTATOR_MAX_CANDIDATE_CHARS", Integer.toString(parameters.maxCandidateChars()));
         environment.put(
                 "CICD_FUZZING_DSL_DICTIONARY_FILE",
-                root.resolve(DSL_DICTIONARY_FILE).toString());
+                root.resolve(FuzzingParameters.DEFAULT_DSL_DICTIONARY_FILE).toString());
     }
 
     private void putIfPresent(Map<String, String> environment, String key, String value) {

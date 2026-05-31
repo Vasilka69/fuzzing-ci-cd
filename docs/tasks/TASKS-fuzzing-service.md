@@ -22,8 +22,9 @@ Topic: `jobs.fuzzing`
 - [x] `FUZZING-002 [MVP]` fake LLM worker/local grammar mode.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: `mode=fake` запускает готовое ядро в local grammar mode без внешнего LLM API; executor задает workspace-local IPC socket, DSL prompt/seeds и параметры fake worker через environment, результат покрыт unit tests и JSON assertion итогового `JOB_FINISHED`.
-- [ ] `FUZZING-003 [MVP]` демонстрационный target DSL.
+- [x] `FUZZING-003 [MVP]` демонстрационный target DSL.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: для `local_grammar=dsl` сервис задает демонстрационный target `./build/target_dsl` по умолчанию, публикует metadata prompt/seeds/dictionary в `JOB_FINISHED.additionalData` без inline logs/payload и покрыт unit + JSON contract assertions.
 - [ ] `FUZZING-004 [MVP]` AFL++ run with budget.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `FUZZING-005 [MVP]` crash report and artifacts.
