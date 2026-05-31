@@ -16,8 +16,9 @@ Topic: `jobs.build`
 
 ## Уровень 1. MVP
 
-- [ ] `BUILD-001 [MVP]` Maven и Gradle сборка в изолированном workspace.
+- [x] `BUILD-001 [MVP]` Maven и Gradle сборка в изолированном workspace.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: добавлены whitelist entrypoint-ы для Maven/Gradle, запуск через общий `ProcessRunner` внутри workspace, unit/integration тесты и JSON assertion итогового события.
 - [ ] `BUILD-002 [MVP]` скачивание source snapshot из storage.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `BUILD-003 [MVP]` expected_artifacts glob resolver.
