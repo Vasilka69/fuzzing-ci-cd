@@ -20,8 +20,8 @@ Topic: `jobs.storage`
   - Готово: реализован local filesystem backend для `storage/source-snapshot`, есть unit test backend-а и integration-style test через `ExecutorJobHandler` с contract assertion итогового `JOB_FINISHED`.
 - [x] `STORAGE-002 [MVP]` storage:// URI namespace.
   - Готово: namespace реализован через общий `StorageUris`, покрыт unit tests на canonical URI/round-trip/валидацию, а результат `storage/source-snapshot` проверяет `storage://` URI в artifact и `JOB_FINISHED.additionalData`.
-- [ ] `STORAGE-003 [MVP]` upload/download REST API для executor-ов.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `STORAGE-003 [MVP]` upload/download REST API для executor-ов.
+  - Готово: реализованы `PUT /artifacts/{namespacePath}` и `GET /artifacts/{namespacePath}` поверх local filesystem backend, добавлены controller/backend tests и JSON contract assertion upload-результата.
 - [ ] `STORAGE-004 [MVP]` sha256 verification.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `STORAGE-005 [MVP]` cleanup temporary artifacts.

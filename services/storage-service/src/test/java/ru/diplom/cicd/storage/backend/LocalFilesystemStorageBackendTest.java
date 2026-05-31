@@ -60,6 +60,32 @@ class LocalFilesystemStorageBackendTest {
     }
 
     @Test
+    void loadReturnsStoredArtifactPath() throws IOException {
+        Path source = tempDir.resolve("download.txt");
+        Files.writeString(source, "download");
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+        StorageSaveRequest request =
+                new StorageSaveRequest("artifacts/download.txt", "artifact", "download.txt", "text/plain", Map.of());
+        backend.save(source, request);
+
+        Path artifactPath = backend.load("artifacts/download.txt");
+
+        assertEquals("download", Files.readString(artifactPath));
+        assertTrue(artifactPath.startsWith(
+                tempDir.resolve("storage").toAbsolutePath().normalize()));
+    }
+
+    @Test
+    void loadRejectsMissingArtifact() {
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+
+        StorageClientException exception =
+                assertThrows(StorageClientException.class, () -> backend.load("artifacts/missing.txt"));
+
+        assertEquals("Артефакт не найден: storage://artifacts/missing.txt", exception.getMessage());
+    }
+
+    @Test
     void saveRejectsPathTraversal() throws IOException {
         Path source = tempDir.resolve("source.txt");
         Files.writeString(source, "outside");

@@ -74,6 +74,16 @@ public final class LocalFilesystemStorageBackend {
         }
     }
 
+    public Path load(String namespacePath) {
+        String normalizedNamespacePath = StorageUris.normalizeNamespacePath(namespacePath);
+        Path artifactPath = resolve(normalizedNamespacePath);
+        if (!Files.isRegularFile(artifactPath)) {
+            throw new StorageClientException(
+                    "Артефакт не найден: " + StorageUris.toStorageUri(normalizedNamespacePath));
+        }
+        return artifactPath;
+    }
+
     Path resolve(String namespacePath) {
         Path resolvedPath = root.resolve(namespacePath).normalize();
         if (!resolvedPath.startsWith(root)) {
