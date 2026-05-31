@@ -12,12 +12,14 @@ import ru.diplom.cicd.executor.core.job.ExecutorJobException;
 
 class BuildCommandBuilderTest {
 
+    private static final String SOURCE_SNAPSHOT_URI = "storage://source-snapshots/job-1/source-snapshot.tar.gz";
+
     private final BuildCommandBuilder commandBuilder = new BuildCommandBuilder();
 
     @Test
     void commandAllowsMavenWrapperEntrypoint() {
-        BuildParameters parameters =
-                new BuildParameters(BuildTool.MAVEN, Path.of("."), "./mvnw", List.of("-q", "test"), Map.of());
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.MAVEN, SOURCE_SNAPSHOT_URI, Path.of("."), "./mvnw", List.of("-q", "test"), Map.of());
 
         List<String> command = commandBuilder.command(parameters);
 
@@ -26,8 +28,8 @@ class BuildCommandBuilderTest {
 
     @Test
     void commandRejectsArbitraryEntrypoint() {
-        BuildParameters parameters =
-                new BuildParameters(BuildTool.GRADLE, Path.of("."), "bash", List.of("-lc", "gradle build"), Map.of());
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.GRADLE, SOURCE_SNAPSHOT_URI, Path.of("."), "bash", List.of("-lc", "gradle build"), Map.of());
 
         ExecutorJobException exception =
                 assertThrows(ExecutorJobException.class, () -> commandBuilder.command(parameters));

@@ -13,12 +13,14 @@ import ru.diplom.cicd.executor.core.job.ExecutorJobException;
 
 public record BuildParameters(
         BuildTool buildTool,
+        String sourceSnapshotUri,
         Path workingDirectory,
         String entrypoint,
         List<String> args,
         Map<String, String> environment) {
 
     public static final String BUILD_TOOL_KEY = "build_tool";
+    public static final String SOURCE_SNAPSHOT_URI_KEY = "source_snapshot_uri";
     public static final String WORKING_DIRECTORY_KEY = "working_directory";
     public static final String ENTRYPOINT_KEY = "entrypoint";
     public static final String ARGS_KEY = "args";
@@ -26,6 +28,7 @@ public record BuildParameters(
 
     public BuildParameters {
         Objects.requireNonNull(buildTool, "buildTool");
+        requireStorageUri(sourceSnapshotUri);
         workingDirectory = normalizeWorkingDirectory(workingDirectory == null ? Path.of(".") : workingDirectory);
         entrypoint = StringUtils.defaultIfBlank(entrypoint, buildTool.defaultEntrypoint());
         args = args == null ? List.of() : List.copyOf(args);
@@ -46,6 +49,7 @@ public record BuildParameters(
 
         return new BuildParameters(
                 tool,
+                sourceSnapshotUri(value(job.params(), SOURCE_SNAPSHOT_URI_KEY, "sourceSnapshotUri")),
                 workingDirectory(value(job.params(), WORKING_DIRECTORY_KEY, "workingDirectory")),
                 requireOptionalString(value(job.params(), ENTRYPOINT_KEY), ENTRYPOINT_KEY),
                 args(value(job.params(), ARGS_KEY)),
@@ -61,6 +65,20 @@ public record BuildParameters(
     private static Path workingDirectory(Object value) {
         String rawPath = value == null ? "." : requireString(value, WORKING_DIRECTORY_KEY);
         return normalizeWorkingDirectory(Path.of(StringUtils.defaultIfBlank(rawPath, ".")));
+    }
+
+    private static String sourceSnapshotUri(Object value) {
+        return requireStorageUri(requireString(value, SOURCE_SNAPSHOT_URI_KEY));
+    }
+
+    private static String requireStorageUri(String value) {
+        if (StringUtils.isBlank(value)) {
+            throw ExecutorJobException.validation("source_snapshot_uri должен быть непустым storage:// URI");
+        }
+        if (!value.startsWith("storage://")) {
+            throw ExecutorJobException.validation("source_snapshot_uri должен использовать схему storage://");
+        }
+        return value;
     }
 
     private static Path normalizeWorkingDirectory(Path path) {

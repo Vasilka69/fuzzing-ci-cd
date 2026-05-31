@@ -23,6 +23,8 @@ import ru.diplom.cicd.executor.core.process.ProcessStreamType;
 
 class BuildRunnerTest {
 
+    private static final String SOURCE_SNAPSHOT_URI = "storage://source-snapshots/job-1/source-snapshot.tar.gz";
+
     @TempDir
     private Path tempDir;
 
@@ -30,8 +32,8 @@ class BuildRunnerTest {
     void buildRunsMavenWrapperInsideWorkspace() throws Exception {
         createWrapper("mvnw", "maven build ok");
         BuildRunner runner = new BuildRunner(new LocalProcessRunner());
-        BuildParameters parameters =
-                new BuildParameters(BuildTool.MAVEN, Path.of("."), "./mvnw", List.of("-q", "test"), Map.of());
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.MAVEN, SOURCE_SNAPSHOT_URI, Path.of("."), "./mvnw", List.of("-q", "test"), Map.of());
 
         BuildExecutionResult result = runner.build(parameters, tempDir, 10);
 
@@ -46,8 +48,8 @@ class BuildRunnerTest {
         Files.createDirectories(moduleDirectory);
         createWrapper(moduleDirectory.resolve("gradlew"), "gradle build ok");
         BuildRunner runner = new BuildRunner(new LocalProcessRunner());
-        BuildParameters parameters =
-                new BuildParameters(BuildTool.GRADLE, Path.of("module-a"), "./gradlew", List.of("build"), Map.of());
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.GRADLE, SOURCE_SNAPSHOT_URI, Path.of("module-a"), "./gradlew", List.of("build"), Map.of());
 
         BuildExecutionResult result = runner.build(parameters, tempDir, 10);
 
@@ -59,8 +61,8 @@ class BuildRunnerTest {
     @Test
     void buildMapsNonZeroExitCodeToUserCodeError() {
         BuildRunner runner = new BuildRunner(new StubProcessRunner(processResult(2, "", "compile failed\n")));
-        BuildParameters parameters =
-                new BuildParameters(BuildTool.MAVEN, Path.of("."), "./mvnw", List.of("test"), Map.of());
+        BuildParameters parameters = new BuildParameters(
+                BuildTool.MAVEN, SOURCE_SNAPSHOT_URI, Path.of("."), "./mvnw", List.of("test"), Map.of());
 
         ExecutorJobException exception =
                 assertThrows(ExecutorJobException.class, () -> runner.build(parameters, tempDir, 10));

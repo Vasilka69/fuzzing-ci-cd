@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,6 +22,8 @@ import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.diplom.cicd.build.runner.BuildRunner;
+import ru.diplom.cicd.build.snapshot.BuildSourceSnapshotPreparer;
+import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.event.EventType;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
 import ru.diplom.cicd.contracts.event.ExecutorEventMessage;
@@ -32,17 +35,23 @@ import ru.diplom.cicd.contracts.security.SandboxPolicy;
 import ru.diplom.cicd.executor.core.event.ExecutorEventPublisher;
 import ru.diplom.cicd.executor.core.job.ExecutorJobHandler;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
+import ru.diplom.cicd.executor.core.process.LocalProcessRunner;
 import ru.diplom.cicd.executor.core.process.ProcessExecutionRequest;
 import ru.diplom.cicd.executor.core.process.ProcessExecutionResult;
 import ru.diplom.cicd.executor.core.process.ProcessOutputChunk;
 import ru.diplom.cicd.executor.core.process.ProcessRunner;
 import ru.diplom.cicd.executor.core.process.ProcessStreamType;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
+import ru.diplom.cicd.executor.core.storage.LocalStorageClient;
+import ru.diplom.cicd.executor.core.storage.StorageClient;
+import ru.diplom.cicd.executor.core.storage.StorageUploadRequest;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 
 class BuildJobTest {
 
     private static final UUID JOB_EXECUTION_ID = UUID.fromString("00000000-0000-0000-0000-000000000307");
+    private static final String SOURCE_SNAPSHOT_URI =
+            "storage://source-snapshots/00000000-0000-0000-0000-000000000307/source-snapshot.tar.gz";
 
     @TempDir
     private Path tempDir;
@@ -52,14 +61,16 @@ class BuildJobTest {
     void handleMavenJobPublishesFinishedEventWithoutInlineLogs() throws Exception {
         CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
         CapturingLogPublisher logPublisher = new CapturingLogPublisher();
-        CapturingProcessRunner processRunner = new CapturingProcessRunner(processResult(0, "maven ok\n", ""));
+        StorageClient storageClient = storageClientWithSourceSnapshot();
+        SnapshotAwareProcessRunner processRunner = new SnapshotAwareProcessRunner(processResult(0, "maven ok\n", ""));
         ExecutorJobHandler handler = new ExecutorJobHandler(
                 new LocalWorkspaceManager(tempDir.resolve("workspaces")),
                 eventPublisher,
                 logPublisher,
                 new SecretRedactor(),
                 "build-test-worker-1");
-        BuildJob job = new BuildJob(new BuildRunner(processRunner));
+        BuildJob job = new BuildJob(
+                new BuildRunner(processRunner), new BuildSourceSnapshotPreparer(storageClient, processRunner));
 
         ExecutorEventMessage finishedEvent = handler.handle(buildJob(), job);
 
@@ -69,6 +80,8 @@ class BuildJobTest {
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
         assertEquals("Сборка maven завершена успешно", finishedEvent.summary());
         assertEquals("maven", finishedEvent.additionalData().get("buildTool"));
+        assertEquals(SOURCE_SNAPSHOT_URI, finishedEvent.additionalData().get("sourceSnapshotUri"));
+        assertEquals("source", finishedEvent.additionalData().get("sourceDirectory"));
         assertEquals(".", finishedEvent.additionalData().get("workingDirectory"));
         assertEquals("./mvnw", finishedEvent.additionalData().get("entrypoint"));
         assertEquals(0, finishedEvent.additionalData().get("exitCode"));
@@ -79,11 +92,16 @@ class BuildJobTest {
         ExecutorEventMessage logEvent = logPublisher.events.getFirst();
         assertEquals(EventType.JOB_LOG, logEvent.eventType());
         assertNotNull(logEvent.logs());
+        assertTrue(logEvent.logs().contains("Source snapshot скачан из storage"));
+        assertTrue(logEvent.logs().contains("Source snapshot tar.gz распакован"));
         assertTrue(logEvent.logs().contains("Сборка maven завершена успешно"));
         assertTrue(logEvent.logs().contains("maven ok"));
 
-        assertEquals(List.of("./mvnw", "-q", "test"), processRunner.request.command());
-        assertTrue(processRunner.request.workingDirectory().startsWith(tempDir.resolve("workspaces")));
+        assertEquals(List.of("./mvnw", "-q", "test"), processRunner.buildRequest.command());
+        assertEquals(
+                "source",
+                processRunner.buildRequest.workingDirectory().getFileName().toString());
+        assertTrue(processRunner.buildRequest.workingDirectory().startsWith(tempDir.resolve("workspaces")));
 
         JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
         assertEquals("build", json.get("jobType").textValue());
@@ -91,6 +109,10 @@ class BuildJobTest {
         assertEquals("JOB_FINISHED", json.get("eventType").textValue());
         assertEquals("SUCCESS", json.get("status").textValue());
         assertEquals("maven", json.get("additionalData").get("buildTool").textValue());
+        assertEquals(
+                SOURCE_SNAPSHOT_URI,
+                json.get("additionalData").get("sourceSnapshotUri").textValue());
+        assertEquals("source", json.get("additionalData").get("sourceDirectory").textValue());
         assertEquals("./mvnw", json.get("additionalData").get("entrypoint").textValue());
         assertEquals(0, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
@@ -116,7 +138,15 @@ class BuildJobTest {
                 new WorkspacePolicy("always", false),
                 safeSandboxPolicy(),
                 Map.of(),
-                Map.of("build_tool", "maven", "entrypoint", "./mvnw", "args", List.of("-q", "test")),
+                Map.of(
+                        "build_tool",
+                        "maven",
+                        "source_snapshot_uri",
+                        SOURCE_SNAPSHOT_URI,
+                        "entrypoint",
+                        "./mvnw",
+                        "args",
+                        List.of("-q", "test")),
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
     }
@@ -140,6 +170,41 @@ class BuildJobTest {
 
     private ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+
+    private StorageClient storageClientWithSourceSnapshot() throws Exception {
+        Path storageRoot = tempDir.resolve("storage");
+        Path sourceDirectory = tempDir.resolve("source-project");
+        Files.createDirectories(sourceDirectory);
+        Files.writeString(sourceDirectory.resolve("mvnw"), "#!/usr/bin/env sh\nprintf 'maven ok\\n'\n");
+        Path archivePath = tempDir.resolve("source-snapshot.tar.gz");
+        tar(sourceDirectory, "-czf", archivePath.toString(), "-C", sourceDirectory.toString(), ".");
+        LocalStorageClient storageClient = new LocalStorageClient(storageRoot);
+        ArtifactDescriptor uploadedSnapshot = storageClient
+                .upload(new StorageUploadRequest(
+                        archivePath,
+                        "source-snapshots/%s/source-snapshot.tar.gz".formatted(JOB_EXECUTION_ID),
+                        "source_snapshot",
+                        "source-snapshot.tar.gz",
+                        "application/gzip",
+                        Map.of()))
+                .toCompletableFuture()
+                .join();
+        assertEquals(SOURCE_SNAPSHOT_URI, uploadedSnapshot.uri());
+        return storageClient;
+    }
+
+    private void tar(Path workingDirectory, String... args) throws Exception {
+        List<String> command = new ArrayList<>();
+        command.add("tar");
+        command.addAll(List.of(args));
+        Process process =
+                new ProcessBuilder(command).directory(workingDirectory.toFile()).start();
+        String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new AssertionError("Tar test command failed: " + command + System.lineSeparator() + stderr);
+        }
     }
 
     private static ProcessExecutionResult processResult(int exitCode, String stdout, String stderr) {
@@ -179,18 +244,22 @@ class BuildJobTest {
         }
     }
 
-    private static final class CapturingProcessRunner implements ProcessRunner {
+    private static final class SnapshotAwareProcessRunner implements ProcessRunner {
 
+        private final LocalProcessRunner localProcessRunner = new LocalProcessRunner();
         private final ProcessExecutionResult result;
-        private ProcessExecutionRequest request;
+        private ProcessExecutionRequest buildRequest;
 
-        private CapturingProcessRunner(ProcessExecutionResult result) {
+        private SnapshotAwareProcessRunner(ProcessExecutionResult result) {
             this.result = result;
         }
 
         @Override
         public ProcessExecutionResult run(ProcessExecutionRequest request) {
-            this.request = request;
+            if (!request.command().isEmpty() && "tar".equals(request.command().getFirst())) {
+                return localProcessRunner.run(request);
+            }
+            this.buildRequest = request;
             return result;
         }
     }

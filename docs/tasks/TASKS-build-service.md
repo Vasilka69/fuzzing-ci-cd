@@ -19,8 +19,9 @@ Topic: `jobs.build`
 - [x] `BUILD-001 [MVP]` Maven и Gradle сборка в изолированном workspace.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: добавлены whitelist entrypoint-ы для Maven/Gradle, запуск через общий `ProcessRunner` внутри workspace, unit/integration тесты и JSON assertion итогового события.
-- [ ] `BUILD-002 [MVP]` скачивание source snapshot из storage.
+- [x] `BUILD-002 [MVP]` скачивание source snapshot из storage.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: build job требует `source_snapshot_uri`, скачивает `storage://` snapshot через `StorageClient`, распаковывает tar.gz через общий `ProcessRunner` в workspace и запускает сборку из распакованного каталога; добавлены unit/integration-style tests и JSON assertion результата.
 - [ ] `BUILD-003 [MVP]` expected_artifacts glob resolver.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `BUILD-004 [MVP]` сбор stdout/stderr с ограничением размера.

@@ -18,6 +18,8 @@ import ru.diplom.cicd.executor.core.job.ExecutorJobException;
 
 class BuildParametersTest {
 
+    private static final String SOURCE_SNAPSHOT_URI = "storage://source-snapshots/job-1/source-snapshot.tar.gz";
+
     @Test
     void fromReadsMavenParams() {
         BuildParameters parameters = BuildParameters.from(buildJob(
@@ -25,6 +27,8 @@ class BuildParametersTest {
                 Map.of(
                         "build_tool",
                         "maven",
+                        "source_snapshot_uri",
+                        SOURCE_SNAPSHOT_URI,
                         "working_directory",
                         "module-a",
                         "entrypoint",
@@ -35,6 +39,7 @@ class BuildParametersTest {
                         Map.of("MAVEN_OPTS", "-Djava.awt.headless=true"))));
 
         assertEquals(BuildTool.MAVEN, parameters.buildTool());
+        assertEquals(SOURCE_SNAPSHOT_URI, parameters.sourceSnapshotUri());
         assertEquals("module-a", parameters.workingDirectory().toString());
         assertEquals("./mvnw", parameters.entrypoint());
         assertEquals(List.of("-q", "test"), parameters.args());
@@ -43,7 +48,8 @@ class BuildParametersTest {
 
     @Test
     void fromRejectsParentTraversalWorkingDirectory() {
-        JobMessage job = buildJob("build/gradle", Map.of("working_directory", "../outside"));
+        JobMessage job = buildJob(
+                "build/gradle", Map.of("source_snapshot_uri", SOURCE_SNAPSHOT_URI, "working_directory", "../outside"));
 
         ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> BuildParameters.from(job));
 
@@ -52,7 +58,17 @@ class BuildParametersTest {
 
     @Test
     void fromRejectsToolMismatch() {
-        JobMessage job = buildJob("build/maven", Map.of("build_tool", "gradle"));
+        JobMessage job =
+                buildJob("build/maven", Map.of("source_snapshot_uri", SOURCE_SNAPSHOT_URI, "build_tool", "gradle"));
+
+        ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> BuildParameters.from(job));
+
+        assertEquals(ErrorType.VALIDATION_ERROR, exception.errorType());
+    }
+
+    @Test
+    void fromRejectsMissingSourceSnapshotUri() {
+        JobMessage job = buildJob("build/maven", Map.of("build_tool", "maven"));
 
         ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> BuildParameters.from(job));
 
