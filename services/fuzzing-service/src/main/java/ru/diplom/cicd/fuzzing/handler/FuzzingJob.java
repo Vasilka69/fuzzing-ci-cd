@@ -1,13 +1,17 @@
 package ru.diplom.cicd.fuzzing.handler;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
+import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
 import ru.diplom.cicd.executor.core.job.ExecutorJob;
 import ru.diplom.cicd.executor.core.job.ExecutorJobContext;
 import ru.diplom.cicd.executor.core.job.ExecutorJobResult;
+import ru.diplom.cicd.fuzzing.artifact.FuzzingArtifactBundle;
+import ru.diplom.cicd.fuzzing.artifact.FuzzingArtifactBundlePublisher;
 import ru.diplom.cicd.fuzzing.runner.FuzzingKernelAdapter;
 import ru.diplom.cicd.fuzzing.runner.FuzzingKernelExecutionResult;
 import ru.diplom.cicd.fuzzing.runner.FuzzingParameters;
@@ -17,34 +21,61 @@ import ru.diplom.cicd.fuzzing.runner.ProcessFuzzingKernelAdapter;
 public final class FuzzingJob implements ExecutorJob {
 
     private final FuzzingKernelAdapter kernelAdapter;
+    private final FuzzingArtifactBundlePublisher artifactBundlePublisher;
 
-    public FuzzingJob(FuzzingKernelAdapter kernelAdapter) {
+    public FuzzingJob(FuzzingKernelAdapter kernelAdapter, FuzzingArtifactBundlePublisher artifactBundlePublisher) {
         this.kernelAdapter = Objects.requireNonNull(kernelAdapter, "kernelAdapter");
+        this.artifactBundlePublisher = Objects.requireNonNull(artifactBundlePublisher, "artifactBundlePublisher");
     }
 
     @Override
     public ExecutorJobResult execute(ExecutorJobContext context) {
         FuzzingParameters parameters = FuzzingParameters.from(context.job());
         FuzzingKernelExecutionResult result = kernelAdapter.run(context.job(), context.workspace(), parameters);
+        FuzzingArtifactBundle artifactBundle = artifactBundlePublisher.publish(
+                context.job(), context.workspace().root(), result);
         return new ExecutorJobResult(
                 ExecutionStatus.SUCCESS,
-                "Fuzzing-ядро завершило запуск адаптера успешно",
-                java.util.List.of(),
-                metrics(result),
-                result.logs(),
+                summary(artifactBundle),
+                artifacts(artifactBundle),
+                metrics(result, artifactBundle),
+                logs(result, artifactBundle),
                 null,
-                additionalData(result));
+                additionalData(result, artifactBundle));
     }
 
-    private Map<String, Object> metrics(FuzzingKernelExecutionResult result) {
+    private String summary(FuzzingArtifactBundle artifactBundle) {
+        if (artifactBundle.report().crashCount() > 0) {
+            return "Fuzzing завершен, найдено crash cases: "
+                    + artifactBundle.report().crashCount();
+        }
+        return "Fuzzing-ядро завершило запуск адаптера успешно";
+    }
+
+    private List<ArtifactDescriptor> artifacts(FuzzingArtifactBundle artifactBundle) {
+        return List.of(artifactBundle.artifact());
+    }
+
+    private Map<String, Object> metrics(FuzzingKernelExecutionResult result, FuzzingArtifactBundle artifactBundle) {
         return Map.of(
                 "durationMs",
                 result.processResult().duration().toMillis(),
                 "exitCode",
-                result.processResult().exitCode());
+                result.processResult().exitCode(),
+                "crashCount",
+                artifactBundle.report().crashCount(),
+                "hangCount",
+                artifactBundle.report().hangCount(),
+                "corpusCount",
+                artifactBundle.report().corpusCount());
     }
 
-    private Map<String, Object> additionalData(FuzzingKernelExecutionResult result) {
+    private String logs(FuzzingKernelExecutionResult result, FuzzingArtifactBundle artifactBundle) {
+        return String.join(System.lineSeparator(), result.logs(), artifactBundle.logs());
+    }
+
+    private Map<String, Object> additionalData(
+            FuzzingKernelExecutionResult result, FuzzingArtifactBundle artifactBundle) {
         FuzzingParameters parameters = result.parameters();
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("mode", parameters.mode().wireValue());
@@ -61,6 +92,11 @@ public final class FuzzingJob implements ExecutorJob {
         data.put("maxCandidateChars", parameters.maxCandidateChars());
         data.put("stdoutTruncated", result.processResult().stdoutTruncated());
         data.put("stderrTruncated", result.processResult().stderrTruncated());
+        data.put("aflOutputDirectory", result.aflOutputDirectory().getFileName().toString());
+        data.put("crashCount", artifactBundle.report().crashCount());
+        data.put("hangCount", artifactBundle.report().hangCount());
+        data.put("corpusCount", artifactBundle.report().corpusCount());
+        data.put("fuzzingReportBundle", artifactBundle.metadata());
         putIfPresent(data, "targetArtifactUri", parameters.targetArtifactUri());
         putIfPresent(data, "sourceSnapshotUri", parameters.sourceSnapshotUri());
         putIfPresent(data, "seedCorpusUri", parameters.seedCorpusUri());

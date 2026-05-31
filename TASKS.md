@@ -62,7 +62,8 @@
   - Готово: все MVP задачи `STORAGE-001`..`STORAGE-005` закрыты в `docs/tasks/TASKS-storage-service.md`.
 - [x] `BUILD-001..` Выполнить MVP задачи из `docs/tasks/TASKS-build-service.md`.
   - Готово: все MVP задачи `BUILD-001`..`BUILD-005` закрыты в `docs/tasks/TASKS-build-service.md`; build artifacts публикуются одним `build-artifacts.tar.gz` bundle с `artifact-manifest.json`.
-- [ ] `FUZZ-001..` Выполнить MVP задачи из `docs/tasks/TASKS-fuzzing-service.md`.
+- [x] `FUZZ-001..` Выполнить MVP задачи из `docs/tasks/TASKS-fuzzing-service.md`.
+  - Готово: все MVP задачи `FUZZING-001`..`FUZZING-005` закрыты в `docs/tasks/TASKS-fuzzing-service.md`; crash/hang/corpus публикуются одним `fuzzing-report.tar.gz` bundle с `fuzzing-report.json`.
 - [ ] `DEPLOY-001..` Выполнить MVP задачи из `docs/tasks/TASKS-deploy-service.md`.
 - [ ] `SCRIPT-001..` Выполнить MVP задачи из `docs/tasks/TASKS-script-service.md`.
 

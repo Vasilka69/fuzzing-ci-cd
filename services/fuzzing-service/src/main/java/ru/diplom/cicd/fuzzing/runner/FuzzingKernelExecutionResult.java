@@ -1,5 +1,6 @@
 package ru.diplom.cicd.fuzzing.runner;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import ru.diplom.cicd.executor.core.process.ProcessExecutionResult;
@@ -8,6 +9,7 @@ public record FuzzingKernelExecutionResult(
         FuzzingParameters parameters,
         List<String> prepareCommand,
         List<String> command,
+        Path aflOutputDirectory,
         ProcessExecutionResult processResult,
         String logs) {
 

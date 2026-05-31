@@ -118,7 +118,13 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
                             parameters.mode().wireValue()),
                     ExecutionStatus.FAILED);
         }
-        return new FuzzingKernelExecutionResult(parameters, prepareCommand, command, result, logs(parameters, result));
+        return new FuzzingKernelExecutionResult(
+                parameters,
+                prepareCommand,
+                command,
+                aflOutputDirectory(workspace, parameters),
+                result,
+                logs(parameters, result));
     }
 
     private Process startFakeWorkerIfNeeded(

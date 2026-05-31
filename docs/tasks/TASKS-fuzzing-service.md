@@ -28,8 +28,9 @@ Topic: `jobs.fuzzing`
 - [x] `FUZZING-004 [MVP]` AFL++ run with budget.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: adapter готовит ядро через `make all`, запускает AFL++ напрямую командой `afl-fuzz -V <budget_seconds>` через общий `ProcessRunner`, поднимает fake worker как IPC helper, пишет AFL output в workspace-local директорию и покрыт unit + JSON contract assertions. Пути настраиваются через `CICD_FUZZING_KERNEL_ROOT`, `CICD_FUZZING_AFLPP_ROOT`, `CICD_FUZZING_START_FAKE_WORKER`.
-- [ ] `FUZZING-005 [MVP]` crash report and artifacts.
+- [x] `FUZZING-005 [MVP]` crash report and artifacts.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: AFL++ output сканируется после запуска, crash/hang/corpus и `fuzzer_stats` попадают в `fuzzing-report.tar.gz` bundle с `fuzzing-report.json`; событие результата содержит только artifact descriptor и компактную metadata без inline payload/logs, покрыто unit + JSON contract assertions.
 
 ## Уровень 2. Дипломно-достаточная полнота
 
@@ -68,7 +69,7 @@ Topic: `jobs.fuzzing`
 
 ## Definition of Done для сервиса
 
-- [ ] Все MVP задачи закрыты.
+- [x] Все MVP задачи закрыты.
 - [ ] Сервис покрыт unit и integration/contract tests.
 - [ ] Dockerfile и Kubernetes manifests есть.
 - [ ] Сервис не зависит от master-service/ui.
