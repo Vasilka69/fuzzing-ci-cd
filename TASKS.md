@@ -56,7 +56,8 @@
 
 ## Уровень 3. MVP по сервисам
 
-- [ ] `VCS-001..` Выполнить MVP задачи из `docs/tasks/TASKS-vcs-service.md`.
+- [x] `VCS-001..` Выполнить MVP задачи из `docs/tasks/TASKS-vcs-service.md`.
+  - Готово: все MVP задачи `VCS-001`..`VCS-005` закрыты в `docs/tasks/TASKS-vcs-service.md`.
 - [ ] `STOR-001..` Выполнить MVP задачи из `docs/tasks/TASKS-storage-service.md`.
 - [ ] `BUILD-001..` Выполнить MVP задачи из `docs/tasks/TASKS-build-service.md`.
 - [ ] `FUZZ-001..` Выполнить MVP задачи из `docs/tasks/TASKS-fuzzing-service.md`.

@@ -24,8 +24,8 @@ Topic: `jobs.vcs`
   - Готово: source snapshot создается через `tar` на уровне process runner, metadata архива публикуется в `JOB_FINISHED.additionalData.snapshot`, есть unit/integration test и contract assertion результата.
 - [x] `VCS-004 [MVP]` upload snapshot через storage-client.
   - Готово: source snapshot загружается через `StorageClient` в стабильный `storage://` namespace по `jobExecutionId`, artifact metadata публикуется в `JOB_ARTIFACT`/`JOB_FINISHED`, есть integration-style test и contract assertion результата.
-- [ ] `VCS-005 [MVP]` публикация JOB_RUNNING/JOB_FINISHED/JOB_LOG.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `VCS-005 [MVP]` публикация JOB_RUNNING/JOB_FINISHED/JOB_LOG.
+  - Готово: публикация выполняется через общий `ExecutorJobHandler`; `VcsGitCheckoutJobTest` проверяет `JOB_RUNNING`, отдельный `JOB_LOG`, `JOB_FINISHED` без inline logs и JSON contract assertion результата.
 
 ## Уровень 2. Дипломно-достаточная полнота
 
@@ -62,7 +62,7 @@ Topic: `jobs.vcs`
 
 ## Definition of Done для сервиса
 
-- [ ] Все MVP задачи закрыты.
+- [x] Все MVP задачи закрыты.
 - [ ] Сервис покрыт unit и integration/contract tests.
 - [ ] Dockerfile и Kubernetes manifests есть.
 - [ ] Сервис не зависит от master-service/ui.
