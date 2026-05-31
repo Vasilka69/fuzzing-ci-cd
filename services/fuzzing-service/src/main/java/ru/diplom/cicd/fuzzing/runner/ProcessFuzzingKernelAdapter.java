@@ -26,6 +26,10 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
     public static final int MAX_OUTPUT_BYTES_PER_STREAM = 64 * 1024;
 
     private static final int ERROR_DETAILS_LIMIT = 1000;
+    private static final String DEFAULT_FAKE_WORKER_SOCKET = "llm-mutator.sock";
+    private static final String DSL_PROMPT_FILE = "targets/dsl/prompt.txt";
+    private static final String DSL_SEED_DIR = "targets/dsl/seeds";
+    private static final String DSL_DICTIONARY_FILE = "targets/dsl/dsl.dict";
     // TODO(FUZZING-004): заменить smoke-команду на ограниченный по budget_seconds AFL++ запуск.
     private static final List<String> DEFAULT_KERNEL_COMMAND = List.of("make", "ipc-smoke");
 
@@ -121,14 +125,43 @@ public final class ProcessFuzzingKernelAdapter implements FuzzingKernelAdapter {
         Map<String, String> environment = new LinkedHashMap<>(parameters.environment());
         environment.put("CICD_JOB_EXECUTION_ID", job.jobExecutionId().toString());
         environment.put("CICD_FUZZING_MODE", parameters.mode().wireValue());
+        environment.put("CICD_FUZZING_LOCAL_GRAMMAR", parameters.localGrammar());
         environment.put("CICD_FUZZING_BUDGET_SECONDS", Long.toString(parameters.budgetSeconds()));
         environment.put("CICD_WORKSPACE_ROOT", workspace.root().toString());
+        if (parameters.mode() == FuzzingMode.FAKE) {
+            appendFakeWorkerEnvironment(environment, workspace, parameters);
+        }
         putIfPresent(environment, "CICD_TARGET_ARTIFACT_URI", parameters.targetArtifactUri());
         putIfPresent(environment, "CICD_SOURCE_SNAPSHOT_URI", parameters.sourceSnapshotUri());
         putIfPresent(environment, "CICD_SEED_CORPUS_URI", parameters.seedCorpusUri());
         putIfPresent(environment, "CICD_DICTIONARY_URI", parameters.dictionaryUri());
         putIfPresent(environment, "CICD_PROMPT_URI", parameters.promptUri());
         return Map.copyOf(environment);
+    }
+
+    private void appendFakeWorkerEnvironment(
+            Map<String, String> environment, WorkspaceHandle workspace, FuzzingParameters parameters) {
+        Path root = kernelRoot.toAbsolutePath().normalize();
+        Path generatedRoot = workspace.root().resolve("generated").normalize();
+        environment.put("LLM_API_URL", "");
+        environment.put("LLM_API_KEY", "");
+        environment.put(
+                "LLM_MUTATOR_ADDR",
+                generatedRoot.resolve(DEFAULT_FAKE_WORKER_SOCKET).toString());
+        environment.put("LLM_MUTATOR_PROMPT_FILE", root.resolve(DSL_PROMPT_FILE).toString());
+        environment.put("LLM_MUTATOR_SEED_DIR", root.resolve(DSL_SEED_DIR).toString());
+        environment.put(
+                "LLM_MUTATOR_DISCOVERED_DIR",
+                generatedRoot.resolve("discovered").toString());
+        environment.put(
+                "LLM_MUTATOR_LOG_CANDIDATES_DIR",
+                generatedRoot.resolve("candidates").toString());
+        environment.put("LLM_MUTATOR_QUEUE_SIZE", Integer.toString(parameters.llmWorkerQueueSize()));
+        environment.put("LLM_MUTATOR_WORKERS", Integer.toString(parameters.llmWorkerCount()));
+        environment.put("LLM_MUTATOR_MAX_CANDIDATE_CHARS", Integer.toString(parameters.maxCandidateChars()));
+        environment.put(
+                "CICD_FUZZING_DSL_DICTIONARY_FILE",
+                root.resolve(DSL_DICTIONARY_FILE).toString());
     }
 
     private void putIfPresent(Map<String, String> environment, String key, String value) {

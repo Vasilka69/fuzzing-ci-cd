@@ -25,8 +25,16 @@ class FuzzingParametersTest {
                 12,
                 "kernel_command",
                 List.of("make", "ipc-smoke"),
+                "local_grammar",
+                "dsl",
                 "target_command",
                 List.of("./build/target_dsl"),
+                "llm_worker_queue_size",
+                4,
+                "llm_worker_count",
+                "2",
+                "max_candidate_chars",
+                1024,
                 "target_artifact_uri",
                 "storage://build-artifacts/job/target.tar.gz",
                 "seed_corpus_uri",
@@ -36,8 +44,12 @@ class FuzzingParametersTest {
 
         assertEquals(FuzzingMode.FAKE, parameters.mode());
         assertEquals(12, parameters.budgetSeconds());
+        assertEquals("dsl", parameters.localGrammar());
         assertEquals(List.of("make", "ipc-smoke"), parameters.kernelCommand());
         assertEquals(List.of("./build/target_dsl"), parameters.targetCommand());
+        assertEquals(4, parameters.llmWorkerQueueSize());
+        assertEquals(2, parameters.llmWorkerCount());
+        assertEquals(1024, parameters.maxCandidateChars());
         assertEquals("storage://build-artifacts/job/target.tar.gz", parameters.targetArtifactUri());
         assertEquals("storage://fuzzing-corpus/job/seeds.tar.gz", parameters.seedCorpusUri());
         assertEquals(Map.of("AFL_NO_UI", "1"), parameters.environment());
@@ -68,6 +80,24 @@ class FuzzingParametersTest {
         ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> FuzzingParameters.from(job));
 
         assertTrue(exception.getMessage().contains("kernel_working_directory должен быть относительным"));
+    }
+
+    @Test
+    void fromRejectsUnsupportedLocalGrammar() {
+        JobMessage job = fuzzingJob(Map.of("local_grammar", "json"));
+
+        ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> FuzzingParameters.from(job));
+
+        assertEquals("local_grammar сейчас поддерживает только dsl", exception.getMessage());
+    }
+
+    @Test
+    void fromRejectsInvalidWorkerQueueSize() {
+        JobMessage job = fuzzingJob(Map.of("llm_worker_queue_size", 0));
+
+        ExecutorJobException exception = assertThrows(ExecutorJobException.class, () -> FuzzingParameters.from(job));
+
+        assertEquals("llm_worker_queue_size должен быть положительным", exception.getMessage());
     }
 
     @Test

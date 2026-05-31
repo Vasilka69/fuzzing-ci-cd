@@ -13,10 +13,14 @@ import ru.diplom.cicd.executor.core.job.ExecutorJobException;
 public record FuzzingParameters(
         FuzzingMode mode,
         long budgetSeconds,
+        String localGrammar,
         List<String> kernelCommand,
         Path kernelWorkingDirectory,
         List<String> targetCommand,
         Map<String, String> environment,
+        int llmWorkerQueueSize,
+        int llmWorkerCount,
+        int maxCandidateChars,
         String targetArtifactUri,
         String sourceSnapshotUri,
         String seedCorpusUri,
@@ -26,10 +30,14 @@ public record FuzzingParameters(
     public static final String TEMPLATE_PATH = "fuzzing/afl-llm";
     public static final String MODE_KEY = "mode";
     public static final String BUDGET_SECONDS_KEY = "budget_seconds";
+    public static final String LOCAL_GRAMMAR_KEY = "local_grammar";
     public static final String KERNEL_COMMAND_KEY = "kernel_command";
     public static final String KERNEL_WORKING_DIRECTORY_KEY = "kernel_working_directory";
     public static final String TARGET_COMMAND_KEY = "target_command";
     public static final String ENVIRONMENT_KEY = "environment";
+    public static final String LLM_WORKER_QUEUE_SIZE_KEY = "llm_worker_queue_size";
+    public static final String LLM_WORKER_COUNT_KEY = "llm_worker_count";
+    public static final String MAX_CANDIDATE_CHARS_KEY = "max_candidate_chars";
     public static final String TARGET_ARTIFACT_URI_KEY = "target_artifact_uri";
     public static final String SOURCE_SNAPSHOT_URI_KEY = "source_snapshot_uri";
     public static final String SEED_CORPUS_URI_KEY = "seed_corpus_uri";
@@ -37,12 +45,17 @@ public record FuzzingParameters(
     public static final String PROMPT_URI_KEY = "prompt_uri";
 
     private static final long DEFAULT_BUDGET_SECONDS = 30;
+    private static final String DEFAULT_LOCAL_GRAMMAR = "dsl";
+    private static final int DEFAULT_LLM_WORKER_QUEUE_SIZE = 8;
+    private static final int DEFAULT_LLM_WORKER_COUNT = 1;
+    private static final int DEFAULT_MAX_CANDIDATE_CHARS = 2048;
 
     public FuzzingParameters {
         mode = mode == null ? FuzzingMode.FAKE : mode;
         if (budgetSeconds < 1) {
             throw ExecutorJobException.validation("budget_seconds должен быть положительным");
         }
+        localGrammar = normalizeLocalGrammar(localGrammar);
         kernelCommand = kernelCommand == null ? List.of() : List.copyOf(kernelCommand);
         if (mode == FuzzingMode.REAL && kernelCommand.isEmpty()) {
             throw ExecutorJobException.validation(
@@ -53,6 +66,9 @@ public record FuzzingParameters(
                 "kernel_working_directory должен быть относительным путем внутри fuzzing kernel root");
         targetCommand = targetCommand == null ? List.of() : List.copyOf(targetCommand);
         environment = environment == null ? Map.of() : Map.copyOf(environment);
+        requirePositive(llmWorkerQueueSize, LLM_WORKER_QUEUE_SIZE_KEY);
+        requirePositive(llmWorkerCount, LLM_WORKER_COUNT_KEY);
+        requirePositive(maxCandidateChars, MAX_CANDIDATE_CHARS_KEY);
         targetArtifactUri = optionalStorageUri(targetArtifactUri, TARGET_ARTIFACT_URI_KEY);
         sourceSnapshotUri = optionalStorageUri(sourceSnapshotUri, SOURCE_SNAPSHOT_URI_KEY);
         seedCorpusUri = optionalStorageUri(seedCorpusUri, SEED_CORPUS_URI_KEY);
@@ -70,10 +86,23 @@ public record FuzzingParameters(
         return new FuzzingParameters(
                 FuzzingMode.fromWireValue(optionalString(value(params, MODE_KEY), MODE_KEY)),
                 budgetSeconds,
+                optionalString(value(params, LOCAL_GRAMMAR_KEY, "localGrammar"), LOCAL_GRAMMAR_KEY),
                 stringList(value(params, KERNEL_COMMAND_KEY, "kernelCommand"), KERNEL_COMMAND_KEY),
                 workingDirectory(value(params, KERNEL_WORKING_DIRECTORY_KEY, "kernelWorkingDirectory")),
                 stringList(value(params, TARGET_COMMAND_KEY, "targetCommand"), TARGET_COMMAND_KEY),
                 environment(value(params, ENVIRONMENT_KEY)),
+                positiveInt(
+                        value(params, LLM_WORKER_QUEUE_SIZE_KEY, "llmWorkerQueueSize"),
+                        LLM_WORKER_QUEUE_SIZE_KEY,
+                        DEFAULT_LLM_WORKER_QUEUE_SIZE),
+                positiveInt(
+                        value(params, LLM_WORKER_COUNT_KEY, "llmWorkerCount"),
+                        LLM_WORKER_COUNT_KEY,
+                        DEFAULT_LLM_WORKER_COUNT),
+                positiveInt(
+                        value(params, MAX_CANDIDATE_CHARS_KEY, "maxCandidateChars"),
+                        MAX_CANDIDATE_CHARS_KEY,
+                        DEFAULT_MAX_CANDIDATE_CHARS),
                 optionalString(value(params, TARGET_ARTIFACT_URI_KEY, "targetArtifactUri"), TARGET_ARTIFACT_URI_KEY),
                 optionalString(value(params, SOURCE_SNAPSHOT_URI_KEY, "sourceSnapshotUri"), SOURCE_SNAPSHOT_URI_KEY),
                 optionalString(value(params, SEED_CORPUS_URI_KEY, "seedCorpusUri"), SEED_CORPUS_URI_KEY),
@@ -107,6 +136,32 @@ public record FuzzingParameters(
             }
         }
         throw ExecutorJobException.validation("budget_seconds должен быть целым числом");
+    }
+
+    private static int positiveInt(Object value, String key, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        int result;
+        switch (value) {
+            case Number number -> result = number.intValue();
+            case String stringValue -> {
+                try {
+                    result = Integer.parseInt(stringValue);
+                } catch (NumberFormatException exception) {
+                    throw ExecutorJobException.validation(key + " должен быть целым числом");
+                }
+            }
+            default -> throw ExecutorJobException.validation(key + " должен быть целым числом");
+        }
+        requirePositive(result, key);
+        return result;
+    }
+
+    private static void requirePositive(int value, String key) {
+        if (value < 1) {
+            throw ExecutorJobException.validation(key + " должен быть положительным");
+        }
     }
 
     private static Path workingDirectory(Object value) {
@@ -150,6 +205,15 @@ public record FuzzingParameters(
             result.put(name, requireString(rawValue, ENVIRONMENT_KEY));
         });
         return Map.copyOf(result);
+    }
+
+    private static String normalizeLocalGrammar(String value) {
+        String normalized =
+                StringUtils.defaultIfBlank(value, DEFAULT_LOCAL_GRAMMAR).trim();
+        if (!DEFAULT_LOCAL_GRAMMAR.equals(normalized)) {
+            throw ExecutorJobException.validation("local_grammar сейчас поддерживает только dsl");
+        }
+        return normalized;
     }
 
     private static Path normalizeRelativePath(Path path, String message) {

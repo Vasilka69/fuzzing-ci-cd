@@ -48,11 +48,15 @@ public final class FuzzingJob implements ExecutorJob {
         FuzzingParameters parameters = result.parameters();
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("mode", parameters.mode().wireValue());
+        data.put("localGrammar", parameters.localGrammar());
         data.put("budgetSeconds", parameters.budgetSeconds());
         data.put("kernelCommand", result.command());
         data.put("exitCode", result.processResult().exitCode());
         data.put("durationMs", result.processResult().duration().toMillis());
         data.put("outputLimitBytesPerStream", ProcessFuzzingKernelAdapter.MAX_OUTPUT_BYTES_PER_STREAM);
+        data.put("llmWorkerQueueSize", parameters.llmWorkerQueueSize());
+        data.put("llmWorkerCount", parameters.llmWorkerCount());
+        data.put("maxCandidateChars", parameters.maxCandidateChars());
         data.put("stdoutTruncated", result.processResult().stdoutTruncated());
         data.put("stderrTruncated", result.processResult().stderrTruncated());
         putIfPresent(data, "targetArtifactUri", parameters.targetArtifactUri());

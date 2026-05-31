@@ -19,8 +19,9 @@ Topic: `jobs.fuzzing`
 - [x] `FUZZING-001 [MVP]` адаптер к готовому fuzzing-ядру без переписывания core.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: добавлен process adapter boundary к `fuzzing-engine/afl-llm-engine`, запуск через общий `ProcessRunner`, unit tests и JSON contract assertion итогового `JOB_FINISHED`.
-- [ ] `FUZZING-002 [MVP]` fake LLM worker/local grammar mode.
+- [x] `FUZZING-002 [MVP]` fake LLM worker/local grammar mode.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: `mode=fake` запускает готовое ядро в local grammar mode без внешнего LLM API; executor задает workspace-local IPC socket, DSL prompt/seeds и параметры fake worker через environment, результат покрыт unit tests и JSON assertion итогового `JOB_FINISHED`.
 - [ ] `FUZZING-003 [MVP]` демонстрационный target DSL.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `FUZZING-004 [MVP]` AFL++ run with budget.
