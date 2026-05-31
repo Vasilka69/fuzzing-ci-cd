@@ -60,8 +60,8 @@
   - Готово: все MVP задачи `VCS-001`..`VCS-005` закрыты в `docs/tasks/TASKS-vcs-service.md`.
 - [x] `STOR-001..` Выполнить MVP задачи из `docs/tasks/TASKS-storage-service.md`.
   - Готово: все MVP задачи `STORAGE-001`..`STORAGE-005` закрыты в `docs/tasks/TASKS-storage-service.md`.
-- [ ] `BUILD-001..` Выполнить MVP задачи из `docs/tasks/TASKS-build-service.md`.
-  - В прогрессе: `BUILD-001`..`BUILD-004` закрыты; остается `BUILD-005`.
+- [x] `BUILD-001..` Выполнить MVP задачи из `docs/tasks/TASKS-build-service.md`.
+  - Готово: все MVP задачи `BUILD-001`..`BUILD-005` закрыты в `docs/tasks/TASKS-build-service.md`; build artifacts публикуются одним `build-artifacts.tar.gz` bundle с `artifact-manifest.json`.
 - [ ] `FUZZ-001..` Выполнить MVP задачи из `docs/tasks/TASKS-fuzzing-service.md`.
 - [ ] `DEPLOY-001..` Выполнить MVP задачи из `docs/tasks/TASKS-deploy-service.md`.
 - [ ] `SCRIPT-001..` Выполнить MVP задачи из `docs/tasks/TASKS-script-service.md`.

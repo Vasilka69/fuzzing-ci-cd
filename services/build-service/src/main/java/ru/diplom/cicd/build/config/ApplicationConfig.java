@@ -1,5 +1,6 @@
 package ru.diplom.cicd.build.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 import org.springframework.context.annotation.Bean;
@@ -26,5 +27,10 @@ public class ApplicationConfig {
     @Bean
     StorageClient storageClient() {
         return new LocalStorageClient(Path.of(System.getProperty("java.io.tmpdir"), "fuzzing-ci-cd", "storage"));
+    }
+
+    @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }

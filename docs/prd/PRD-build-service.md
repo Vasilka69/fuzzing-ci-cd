@@ -17,7 +17,7 @@ Build-сервис выполняет сборку проектов из source 
 - скачивание source snapshot из storage
 - expected_artifacts glob resolver
 - сбор stdout/stderr с ограничением размера
-- публикация artifacts
+- публикация build artifacts одним archive bundle
 
 ### Дипломно-достаточный scope
 
@@ -48,12 +48,19 @@ Build-сервис выполняет сборку проектов из source 
 
 ## 4. Результат job
 
-- `build_artifacts`
+- `build_artifacts` — один `build-artifacts.tar.gz` artifact bundle в internal storage
 - `exit_code`
 - `duration_ms`
 - `build metrics`
 - `logs_uri или JOB_LOG документы`
-- `artifact manifest`
+- `artifact manifest` — `artifact-manifest.json` внутри bundle с путями файлов, patterns и размерами
+
+Для MVP build-service публикует найденные `expected_artifacts` одним архивом:
+
+- storage namespace: `build-artifacts/<jobExecutionId>/build-artifacts.tar.gz`;
+- `artifactType`: `build_artifacts`;
+- `contentType`: `application/gzip`;
+- внутри архива: каталог `artifacts/` с сохранением относительных путей и `artifact-manifest.json`.
 
 ## 5. Общие требования executor-а
 

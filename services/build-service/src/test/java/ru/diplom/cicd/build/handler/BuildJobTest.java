@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.diplom.cicd.build.artifact.BuildArtifactBundlePublisher;
 import ru.diplom.cicd.build.artifact.ExpectedArtifactResolver;
 import ru.diplom.cicd.build.runner.BuildRunner;
 import ru.diplom.cicd.build.snapshot.BuildSourceSnapshotPreparer;
@@ -74,12 +75,17 @@ class BuildJobTest {
         BuildJob job = new BuildJob(
                 new BuildRunner(processRunner),
                 new BuildSourceSnapshotPreparer(storageClient, processRunner),
-                new ExpectedArtifactResolver());
+                new ExpectedArtifactResolver(),
+                new BuildArtifactBundlePublisher(storageClient, processRunner, objectMapper()));
 
         ExecutorEventMessage finishedEvent = handler.handle(buildJob(), job);
 
-        assertEquals(2, eventPublisher.events.size());
+        assertEquals(3, eventPublisher.events.size());
         assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
+        ExecutorEventMessage artifactEvent = eventPublisher.events.get(1);
+        assertEquals(EventType.JOB_ARTIFACT, artifactEvent.eventType());
+        assertEquals(ExecutionStatus.RUNNING, artifactEvent.status());
+        assertEquals(1, artifactEvent.artifacts().size());
         assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
         assertEquals("Сборка maven завершена успешно", finishedEvent.summary());
@@ -101,8 +107,46 @@ class BuildJobTest {
         assertEquals(1, expectedArtifacts.size());
         assertEquals("target/*.jar", expectedArtifacts.getFirst().get("pattern"));
         assertEquals("target/app.jar", expectedArtifacts.getFirst().get("path"));
-        assertTrue(finishedEvent.artifacts().isEmpty());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> buildArtifactsBundle =
+                (Map<String, Object>) finishedEvent.additionalData().get("buildArtifactsBundle");
+        assertEquals(
+                "storage://build-artifacts/%s/build-artifacts.tar.gz".formatted(JOB_EXECUTION_ID),
+                buildArtifactsBundle.get("uri"));
+        assertEquals("build-artifacts.tar.gz", buildArtifactsBundle.get("fileName"));
+        assertEquals("tar.gz", buildArtifactsBundle.get("format"));
+        assertEquals("application/gzip", buildArtifactsBundle.get("contentType"));
+        assertEquals(1, buildArtifactsBundle.get("artifactCount"));
+        assertEquals("artifact-manifest.json", buildArtifactsBundle.get("manifestPath"));
+        assertEquals(1, finishedEvent.artifacts().size());
+        ArtifactDescriptor buildArtifacts = finishedEvent.artifacts().getFirst();
+        assertEquals("build_artifacts", buildArtifacts.artifactType());
+        assertEquals("build-artifacts.tar.gz", buildArtifacts.name());
+        assertEquals("application/gzip", buildArtifacts.contentType());
+        assertEquals(
+                "storage://build-artifacts/%s/build-artifacts.tar.gz".formatted(JOB_EXECUTION_ID),
+                buildArtifacts.uri());
+        assertEquals(artifactEvent.artifacts(), finishedEvent.artifacts());
         assertNull(finishedEvent.logs());
+
+        Path bundlePath =
+                tempDir.resolve("storage/build-artifacts/%s/build-artifacts.tar.gz".formatted(JOB_EXECUTION_ID));
+        assertTrue(Files.exists(bundlePath));
+        assertArchiveContains(bundlePath, "./artifact-manifest.json", "./artifacts/target/app.jar");
+        Path extractedBundle = tempDir.resolve("extracted-build-artifacts");
+        Files.createDirectories(extractedBundle);
+        tar(tempDir, "-xzf", bundlePath.toString(), "-C", extractedBundle.toString());
+        JsonNode manifest = objectMapper()
+                .readTree(extractedBundle.resolve("artifact-manifest.json").toFile());
+        assertEquals("build_artifacts", manifest.get("artifactType").textValue());
+        assertEquals("tar.gz", manifest.get("archiveFormat").textValue());
+        assertEquals(JOB_EXECUTION_ID.toString(), manifest.get("jobExecutionId").textValue());
+        assertEquals(
+                "target/*.jar", manifest.get("expectedArtifactPatterns").get(0).textValue());
+        assertEquals("target/app.jar", manifest.get("files").get(0).get("path").textValue());
+        assertEquals(
+                "artifacts/target/app.jar",
+                manifest.get("files").get(0).get("archivePath").textValue());
 
         assertEquals(1, logPublisher.events.size());
         ExecutorEventMessage logEvent = logPublisher.events.getFirst();
@@ -112,6 +156,7 @@ class BuildJobTest {
         assertTrue(logEvent.logs().contains("Source snapshot tar.gz распакован"));
         assertTrue(logEvent.logs().contains("Сборка maven завершена успешно"));
         assertTrue(logEvent.logs().contains("maven ok"));
+        assertTrue(logEvent.logs().contains("Build artifacts tar.gz опубликован"));
 
         assertEquals(List.of("./mvnw", "-q", "test"), processRunner.buildRequest.command());
         assertEquals(
@@ -148,7 +193,22 @@ class BuildJobTest {
                         .get(0)
                         .get("path")
                         .textValue());
-        assertEquals(0, json.get("artifacts").size());
+        assertEquals(
+                "storage://build-artifacts/%s/build-artifacts.tar.gz".formatted(JOB_EXECUTION_ID),
+                json.get("additionalData")
+                        .get("buildArtifactsBundle")
+                        .get("uri")
+                        .textValue());
+        assertEquals(
+                "build_artifacts",
+                json.get("artifacts").get(0).get("artifactType").textValue());
+        assertEquals(
+                "build-artifacts.tar.gz",
+                json.get("artifacts").get(0).get("name").textValue());
+        assertEquals(
+                "storage://build-artifacts/%s/build-artifacts.tar.gz".formatted(JOB_EXECUTION_ID),
+                json.get("artifacts").get(0).get("uri").textValue());
+        assertEquals(1, json.get("artifacts").size());
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
     }
@@ -169,7 +229,8 @@ class BuildJobTest {
         BuildJob job = new BuildJob(
                 new BuildRunner(processRunner),
                 new BuildSourceSnapshotPreparer(storageClient, processRunner),
-                new ExpectedArtifactResolver());
+                new ExpectedArtifactResolver(),
+                new BuildArtifactBundlePublisher(storageClient, processRunner, objectMapper()));
 
         ExecutorEventMessage finishedEvent = handler.handle(buildJob(), job);
 
@@ -278,6 +339,24 @@ class BuildJobTest {
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new AssertionError("Tar test command failed: " + command + System.lineSeparator() + stderr);
+        }
+    }
+
+    private void assertArchiveContains(Path archivePath, String... expectedEntries) throws Exception {
+        List<String> command = new ArrayList<>();
+        command.add("tar");
+        command.add("-tzf");
+        command.add(archivePath.toString());
+        Process process =
+                new ProcessBuilder(command).directory(tempDir.toFile()).start();
+        String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new AssertionError("Tar test command failed: " + command + System.lineSeparator() + stderr);
+        }
+        for (String expectedEntry : expectedEntries) {
+            assertTrue(stdout.contains(expectedEntry), "Archive does not contain " + expectedEntry);
         }
     }
 

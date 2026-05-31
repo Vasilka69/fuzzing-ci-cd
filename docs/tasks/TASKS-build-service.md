@@ -28,8 +28,9 @@ Topic: `jobs.build`
 - [x] `BUILD-004 [MVP]` сбор stdout/stderr с ограничением размера.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
   - Готово: общий `ProcessRunner` ограничивает сохраняемый stdout/stderr по каждому stream, build job задает лимит 64 KiB на stream, публикует маркер усечения в `JOB_LOG` и flags `stdoutTruncated`/`stderrTruncated` в `additionalData`; добавлены unit/integration-style tests и JSON assertion итогового события.
-- [ ] `BUILD-005 [MVP]` публикация artifacts.
+- [x] `BUILD-005 [MVP]` публикация artifacts.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: найденные `expected_artifacts` публикуются одним `build-artifacts.tar.gz` bundle через `StorageClient`; внутри архива лежат файлы в каталоге `artifacts/` с сохранением относительных путей и `artifact-manifest.json`, а `JOB_ARTIFACT`/`JOB_FINISHED` содержат один `ArtifactDescriptor` типа `build_artifacts`.
 
 ## Уровень 2. Дипломно-достаточная полнота
 
@@ -66,7 +67,7 @@ Topic: `jobs.build`
 
 ## Definition of Done для сервиса
 
-- [ ] Все MVP задачи закрыты.
+- [x] Все MVP задачи закрыты.
 - [ ] Сервис покрыт unit и integration/contract tests.
 - [ ] Dockerfile и Kubernetes manifests есть.
 - [ ] Сервис не зависит от master-service/ui.
