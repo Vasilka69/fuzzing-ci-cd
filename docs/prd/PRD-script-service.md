@@ -13,7 +13,7 @@ Script-сервис выполняет пользовательские Bash/cmd
 
 ### In scope для MVP
 
-- Bash script в контейнерном sandbox
+- Bash script в контейнерном sandbox executor-а
 - input artifacts download
 - expected outputs upload
 - stdout/stderr chunking
@@ -36,22 +36,22 @@ Script-сервис выполняет пользовательские Bash/cmd
 
 ## 3. Входные параметры job
 
-- `script_type`
-- `script или script_artifact_uri`
-- `input_artifacts`
-- `environment`
-- `working_directory`
-- `timeout`
+- `script_type` — для MVP поддерживается только `bash`.
+- `script` или `script_artifact_uri` — ровно один источник bash-сценария; `script_artifact_uri` должен быть `storage://` URI.
+- `input_artifacts` — массив объектов `{ "uri": "storage://...", "path": "relative/path" }`; `path` всегда относительный и не может выходить за пределы workspace.
+- `environment` — объект со строковыми значениями переменных окружения.
+- `working_directory` — относительный путь внутри workspace, по умолчанию `"."`.
+- `timeout` / `timeoutSeconds` — общий timeout job.
 - `resource_limits`
-- `expected_outputs`
-- `sandbox_policy`
+- `expected_outputs` — массив относительных glob-паттернов внутри `working_directory`.
+- `sandbox_policy` — если `networkPolicy` не задан, service считает эффективной политикой `none`.
 
 ## 4. Результат job
 
 - `exit_code`
-- `logs`
-- `output_artifacts`
-- `runtime metadata`
+- `logs` — публикуются отдельным `JOB_LOG`; итоговый `JOB_FINISHED.logs = null`.
+- `output_artifacts` — найденные `expected_outputs` публикуются как `script_output` artifacts через storage URI.
+- `runtime metadata` — `scriptType`, `workingDirectory`, `effectiveNetworkPolicy`, `sandboxRunner`, `durationMs`, truncation flags.
 - `timeout/resource-limit flags`
 - `summary`
 

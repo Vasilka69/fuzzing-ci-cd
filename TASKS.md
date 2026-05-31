@@ -66,7 +66,8 @@
   - Готово: все MVP задачи `FUZZING-001`..`FUZZING-005` закрыты в `docs/tasks/TASKS-fuzzing-service.md`; crash/hang/corpus публикуются одним `fuzzing-report.tar.gz` bundle с `fuzzing-report.json`.
 - [x] `DEPLOY-001..` Выполнить MVP задачи из `docs/tasks/TASKS-deploy-service.md`.
   - Готово: все MVP задачи `DEPLOY-001`..`DEPLOY-005` закрыты в `docs/tasks/TASKS-deploy-service.md`; file-copy и ssh-bash публикуют deployment manifest и basic healthcheck result.
-- [ ] `SCRIPT-001..` Выполнить MVP задачи из `docs/tasks/TASKS-script-service.md`.
+- [x] `SCRIPT-001..` Выполнить MVP задачи из `docs/tasks/TASKS-script-service.md`.
+  - Готово: все MVP задачи `SCRIPT-001`..`SCRIPT-005` закрыты в `docs/tasks/TASKS-script-service.md`; `script/bash` запускается через общий process runner, скачивает input artifacts, публикует expected outputs и фиксирует network-none default в result metadata.
 
 ## Уровень 4. Demo pipeline без UI/master
 

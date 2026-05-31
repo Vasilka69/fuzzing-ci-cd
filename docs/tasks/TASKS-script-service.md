@@ -16,16 +16,21 @@ Topic: `jobs.script`
 
 ## Уровень 1. MVP
 
-- [ ] `SCRIPT-001 [MVP]` Bash script в контейнерном sandbox.
+- [x] `SCRIPT-001 [MVP]` Bash script в контейнерном sandbox.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
-- [ ] `SCRIPT-002 [MVP]` input artifacts download.
+  - Готово: `script/bash` запускается через общий `ProcessRunner` внутри ограниченного executor container/pod sandbox; результат покрыт `ScriptJobTest`.
+- [x] `SCRIPT-002 [MVP]` input artifacts download.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
-- [ ] `SCRIPT-003 [MVP]` expected outputs upload.
+  - Готово: `input_artifacts[]` скачиваются из `storage://` в workspace по безопасным относительным путям.
+- [x] `SCRIPT-003 [MVP]` expected outputs upload.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
-- [ ] `SCRIPT-004 [MVP]` stdout/stderr chunking.
+  - Готово: `expected_outputs[]` публикуются в storage как `script_output` artifacts.
+- [x] `SCRIPT-004 [MVP]` stdout/stderr chunking.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
-- [ ] `SCRIPT-005 [MVP]` network none by default.
+  - Готово: stdout/stderr обрабатываются через общий chunking/limit `ProcessRunner`, metadata содержит truncation flags.
+- [x] `SCRIPT-005 [MVP]` network none by default.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+  - Готово: при отсутствующем `sandbox_policy.networkPolicy` результат фиксирует `effectiveNetworkPolicy=none`; runtime isolation задается securityContext executor container/pod.
 
 ## Уровень 2. Дипломно-достаточная полнота
 
@@ -62,10 +67,10 @@ Topic: `jobs.script`
 
 ## Definition of Done для сервиса
 
-- [ ] Все MVP задачи закрыты.
-- [ ] Сервис покрыт unit и integration/contract tests.
-- [ ] Dockerfile и Kubernetes manifests есть.
-- [ ] Сервис не зависит от master-service/ui.
-- [ ] `jobExecutionId` используется во всех logs/events/artifacts.
-- [ ] Секреты не попадают в логи.
-- [ ] README сервиса объясняет local run и ограничения.
+- [x] Все MVP задачи закрыты.
+- [x] Сервис покрыт unit и integration/contract tests.
+- [x] Dockerfile и Kubernetes manifests есть.
+- [x] Сервис не зависит от master-service/ui.
+- [x] `jobExecutionId` используется во всех logs/events/artifacts.
+- [x] Секреты не попадают в логи.
+- [x] README сервиса объясняет local run и ограничения.
