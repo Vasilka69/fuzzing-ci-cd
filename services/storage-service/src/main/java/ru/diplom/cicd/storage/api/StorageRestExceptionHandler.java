@@ -6,11 +6,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.diplom.cicd.executor.core.storage.StorageClientException;
+import ru.diplom.cicd.storage.backend.StorageChecksumMismatchException;
 
 @RestControllerAdvice
 public final class StorageRestExceptionHandler {
 
-    @ExceptionHandler({IllegalArgumentException.class, StorageClientException.class})
+    @ExceptionHandler({
+        IllegalArgumentException.class,
+        StorageClientException.class,
+        StorageChecksumMismatchException.class
+    })
     public ResponseEntity<StorageApiError> handleStorageClientException(RuntimeException exception) {
         HttpStatus status = status(exception);
         return ResponseEntity.status(status).body(new StorageApiError(code(status), exception.getMessage()));

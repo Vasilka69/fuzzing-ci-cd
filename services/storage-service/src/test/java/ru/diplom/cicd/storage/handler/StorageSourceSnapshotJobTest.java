@@ -20,6 +20,7 @@ import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
+import ru.diplom.cicd.contracts.error.ErrorType;
 import ru.diplom.cicd.contracts.event.EventType;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
 import ru.diplom.cicd.contracts.event.ExecutorEventMessage;
@@ -39,6 +40,8 @@ import ru.diplom.cicd.storage.backend.LocalFilesystemStorageBackend;
 class StorageSourceSnapshotJobTest {
 
     private static final UUID JOB_EXECUTION_ID = UUID.fromString("00000000-0000-0000-0000-000000000207");
+    private static final String STORAGE_PAYLOAD_SHA256 =
+            "5e1c7766758f09dc15399c4c444a9c5734cf49bda9797f31c2f42af3be2fbbaa";
 
     @TempDir
     private Path tempDir;
@@ -70,6 +73,7 @@ class StorageSourceSnapshotJobTest {
         assertEquals(
                 "storage://source-snapshots/00000000-0000-0000-0000-000000000207/source-snapshot.tar.gz",
                 finishedEvent.additionalData().get("storageUri"));
+        assertEquals(STORAGE_PAYLOAD_SHA256, finishedEvent.additionalData().get("checksumSha256"));
         assertEquals(15L, finishedEvent.additionalData().get("sizeBytes"));
         assertEquals("application/gzip", finishedEvent.additionalData().get("contentType"));
         assertEquals(1, finishedEvent.artifacts().size());
@@ -83,7 +87,7 @@ class StorageSourceSnapshotJobTest {
                 StorageUris.namespacePath(artifact.uri()));
         assertEquals("application/gzip", artifact.contentType());
         assertEquals(15L, artifact.sizeBytes());
-        assertEquals(64, artifact.checksumSha256().length());
+        assertEquals(STORAGE_PAYLOAD_SHA256, artifact.checksumSha256());
         assertEquals("git", artifact.metadata().get("vcsType"));
         assertEquals(JOB_EXECUTION_ID, artifact.metadata().get("jobExecutionId"));
         assertTrue(Files.isRegularFile(tempDir.resolve(
@@ -112,11 +116,49 @@ class StorageSourceSnapshotJobTest {
                 "storage://source-snapshots/00000000-0000-0000-0000-000000000207/source-snapshot.tar.gz",
                 json.get("additionalData").get("storageUri").textValue());
         assertEquals(15L, json.get("additionalData").get("sizeBytes").longValue());
+        assertEquals(
+                STORAGE_PAYLOAD_SHA256,
+                json.get("additionalData").get("checksumSha256").textValue());
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
     }
 
+    @Test
+    void handleSourceSnapshotJobRejectsChecksumMismatchAsValidationError() throws Exception {
+        Path sourceSnapshot = tempDir.resolve("source-snapshot.tar.gz");
+        Files.writeString(sourceSnapshot, "storage payload");
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "storage-test-worker-1");
+        StorageSourceSnapshotJob job =
+                new StorageSourceSnapshotJob(new LocalFilesystemStorageBackend(tempDir.resolve("storage")));
+
+        ExecutorEventMessage finishedEvent = handler.handle(
+                storageJob(sourceSnapshot, "0000000000000000000000000000000000000000000000000000000000000000"), job);
+
+        assertEquals(2, eventPublisher.events.size());
+        assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
+        assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
+        assertEquals(ExecutionStatus.FAILED, finishedEvent.status());
+        assertNotNull(finishedEvent.error());
+        assertEquals(ErrorType.VALIDATION_ERROR, finishedEvent.error().type());
+        assertEquals("executor.job.validation", finishedEvent.error().code());
+        assertTrue(finishedEvent.summary().startsWith("SHA-256 checksum артефакта не совпадает для storage://"));
+        assertTrue(logPublisher.events.isEmpty());
+        assertTrue(Files.notExists(tempDir.resolve(
+                "storage/source-snapshots/00000000-0000-0000-0000-000000000207/source-snapshot.tar.gz")));
+    }
+
     private JobMessage storageJob(Path sourceSnapshot) {
+        return storageJob(sourceSnapshot, STORAGE_PAYLOAD_SHA256);
+    }
+
+    private JobMessage storageJob(Path sourceSnapshot, String expectedChecksumSha256) {
         return new JobMessage(
                 1,
                 UUID.fromString("00000000-0000-0000-0000-000000000201"),
@@ -148,6 +190,8 @@ class StorageSourceSnapshotJobTest {
                         "source-snapshot.tar.gz",
                         "contentType",
                         "application/gzip",
+                        "checksumSha256",
+                        expectedChecksumSha256,
                         "metadata",
                         Map.of("vcsType", "git")),
                 Map.of("refs", List.of()),

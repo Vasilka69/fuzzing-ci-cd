@@ -15,6 +15,7 @@ import ru.diplom.cicd.executor.core.job.ExecutorJobException;
 import ru.diplom.cicd.executor.core.job.ExecutorJobResult;
 import ru.diplom.cicd.executor.core.storage.StorageClientException;
 import ru.diplom.cicd.storage.backend.LocalFilesystemStorageBackend;
+import ru.diplom.cicd.storage.backend.StorageChecksumMismatchException;
 import ru.diplom.cicd.storage.backend.StorageSaveRequest;
 
 /**
@@ -76,21 +77,24 @@ public final class StorageSourceSnapshotJob implements ExecutorJob {
     private ArtifactDescriptor save(StorageSaveParameters parameters) {
         try {
             return storageBackend.save(
-                    parameters.sourcePath(),
-                    new StorageSaveRequest(
-                            parameters.destinationPath(),
-                            parameters.artifactType(),
-                            parameters.name(),
-                            parameters.contentType(),
-                            parameters.metadata()));
+                parameters.sourcePath(),
+                new StorageSaveRequest(
+                    parameters.destinationPath(),
+                    parameters.artifactType(),
+                    parameters.name(),
+                    parameters.contentType(),
+                    parameters.metadata(),
+                    parameters.expectedChecksumSha256()));
+        } catch (StorageChecksumMismatchException | IllegalArgumentException exception) {
+            throw ExecutorJobException.validation(exception.getMessage());
         } catch (StorageClientException exception) {
             throw new ExecutorJobException(
-                    ErrorType.INFRASTRUCTURE_ERROR,
-                    "storage.local.save-failed",
-                    "Не удалось сохранить артефакт в локальное хранилище",
-                    exception.getMessage(),
-                    Map.of("exceptionClass", exception.getClass().getName()),
-                    ExecutionStatus.FAILED);
+                ErrorType.INFRASTRUCTURE_ERROR,
+                "storage.local.save-failed",
+                "Не удалось сохранить артефакт в локальное хранилище",
+                exception.getMessage(),
+                Map.of("exceptionClass", exception.getClass().getName()),
+                ExecutionStatus.FAILED);
         }
     }
 

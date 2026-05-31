@@ -12,6 +12,7 @@ final class StorageArtifactHttpRequestUtils {
 
     static final String HEADER_ARTIFACT_TYPE = "X-CICD-Artifact-Type";
     static final String HEADER_ARTIFACT_NAME = "X-CICD-Artifact-Name";
+    static final String HEADER_CHECKSUM_SHA256 = "X-CICD-Checksum-Sha256";
 
     private StorageArtifactHttpRequestUtils() {}
 
@@ -26,7 +27,8 @@ final class StorageArtifactHttpRequestUtils {
                 headerValue(headers, HEADER_ARTIFACT_TYPE),
                 uploadName(headers, namespacePath),
                 contentType(headers, request),
-                Map.of());
+                Map.of(),
+                headerValue(headers, HEADER_CHECKSUM_SHA256));
     }
 
     static String downloadFileName(String namespacePath) {

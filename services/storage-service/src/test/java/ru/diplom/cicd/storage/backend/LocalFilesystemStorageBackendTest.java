@@ -31,7 +31,8 @@ class LocalFilesystemStorageBackendTest {
                         "source_snapshot",
                         "source-snapshot.tar.gz",
                         "application/gzip",
-                        Map.of("vcsType", "git")));
+                        Map.of("vcsType", "git"),
+                        "16a0eeb0791b6c92451fd284dd9f599e0a7dbe7f6ebea6e2d2d06c7f74aec112"));
 
         assertEquals("storage://source-snapshots/job-1/source-snapshot.tar.gz", artifact.uri());
         assertEquals("source_snapshot", artifact.artifactType());
@@ -57,6 +58,30 @@ class LocalFilesystemStorageBackendTest {
 
         assertEquals(firstArtifact.artifactId(), secondArtifact.artifactId());
         assertEquals(firstArtifact.checksumSha256(), secondArtifact.checksumSha256());
+    }
+
+    @Test
+    void saveRejectsExpectedSha256Mismatch() throws IOException {
+        Path source = tempDir.resolve("source.txt");
+        Files.writeString(source, "actual");
+        LocalFilesystemStorageBackend backend = new LocalFilesystemStorageBackend(tempDir.resolve("storage"));
+        StorageSaveRequest request = new StorageSaveRequest(
+                "artifacts/source.txt",
+                "artifact",
+                "source.txt",
+                "text/plain",
+                Map.of(),
+                "0000000000000000000000000000000000000000000000000000000000000000");
+
+        StorageChecksumMismatchException exception =
+                assertThrows(StorageChecksumMismatchException.class, () -> backend.save(source, request));
+
+        assertEquals(
+                "SHA-256 checksum артефакта не совпадает для storage://artifacts/source.txt: "
+                        + "expected=0000000000000000000000000000000000000000000000000000000000000000, "
+                        + "actual=e5c6fde86910ded72db5cc7afc32f850440d4ef7caa5dbb69f5bdc0d3e39cb3b",
+                exception.getMessage());
+        assertTrue(Files.notExists(tempDir.resolve("storage/artifacts/source.txt")));
     }
 
     @Test

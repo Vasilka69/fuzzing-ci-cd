@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import ru.diplom.cicd.contracts.job.JobMessage;
 import ru.diplom.cicd.executor.core.job.ExecutorJobException;
+import ru.diplom.cicd.executor.core.storage.StorageChecksums;
 import ru.diplom.cicd.executor.core.storage.StorageClientException;
 import ru.diplom.cicd.executor.core.storage.StorageUris;
 
@@ -17,6 +18,7 @@ record StorageSaveParameters(
         String artifactType,
         String name,
         String contentType,
+        String expectedChecksumSha256,
         Map<String, Object> metadata) {
 
     private static final String DEFAULT_ARTIFACT_TYPE = "source_snapshot";
@@ -24,6 +26,7 @@ record StorageSaveParameters(
     private static final List<String> SOURCE_KEYS = List.of("sourceUri", "source_uri", "sourcePath", "source_path");
     private static final List<String> DESTINATION_KEYS =
             List.of("destinationPath", "destination_path", "storagePath", "storage_path");
+    private static final List<String> CHECKSUM_KEYS = List.of("checksumSha256", "checksum_sha256", "sha256");
 
     public static final String METADATA_KEY = "metadata";
 
@@ -49,6 +52,9 @@ record StorageSaveParameters(
         String artifactType =
                 optionalString(job, "artifactType", "artifact_type").orElse(DEFAULT_ARTIFACT_TYPE);
         String contentType = optionalString(job, "contentType", "content_type").orElse(DEFAULT_CONTENT_TYPE);
+        String expectedChecksumSha256 = optionalString(job, CHECKSUM_KEYS)
+                .map(StorageSaveParameters::normalizeChecksum)
+                .orElse(null);
 
         Map<String, Object> metadata = new LinkedHashMap<>(metadata(job));
         metadata.put("jobExecutionId", job.jobExecutionId());
@@ -59,7 +65,8 @@ record StorageSaveParameters(
         metadata.put("jobType", job.jobType().wireValue());
         metadata.put("templatePath", job.templatePath());
 
-        return new StorageSaveParameters(sourcePath, destinationPath, artifactType, name, contentType, metadata);
+        return new StorageSaveParameters(
+                sourcePath, destinationPath, artifactType, name, contentType, expectedChecksumSha256, metadata);
     }
 
     private static String requiredString(JobMessage job, List<String> keys, String message) {
@@ -112,6 +119,14 @@ record StorageSaveParameters(
     private static void validateSourcePath(Path sourcePath) {
         if (!Files.isRegularFile(sourcePath.toAbsolutePath().normalize())) {
             throw ExecutorJobException.validation("Исходный файл для storage save job не найден: " + sourcePath);
+        }
+    }
+
+    private static String normalizeChecksum(String checksum) {
+        try {
+            return StorageChecksums.normalizeSha256(checksum);
+        } catch (IllegalArgumentException exception) {
+            throw ExecutorJobException.validation(exception.getMessage());
         }
     }
 

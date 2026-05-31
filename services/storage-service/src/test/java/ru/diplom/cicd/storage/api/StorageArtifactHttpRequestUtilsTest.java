@@ -34,6 +34,9 @@ class StorageArtifactHttpRequestUtilsTest {
         headers.setContentType(MediaType.TEXT_PLAIN);
         headers.set(StorageArtifactHttpRequestUtils.HEADER_ARTIFACT_TYPE, "report");
         headers.set(StorageArtifactHttpRequestUtils.HEADER_ARTIFACT_NAME, "result.txt");
+        headers.set(
+                StorageArtifactHttpRequestUtils.HEADER_CHECKSUM_SHA256,
+                "65b2c35fdd89a7c2d3c8645e8a0816c3a4f1d39d7364eff1e2e8113cc80f19a2");
         MockHttpServletRequest request = new MockHttpServletRequest();
 
         StorageSaveRequest saveRequest =
@@ -43,6 +46,9 @@ class StorageArtifactHttpRequestUtilsTest {
         assertEquals("report", saveRequest.artifactType());
         assertEquals("result.txt", saveRequest.name());
         assertEquals("text/plain", saveRequest.contentType());
+        assertEquals(
+                "65b2c35fdd89a7c2d3c8645e8a0816c3a4f1d39d7364eff1e2e8113cc80f19a2",
+                saveRequest.expectedChecksumSha256());
     }
 
     @Test

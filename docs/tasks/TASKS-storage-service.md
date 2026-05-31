@@ -22,8 +22,8 @@ Topic: `jobs.storage`
   - Готово: namespace реализован через общий `StorageUris`, покрыт unit tests на canonical URI/round-trip/валидацию, а результат `storage/source-snapshot` проверяет `storage://` URI в artifact и `JOB_FINISHED.additionalData`.
 - [x] `STORAGE-003 [MVP]` upload/download REST API для executor-ов.
   - Готово: реализованы `PUT /artifacts/{namespacePath}` и `GET /artifacts/{namespacePath}` поверх local filesystem backend, добавлены controller/backend tests и JSON contract assertion upload-результата.
-- [ ] `STORAGE-004 [MVP]` sha256 verification.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `STORAGE-004 [MVP]` sha256 verification.
+  - Готово: реализована проверка ожидаемой SHA-256 checksum для `storage/source-snapshot` job и REST upload header `X-CICD-Checksum-Sha256`; добавлены unit/controller/job tests и contract assertion `JOB_FINISHED.additionalData.checksumSha256`.
 - [ ] `STORAGE-005 [MVP]` cleanup temporary artifacts.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 

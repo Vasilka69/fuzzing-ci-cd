@@ -41,7 +41,8 @@ public final class StorageArtifactController {
         try {
             Files.copy(body, temporaryFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             ArtifactDescriptor artifact = storageBackend.save(
-                    temporaryFile, StorageArtifactHttpRequestUtils.saveRequest(normalizedNamespacePath, headers, request));
+                    temporaryFile,
+                    StorageArtifactHttpRequestUtils.saveRequest(normalizedNamespacePath, headers, request));
             return ResponseEntity.ok(artifact);
         } finally {
             Files.deleteIfExists(temporaryFile);

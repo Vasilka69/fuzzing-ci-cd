@@ -73,7 +73,10 @@ class StorageArtifactControllerTest {
                         .content("hello storage api")
                         .contentType(MediaType.TEXT_PLAIN)
                         .header(StorageArtifactHttpRequestUtils.HEADER_ARTIFACT_TYPE, "report")
-                        .header(StorageArtifactHttpRequestUtils.HEADER_ARTIFACT_NAME, "result.txt"))
+                        .header(StorageArtifactHttpRequestUtils.HEADER_ARTIFACT_NAME, "result.txt")
+                        .header(
+                                StorageArtifactHttpRequestUtils.HEADER_CHECKSUM_SHA256,
+                                "65b2c35fdd89a7c2d3c8645e8a0816c3a4f1d39d7364eff1e2e8113cc80f19a2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.artifactType").value("report"))
                 .andExpect(jsonPath("$.name").value("result.txt"))
@@ -85,7 +88,9 @@ class StorageArtifactControllerTest {
 
         JsonNode json = objectMapper().readTree(uploadResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertEquals("storage://reports/job-1/result.txt", json.get("uri").textValue());
-        assertEquals(64, json.get("checksumSha256").textValue().length());
+        assertEquals(
+                "65b2c35fdd89a7c2d3c8645e8a0816c3a4f1d39d7364eff1e2e8113cc80f19a2",
+                json.get("checksumSha256").textValue());
         assertFalse(json.has("storage_uri"));
         assertEquals("hello storage api", Files.readString(TEST_ROOT.resolve("reports/job-1/result.txt")));
 
@@ -93,6 +98,25 @@ class StorageArtifactControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"result.txt\""))
                 .andExpect(content().bytes("hello storage api".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void uploadRejectsChecksumMismatch() throws Exception {
+        MockMvc mockMvc = mockMvc();
+
+        mockMvc.perform(put("/artifacts/reports/job-2/result.txt")
+                        .content("hello storage api")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .header(
+                                StorageArtifactHttpRequestUtils.HEADER_CHECKSUM_SHA256,
+                                "0000000000000000000000000000000000000000000000000000000000000000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("invalid_storage_request"))
+                .andExpect(jsonPath("$.message")
+                        .value(org.hamcrest.Matchers.startsWith(
+                                "SHA-256 checksum артефакта не совпадает для storage://reports/job-2/result.txt")));
+
+        assertTrue(Files.notExists(TEST_ROOT.resolve("reports/job-2/result.txt")));
     }
 
     @Test

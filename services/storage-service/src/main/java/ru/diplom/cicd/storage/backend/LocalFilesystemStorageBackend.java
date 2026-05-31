@@ -54,6 +54,7 @@ public final class LocalFilesystemStorageBackend {
             Files.createDirectories(targetPath.getParent());
 
             String sourceChecksum = StorageChecksums.sha256(normalizedSource);
+            verifyExpectedChecksum(sourceChecksum, request.expectedChecksumSha256(), storageUri);
             if (Files.exists(targetPath)) {
                 ensureExistingArtifactIsSame(targetPath, sourceChecksum, storageUri);
             } else {
@@ -90,6 +91,14 @@ public final class LocalFilesystemStorageBackend {
             throw new StorageClientException("Storage namespace выходит за пределы root: " + namespacePath);
         }
         return resolvedPath;
+    }
+
+    private static void verifyExpectedChecksum(String actualChecksum, String expectedChecksum, String storageUri) {
+        if (expectedChecksum != null && !expectedChecksum.equals(actualChecksum)) {
+            throw new StorageChecksumMismatchException(
+                    "SHA-256 checksum артефакта не совпадает для %s: expected=%s, actual=%s"
+                            .formatted(storageUri, expectedChecksum, actualChecksum));
+        }
     }
 
     private void ensureExistingArtifactIsSame(Path targetPath, String sourceChecksum, String storageUri)
