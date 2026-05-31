@@ -22,8 +22,8 @@ Topic: `jobs.vcs`
   - Готово: HTTP(S) Git URL credentials маскируются в repository metadata, JOB_LOG и error details; добавлены unit/integration tests и contract assertion итогового `JOB_FINISHED`.
 - [x] `VCS-003 [MVP]` архивация snapshot в tar.gz.
   - Готово: source snapshot создается через `tar` на уровне process runner, metadata архива публикуется в `JOB_FINISHED.additionalData.snapshot`, есть unit/integration test и contract assertion результата.
-- [ ] `VCS-004 [MVP]` upload snapshot через storage-client.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `VCS-004 [MVP]` upload snapshot через storage-client.
+  - Готово: source snapshot загружается через `StorageClient` в стабильный `storage://` namespace по `jobExecutionId`, artifact metadata публикуется в `JOB_ARTIFACT`/`JOB_FINISHED`, есть integration-style test и contract assertion результата.
 - [ ] `VCS-005 [MVP]` публикация JOB_RUNNING/JOB_FINISHED/JOB_LOG.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 

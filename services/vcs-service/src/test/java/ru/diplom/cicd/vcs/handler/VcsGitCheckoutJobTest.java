@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.diplom.cicd.contracts.artifact.ArtifactDescriptor;
 import ru.diplom.cicd.contracts.event.EventType;
 import ru.diplom.cicd.contracts.event.ExecutionStatus;
 import ru.diplom.cicd.contracts.event.ExecutorEventMessage;
@@ -39,6 +40,7 @@ import ru.diplom.cicd.executor.core.process.ProcessOutputChunk;
 import ru.diplom.cicd.executor.core.process.ProcessRunner;
 import ru.diplom.cicd.executor.core.process.ProcessStreamType;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
+import ru.diplom.cicd.executor.core.storage.LocalStorageClient;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 import ru.diplom.cicd.vcs.runner.GitCheckoutRunner;
 import ru.diplom.cicd.vcs.snapshot.SourceSnapshotArchiver;
@@ -64,17 +66,23 @@ class VcsGitCheckoutJobTest {
                 new SecretRedactor(),
                 "vcs-test-worker-1");
         LocalProcessRunner processRunner = new LocalProcessRunner();
-        VcsGitCheckoutJob job =
-                new VcsGitCheckoutJob(new GitCheckoutRunner(processRunner), new SourceSnapshotArchiver(processRunner));
+        VcsGitCheckoutJob job = new VcsGitCheckoutJob(
+                new GitCheckoutRunner(processRunner),
+                new SourceSnapshotArchiver(processRunner),
+                new LocalStorageClient(tempDir.resolve("storage")));
 
         ExecutorEventMessage finishedEvent = handler.handle(vcsJob(repository), job);
 
-        assertEquals(2, eventPublisher.events.size());
+        assertEquals(3, eventPublisher.events.size());
         assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
+        assertEquals(EventType.JOB_ARTIFACT, eventPublisher.events.get(1).eventType());
         assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
-        assertEquals("Git checkout и архивация source snapshot завершены успешно", finishedEvent.summary());
+        assertEquals("Git checkout, архивация и upload source snapshot завершены успешно", finishedEvent.summary());
         assertEquals(expectedCommit, finishedEvent.additionalData().get("commitHash"));
+        assertEquals(
+                "storage://source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz",
+                finishedEvent.additionalData().get("sourceSnapshotUri"));
         @SuppressWarnings("unchecked")
         Map<String, Object> snapshot =
                 (Map<String, Object>) finishedEvent.additionalData().get("snapshot");
@@ -84,7 +92,22 @@ class VcsGitCheckoutJobTest {
         assertEquals("source-snapshot.tar.gz", snapshot.get("relativePath"));
         assertTrue((Long) snapshot.get("sizeBytes") > 0);
         assertEquals(64, ((String) snapshot.get("checksumSha256")).length());
-        assertTrue(finishedEvent.artifacts().isEmpty());
+        assertEquals(
+                "storage://source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz",
+                snapshot.get("uri"));
+        assertEquals("application/gzip", snapshot.get("contentType"));
+        assertEquals(1, finishedEvent.artifacts().size());
+        ArtifactDescriptor artifact = finishedEvent.artifacts().getFirst();
+        assertEquals("source_snapshot", artifact.artifactType());
+        assertEquals("source-snapshot.tar.gz", artifact.name());
+        assertEquals(snapshot.get("uri"), artifact.uri());
+        assertEquals("application/gzip", artifact.contentType());
+        assertEquals(snapshot.get("sizeBytes"), artifact.sizeBytes());
+        assertEquals(snapshot.get("checksumSha256"), artifact.checksumSha256());
+        assertEquals(expectedCommit, artifact.metadata().get("commitHash"));
+        assertEquals("git", artifact.metadata().get("vcsType"));
+        assertTrue(Files.isRegularFile(tempDir.resolve(
+                "storage/source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz")));
         assertNull(finishedEvent.logs());
 
         assertEquals(1, logPublisher.events.size());
@@ -99,8 +122,18 @@ class VcsGitCheckoutJobTest {
         assertEquals("vcs/git", json.get("templatePath").textValue());
         assertEquals("JOB_FINISHED", json.get("eventType").textValue());
         assertEquals("SUCCESS", json.get("status").textValue());
+        assertEquals(1, json.get("artifacts").size());
+        assertEquals(
+                "storage://source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz",
+                json.get("artifacts").get(0).get("uri").textValue());
+        assertEquals(
+                "source_snapshot",
+                json.get("artifacts").get(0).get("artifactType").textValue());
         assertEquals(
                 expectedCommit, json.get("additionalData").get("commitHash").textValue());
+        assertEquals(
+                "storage://source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz",
+                json.get("additionalData").get("sourceSnapshotUri").textValue());
         assertEquals(
                 "tar.gz",
                 json.get("additionalData").get("snapshot").get("format").textValue());
@@ -127,8 +160,10 @@ class VcsGitCheckoutJobTest {
                 processResult(0, "", "Cloning from https://user:secret-token@example.test/repo.git\n"),
                 processResult(0, "0123456789abcdef0123456789abcdef01234567\n", ""),
                 processResult(0, "", "")));
-        VcsGitCheckoutJob job =
-                new VcsGitCheckoutJob(new GitCheckoutRunner(processRunner), new SourceSnapshotArchiver(processRunner));
+        VcsGitCheckoutJob job = new VcsGitCheckoutJob(
+                new GitCheckoutRunner(processRunner),
+                new SourceSnapshotArchiver(processRunner),
+                new LocalStorageClient(tempDir.resolve("storage")));
 
         ExecutorEventMessage finishedEvent = handler.handle(vcsJob(rawRepositoryUrl), job);
 
@@ -144,6 +179,9 @@ class VcsGitCheckoutJobTest {
                         .get("repository")
                         .get("repositoryUrl")
                         .textValue());
+        assertEquals(
+                "storage://source-snapshots/00000000-0000-0000-0000-000000000107/source-snapshot.tar.gz",
+                json.get("additionalData").get("sourceSnapshotUri").textValue());
         assertFalse(objectMapper().writeValueAsString(json).contains("secret-token"));
     }
 
