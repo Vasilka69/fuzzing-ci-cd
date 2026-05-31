@@ -343,7 +343,6 @@ class FuzzingJobTest {
 
         @Override
         public ProcessExecutionResult run(ProcessExecutionRequest request) {
-            this.request = request;
             requests.add(request);
             ProcessExecutionResult result = nextResult(request);
             if (isSuccessfulAflRequest(request, result)) {
