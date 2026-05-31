@@ -8,8 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,11 @@ import ru.diplom.cicd.executor.core.event.ExecutorEventPublisher;
 import ru.diplom.cicd.executor.core.job.ExecutorJobHandler;
 import ru.diplom.cicd.executor.core.log.ExecutorLogPublisher;
 import ru.diplom.cicd.executor.core.process.LocalProcessRunner;
+import ru.diplom.cicd.executor.core.process.ProcessExecutionRequest;
+import ru.diplom.cicd.executor.core.process.ProcessExecutionResult;
+import ru.diplom.cicd.executor.core.process.ProcessOutputChunk;
+import ru.diplom.cicd.executor.core.process.ProcessRunner;
+import ru.diplom.cicd.executor.core.process.ProcessStreamType;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 import ru.diplom.cicd.vcs.runner.GitCheckoutRunner;
@@ -84,7 +91,43 @@ class VcsGitCheckoutJobTest {
         assertFalse(json.has("event_type"));
     }
 
+    @Test
+    void handleGitJobRedactsRepositoryCredentialsFromLogsAndFinishedEvent() throws Exception {
+        String rawRepositoryUrl = "https://user:secret-token@example.test/repo.git";
+        CapturingEventPublisher eventPublisher = new CapturingEventPublisher();
+        CapturingLogPublisher logPublisher = new CapturingLogPublisher();
+        ExecutorJobHandler handler = new ExecutorJobHandler(
+                new LocalWorkspaceManager(tempDir.resolve("workspaces")),
+                eventPublisher,
+                logPublisher,
+                new SecretRedactor(),
+                "vcs-test-worker-1");
+        VcsGitCheckoutJob job = new VcsGitCheckoutJob(new GitCheckoutRunner(new SequenceProcessRunner(List.of(
+                processResult(0, "", "Cloning from https://user:secret-token@example.test/repo.git\n"),
+                processResult(0, "0123456789abcdef0123456789abcdef01234567\n", "")))));
+
+        ExecutorEventMessage finishedEvent = handler.handle(vcsJob(rawRepositoryUrl), job);
+
+        ExecutorEventMessage logEvent = logPublisher.events.getFirst();
+        assertFalse(logEvent.logs().contains("secret-token"));
+        assertTrue(logEvent.logs().contains("https://[REDACTED]@example.test/repo.git"));
+
+        JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
+        assertTrue(json.get("logs").isNull());
+        assertEquals(
+                "https://[REDACTED]@example.test/repo.git",
+                json.get("additionalData")
+                        .get("repository")
+                        .get("repositoryUrl")
+                        .textValue());
+        assertFalse(objectMapper().writeValueAsString(json).contains("secret-token"));
+    }
+
     private JobMessage vcsJob(Path repository) {
+        return vcsJob(repository.toUri().toString());
+    }
+
+    private JobMessage vcsJob(String repositoryUrl) {
         return new JobMessage(
                 1,
                 UUID.fromString("00000000-0000-0000-0000-000000000101"),
@@ -103,7 +146,7 @@ class VcsGitCheckoutJobTest {
                 new WorkspacePolicy("always", false),
                 safeSandboxPolicy(),
                 Map.of(),
-                Map.of("vcs_type", "git", "repository_url", repository.toUri().toString(), "checkout_depth", 1),
+                Map.of("vcs_type", "git", "repository_url", repositoryUrl, "checkout_depth", 1),
                 Map.of("refs", List.of()),
                 Instant.parse("2026-05-30T09:00:00Z"));
     }
@@ -156,6 +199,21 @@ class VcsGitCheckoutJobTest {
         return new ObjectMapper();
     }
 
+    private static ProcessExecutionResult processResult(int exitCode, String stdout, String stderr) {
+        return new ProcessExecutionResult(
+                exitCode,
+                false,
+                false,
+                Duration.ofMillis(1),
+                List.of(
+                        processChunk(ProcessStreamType.STDOUT, 0, stdout),
+                        processChunk(ProcessStreamType.STDERR, 1, stderr)));
+    }
+
+    private static ProcessOutputChunk processChunk(ProcessStreamType stream, long sequence, String text) {
+        return new ProcessOutputChunk(stream, sequence, text.getBytes(StandardCharsets.UTF_8));
+    }
+
     private static final class CapturingEventPublisher implements ExecutorEventPublisher {
 
         private final List<ExecutorEventMessage> events = new ArrayList<>();
@@ -175,6 +233,24 @@ class VcsGitCheckoutJobTest {
         public CompletionStage<Void> publish(ExecutorEventMessage logEvent) {
             events.add(logEvent);
             return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    private static final class SequenceProcessRunner implements ProcessRunner {
+
+        private final List<ProcessExecutionResult> results;
+        private int index;
+
+        private SequenceProcessRunner(List<ProcessExecutionResult> results) {
+            this.results = results;
+        }
+
+        @Override
+        public ProcessExecutionResult run(ProcessExecutionRequest request) {
+            if (index >= results.size()) {
+                throw new AssertionError("Неожиданный запуск процесса: " + request.command());
+            }
+            return results.get(index++);
         }
     }
 }

@@ -182,6 +182,7 @@ public final class GitCheckoutRunner {
         if (StringUtils.isBlank(text)) {
             return StringUtils.EMPTY;
         }
-        return text.replace(parameters.repositoryUrl(), parameters.safeRepositoryUrl());
+        return GitRepositoryUrlRedactor.redact(
+                text.replace(parameters.repositoryUrl(), parameters.safeRepositoryUrl()));
     }
 }

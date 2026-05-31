@@ -30,7 +30,8 @@ public record GitCheckoutParameters(
             throw ExecutorJobException.validation("Shallow checkout по произвольному commit пока не поддерживается");
         }
 
-        return new GitCheckoutParameters(repositoryUrl, safeRepositoryUrl(repositoryUrl), ref, refType, checkoutDepth);
+        return new GitCheckoutParameters(
+                repositoryUrl, GitRepositoryUrlRedactor.redact(repositoryUrl), ref, refType, checkoutDepth);
     }
 
     private static String requiredString(Map<String, Object> params, String key) {
@@ -97,9 +98,5 @@ public record GitCheckoutParameters(
             return Boolean.parseBoolean(text);
         }
         throw ExecutorJobException.validation("submodules должен быть boolean");
-    }
-
-    private static String safeRepositoryUrl(String repositoryUrl) {
-        return repositoryUrl.replaceFirst("(?i)(https?://)[^/@]+@", "$1[REDACTED]@");
     }
 }

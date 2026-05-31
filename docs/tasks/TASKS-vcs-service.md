@@ -18,8 +18,8 @@ Topic: `jobs.vcs`
 
 - [x] `VCS-001 [MVP]` Git checkout shallow clone.
   - Готово: реализован `vcs/git` shallow clone через общий process runner, есть unit/integration tests и contract assertion итогового `JOB_FINISHED`.
-- [ ] `VCS-002 [MVP]` маскирование credentials в логах.
-  - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
+- [x] `VCS-002 [MVP]` маскирование credentials в логах.
+  - Готово: HTTP(S) Git URL credentials маскируются в repository metadata, JOB_LOG и error details; добавлены unit/integration tests и contract assertion итогового `JOB_FINISHED`.
 - [ ] `VCS-003 [MVP]` архивация snapshot в tar.gz.
   - Готово, когда: есть реализация, unit/integration test и событие результата покрыто contract assertion.
 - [ ] `VCS-004 [MVP]` upload snapshot через storage-client.

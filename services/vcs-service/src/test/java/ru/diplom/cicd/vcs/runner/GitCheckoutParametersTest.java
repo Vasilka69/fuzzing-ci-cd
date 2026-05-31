@@ -40,11 +40,17 @@ class GitCheckoutParametersTest {
     }
 
     @Test
+    void keepsPublicRepositoryUrlVisible() {
+        GitCheckoutParameters parameters =
+                GitCheckoutParameters.from(job(Map.of("repository_url", "https://example.test/repo.git")));
+
+        assertEquals("https://example.test/repo.git", parameters.safeRepositoryUrl());
+    }
+
+    @Test
     void rejectsUnsupportedSubmodulesInMvpCheckout() {
         JobMessage job = job(Map.of("repository_url", "https://example.test/repo.git", "submodules", true));
-        ExecutorJobException error = assertThrows(
-                ExecutorJobException.class,
-                () -> GitCheckoutParameters.from(job));
+        ExecutorJobException error = assertThrows(ExecutorJobException.class, () -> GitCheckoutParameters.from(job));
 
         assertEquals("Git submodules пока не поддерживаются в MVP checkout", error.getMessage());
     }
@@ -52,9 +58,7 @@ class GitCheckoutParametersTest {
     @Test
     void rejectsInvalidCheckoutDepth() {
         JobMessage job = job(Map.of("repository_url", "https://example.test/repo.git", "checkout_depth", 0));
-        ExecutorJobException error = assertThrows(
-                ExecutorJobException.class,
-                () -> GitCheckoutParameters.from(job));
+        ExecutorJobException error = assertThrows(ExecutorJobException.class, () -> GitCheckoutParameters.from(job));
 
         assertEquals("checkout_depth должен быть в диапазоне от 1 до 100", error.getMessage());
     }
