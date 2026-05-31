@@ -63,7 +63,7 @@
 * `docs/context/PROJECT_CONTEXT.md`;
 * `docs/context/DB_CONTEXT.md`;
 * `docs/architecture/ADR-*.md`;
-* `docs/ai/MANIFEST.json`;
+* `docs/MANIFEST.json`;
 * `...`.
 
 ## Зависимости
