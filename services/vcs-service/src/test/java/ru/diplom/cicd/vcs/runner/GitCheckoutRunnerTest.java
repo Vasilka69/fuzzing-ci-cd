@@ -72,8 +72,7 @@ class GitCheckoutRunnerTest {
         GitCheckoutRunner gitCheckoutRunner = new GitCheckoutRunner(processRunner);
         Path checkoutPath = tempDir.resolve("checkout");
         ExecutorJobException error = assertThrows(
-                ExecutorJobException.class,
-                () -> gitCheckoutRunner.checkout(parameters, checkoutPath, 30));
+                ExecutorJobException.class, () -> gitCheckoutRunner.checkout(parameters, checkoutPath, 30));
 
         assertFalse(error.details().contains("secret-token"));
         assertTrue(error.details().contains("https://[REDACTED]@example.test"));

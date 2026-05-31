@@ -41,6 +41,7 @@ import ru.diplom.cicd.executor.core.process.ProcessStreamType;
 import ru.diplom.cicd.executor.core.security.SecretRedactor;
 import ru.diplom.cicd.executor.core.workspace.LocalWorkspaceManager;
 import ru.diplom.cicd.vcs.runner.GitCheckoutRunner;
+import ru.diplom.cicd.vcs.snapshot.SourceSnapshotArchiver;
 
 class VcsGitCheckoutJobTest {
 
@@ -49,6 +50,7 @@ class VcsGitCheckoutJobTest {
     @TempDir
     private Path tempDir;
 
+    @SuppressWarnings("java:S5961")
     @Test
     void handleGitJobPublishesFinishedEventWithoutInlineLogs() throws Exception {
         Path repository = createRepository();
@@ -61,7 +63,9 @@ class VcsGitCheckoutJobTest {
                 logPublisher,
                 new SecretRedactor(),
                 "vcs-test-worker-1");
-        VcsGitCheckoutJob job = new VcsGitCheckoutJob(new GitCheckoutRunner(new LocalProcessRunner()));
+        LocalProcessRunner processRunner = new LocalProcessRunner();
+        VcsGitCheckoutJob job =
+                new VcsGitCheckoutJob(new GitCheckoutRunner(processRunner), new SourceSnapshotArchiver(processRunner));
 
         ExecutorEventMessage finishedEvent = handler.handle(vcsJob(repository), job);
 
@@ -69,8 +73,17 @@ class VcsGitCheckoutJobTest {
         assertEquals(EventType.JOB_RUNNING, eventPublisher.events.getFirst().eventType());
         assertEquals(EventType.JOB_FINISHED, finishedEvent.eventType());
         assertEquals(ExecutionStatus.SUCCESS, finishedEvent.status());
-        assertEquals("Git checkout завершен успешно", finishedEvent.summary());
+        assertEquals("Git checkout и архивация source snapshot завершены успешно", finishedEvent.summary());
         assertEquals(expectedCommit, finishedEvent.additionalData().get("commitHash"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> snapshot =
+                (Map<String, Object>) finishedEvent.additionalData().get("snapshot");
+        assertNotNull(snapshot);
+        assertEquals("tar.gz", snapshot.get("format"));
+        assertEquals("source-snapshot.tar.gz", snapshot.get("fileName"));
+        assertEquals("source-snapshot.tar.gz", snapshot.get("relativePath"));
+        assertTrue((Long) snapshot.get("sizeBytes") > 0);
+        assertEquals(64, ((String) snapshot.get("checksumSha256")).length());
         assertTrue(finishedEvent.artifacts().isEmpty());
         assertNull(finishedEvent.logs());
 
@@ -79,6 +92,7 @@ class VcsGitCheckoutJobTest {
         assertEquals(EventType.JOB_LOG, logEvent.eventType());
         assertNotNull(logEvent.logs());
         assertTrue(logEvent.logs().contains("Git checkout shallow clone завершен"));
+        assertTrue(logEvent.logs().contains("Source snapshot tar.gz подготовлен"));
 
         JsonNode json = objectMapper().readTree(objectMapper().writeValueAsString(finishedEvent));
         assertEquals("vcs", json.get("jobType").textValue());
@@ -87,6 +101,13 @@ class VcsGitCheckoutJobTest {
         assertEquals("SUCCESS", json.get("status").textValue());
         assertEquals(
                 expectedCommit, json.get("additionalData").get("commitHash").textValue());
+        assertEquals(
+                "tar.gz",
+                json.get("additionalData").get("snapshot").get("format").textValue());
+        assertEquals(
+                "source-snapshot.tar.gz",
+                json.get("additionalData").get("snapshot").get("fileName").textValue());
+        assertTrue(json.get("additionalData").get("snapshot").get("sizeBytes").longValue() > 0);
         assertTrue(json.get("logs").isNull());
         assertFalse(json.has("event_type"));
     }
@@ -102,9 +123,12 @@ class VcsGitCheckoutJobTest {
                 logPublisher,
                 new SecretRedactor(),
                 "vcs-test-worker-1");
-        VcsGitCheckoutJob job = new VcsGitCheckoutJob(new GitCheckoutRunner(new SequenceProcessRunner(List.of(
+        SequenceProcessRunner processRunner = new SequenceProcessRunner(List.of(
                 processResult(0, "", "Cloning from https://user:secret-token@example.test/repo.git\n"),
-                processResult(0, "0123456789abcdef0123456789abcdef01234567\n", "")))));
+                processResult(0, "0123456789abcdef0123456789abcdef01234567\n", ""),
+                processResult(0, "", "")));
+        VcsGitCheckoutJob job =
+                new VcsGitCheckoutJob(new GitCheckoutRunner(processRunner), new SourceSnapshotArchiver(processRunner));
 
         ExecutorEventMessage finishedEvent = handler.handle(vcsJob(rawRepositoryUrl), job);
 
@@ -250,7 +274,23 @@ class VcsGitCheckoutJobTest {
             if (index >= results.size()) {
                 throw new AssertionError("Неожиданный запуск процесса: " + request.command());
             }
+            prepareExpectedSideEffects(request.command());
             return results.get(index++);
+        }
+
+        private void prepareExpectedSideEffects(List<String> command) {
+            try {
+                if (command.size() >= 2 && "git".equals(command.getFirst()) && "clone".equals(command.get(1))) {
+                    Path checkoutPath = Path.of(command.getLast());
+                    Files.createDirectories(checkoutPath);
+                    Files.writeString(checkoutPath.resolve("README.md"), "fake checkout\n");
+                }
+                if (command.size() >= 3 && "tar".equals(command.getFirst()) && "-czf".equals(command.get(1))) {
+                    Files.writeString(Path.of(command.get(2)), "fake archive\n");
+                }
+            } catch (java.io.IOException exception) {
+                throw new AssertionError("Не удалось подготовить side effect тестового процесса", exception);
+            }
         }
     }
 }
