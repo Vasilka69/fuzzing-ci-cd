@@ -82,7 +82,22 @@
 - [x] `DEMO-005 [DIPLOMA]` Сохранить sample executor events/logs и показать, что `JOB_FINISHED.logs = null`, а текст есть в `JOB_LOG`.
   - Готово: добавлены `demo/samples/executor-events.jsonl` и `demo/samples/opensearch-log-documents.jsonl`; sample показывает `JOB_FINISHED.logs = null` и отдельный OpenSearch `JOB_LOG` document с текстом.
 
-## Уровень 5. Дипломно-достаточная полнота
+### 5.1. Дипломно-достаточные задачи сервисов
+
+- [ ] `VCS-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-vcs-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-vcs-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+- [ ] `STORAGE-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-storage-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-storage-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+- [ ] `BUILD-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-build-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-build-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+- [ ] `FUZZING-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-fuzzing-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-fuzzing-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+- [ ] `DEPLOY-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-deploy-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-deploy-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+- [ ] `SCRIPT-DIP-001.. [DIPLOMA]` Выполнить DIPLOMA-задачи из `docs/tasks/TASKS-script-service.md`.
+  - Готово, когда: закрыты все задачи `[DIPLOMA]` в `TASKS-script-service.md`, либо для каждой невыполненной задачи явно указано, почему она перенесена в `[HARDENING]` или `[OPTIONAL/PROD]`.
+
+### 5.2. Общесистемные дипломные задачи
 
 - [ ] `DIP-001 [DIPLOMA]` Поддержать все шаблоны из `V0002__data.sql` хотя бы через validation + documented unsupported mode.
 - [ ] `DIP-002 [DIPLOMA]` Реализовать retry handling для transient infrastructure errors.
