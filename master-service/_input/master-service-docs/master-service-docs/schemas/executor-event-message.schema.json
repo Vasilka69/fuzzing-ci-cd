@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutorEventMessage",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "correlationId",
+    "pipelineRunId",
+    "pipelineId",
+    "jobId",
+    "jobExecutionId",
+    "jobType",
+    "eventType",
+    "status",
+    "attempt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pipelineRunId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pipelineId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "stageId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobExecutionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobType": {
+      "type": "string",
+      "enum": [
+        "vcs",
+        "storage",
+        "build",
+        "fuzzing",
+        "deploy",
+        "script"
+      ]
+    },
+    "templatePath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "JOB_ACCEPTED",
+        "JOB_RUNNING",
+        "JOB_PROGRESS",
+        "JOB_ARTIFACT",
+        "JOB_LOG",
+        "JOB_FINISHED",
+        "JOB_SKIPPED",
+        "JOB_CANCELED",
+        "JOB_HEARTBEAT"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCESS",
+        "FAILED",
+        "TIMEOUT",
+        "CANCELING",
+        "CANCELED",
+        "RETRYING",
+        "SKIPPED",
+        "WAITING_APPROVAL"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workerId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "startedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "finishedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "durationMs": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "error": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "logs": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "additionalData": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

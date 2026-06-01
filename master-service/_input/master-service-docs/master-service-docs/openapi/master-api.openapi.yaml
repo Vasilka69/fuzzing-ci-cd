@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: CI/CD Master Service API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /auth/login:
+    post:
+      summary: Авторизация пользователя
+      responses:
+        '200': { description: OK }
+  /auth/me:
+    get:
+      summary: Текущий пользователь и permissions
+      responses:
+        '200': { description: OK }
+  /folders:
+    get:
+      summary: Получение дерева папок
+      parameters:
+        - { name: parentId, in: query, schema: { type: string, format: uuid } }
+        - { name: includePipelines, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Создание папки
+      responses:
+        '201': { description: Created }
+  /pipelines:
+    get:
+      summary: Список pipeline
+      parameters:
+        - { name: folderId, in: query, schema: { type: string, format: uuid } }
+        - { name: isActive, in: query, schema: { type: boolean } }
+        - { name: query, in: query, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Создание pipeline
+      responses:
+        '201': { description: Created }
+  /pipelines/{id}:
+    get:
+      summary: Pipeline со stage/job/dependency graph
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Обновление pipeline
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Деактивация pipeline
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: No Content }
+  /pipelines/{id}/runs:
+    post:
+      summary: Запуск pipeline
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: Idempotency-Key, in: header, schema: { type: string } }
+      responses:
+        '201': { description: Created }
+  /pipeline-runs:
+    get:
+      summary: Список запусков
+      parameters:
+        - { name: pipelineId, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200': { description: OK }
+  /pipeline-runs/{id}:
+    get:
+      summary: Детали запуска
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /pipeline-runs/{id}/graph:
+    get:
+      summary: Runtime graph запуска
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /pipeline-runs/{id}/cancel:
+    post:
+      summary: Отмена pipeline run
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '202': { description: Accepted }
+  /job-executions/{id}/logs:
+    get:
+      summary: Логи job execution из OpenSearch
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: tail, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /logs/stream:
+    get:
+      summary: SSE stream job events and logs
+      parameters:
+        - { name: pipelineRunId, in: query, schema: { type: string, format: uuid } }
+        - { name: jobId, in: query, schema: { type: string, format: uuid } }
+        - { name: jobExecutionId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: text/event-stream
+          content:
+            text/event-stream: {}
+  /artifacts/{id}/download-url:
+    get:
+      summary: Временная ссылка скачивания artifact
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+  /executors:
+    get:
+      summary: Состояние executor instances
+      responses:
+        '200': { description: OK }
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+        correlationId: { type: string }

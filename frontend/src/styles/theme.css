@@ -1,0 +1,55 @@
+:root {
+  --bg-page: radial-gradient(circle at 10% 10%, #dbf8ff 0%, #fef8ec 46%, #f8fff5 100%);
+  --bg-shell: rgba(255, 255, 255, 0.76);
+  --bg-sidebar: linear-gradient(180deg, #0f1f39 0%, #17365e 52%, #0f1f39 100%);
+  --text-main: #152033;
+  --text-muted: #5b6b82;
+  --accent: #0f9d8f;
+  --accent-soft: #d9fffa;
+  --danger: #c0392b;
+  --border-soft: rgba(22, 38, 66, 0.1);
+  --shadow-soft: 0 12px 36px rgba(18, 41, 68, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  color: var(--text-main);
+  font-family: "Manrope", "Segoe UI", "Tahoma", sans-serif;
+  background: var(--bg-page);
+}
+
+.page-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.glass-card {
+  background: var(--bg-shell);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.section-title {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.section-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

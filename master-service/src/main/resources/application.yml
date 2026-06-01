@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: master-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:cicd_master}
+    username: ${POSTGRES_USER:cicd}
+    password: ${POSTGRES_PASSWORD:cicd}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration,filesystem:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: master-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+
+server:
+  port: ${MASTER_HTTP_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+app:
+  messaging:
+    executor-events-transport: ${EXECUTOR_EVENTS_TRANSPORT:kafka}
+    results-topic: jobs.results
+    cancel-topic: jobs.cancel
+    job-topics:
+      vcs: jobs.vcs
+      storage: jobs.storage
+      build: jobs.build
+      fuzzing: jobs.fuzzing
+      deploy: jobs.deploy
+      script: jobs.script
+  outbox:
+    publisher-enabled: ${OUTBOX_PUBLISHER_ENABLED:true}
+    batch-size: 100
+    max-attempts: 10
+    poll-interval: PT2S
+  sse:
+    heartbeat-interval: PT15S
+    emitter-timeout: 30m
+  opensearch:
+    url: ${OPENSEARCH_URL:http://localhost:9200}
+    index: ${OPENSEARCH_INDEX:cicd-executor-events}
+    logs-page-size: 200
+    poll-batch-size: 200
+    poll-interval: 50000
+    cursor-consumer-name: opensearch-event-poller
+  trigger:
+    scheduler-interval: PT30S
+
+logging:
+  pattern:
+    level: "%5p [corr:%X{correlationId}]"

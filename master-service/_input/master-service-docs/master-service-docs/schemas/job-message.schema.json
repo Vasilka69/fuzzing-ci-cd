@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JobMessage",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "correlationId",
+    "pipelineRunId",
+    "pipelineId",
+    "stageId",
+    "jobId",
+    "jobExecutionId",
+    "jobType",
+    "templatePath",
+    "attempt",
+    "maxAttempts",
+    "timeoutSeconds",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pipelineRunId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "pipelineId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "stageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobExecutionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobType": {
+      "type": "string",
+      "enum": [
+        "vcs",
+        "storage",
+        "build",
+        "fuzzing",
+        "deploy",
+        "script"
+      ]
+    },
+    "templatePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxAttempts": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "resourceLimits": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "workspacePolicy": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}
